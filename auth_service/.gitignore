@@ -1,6 +1,5 @@
 # Build folders
 bin/
-
 obj/
 
 # NuGet
@@ -10,12 +9,11 @@ project.assets.json
 *.nuget.props
 *.nuget.targets
 *.nuget.cache
+*.dgspec.json
 
 # Visual Studio
-*.user
-*.suo
-*.cache
 .vs/
 
-
-
+# User specific
+*.user
+*.suo
