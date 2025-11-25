@@ -2,6 +2,7 @@
     Model defines the User entity for the Learnix application.
 
 */
+using System.ComponentModel.DataAnnotations.Schema;
 
 using System;
 
@@ -24,11 +25,14 @@ namespace auth_service.Domain.Entity
         public string FullName { get; private set; } = string.Empty;
         public string AvatarUrl { get; private set; } = string.Empty;
         public UserRole UserRole { get; private set; }
-        private DateTime dateofBirth = DateTime.MinValue;
-        private DateTime CreatedAt = DateTime.UtcNow;
-        private DateTime UpdatedAt = DateTime.UtcNow;
+        [Column("dateofBirth")]
+        public DateTime DateOfBirth { get; set; }
+
+        public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt {get; private set; } = DateTime.UtcNow;
         public string RefreshToken { get; private set; } = string.Empty;
-        private DateTime RefreshTokenExpiry = DateTime.UtcNow;
+        public DateTime RefreshTokenExpiry { get; private set; } = DateTime.UtcNow;
+
 
         //ORM Constructor
         protected User() {}
@@ -43,8 +47,10 @@ namespace auth_service.Domain.Entity
             UserRole = UserRole.Normal_Student;
             RefreshToken = refreshToken;
             RefreshTokenExpiry = refreshTokenExpiry;
-            dateofBirth = dob;
+            DateOfBirth = dob;
             AvatarUrl = avatarUrl_;
+            CreatedAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
         }
           
         //Getters and Setters 
@@ -80,17 +86,19 @@ namespace auth_service.Domain.Entity
         public void updateUserInfo (string fullName, DateTime dob, string avatarUrl_)
         {
             FullName = fullName;
-            dateofBirth = dob;
+            DateOfBirth = dob;
             AvatarUrl = avatarUrl_;
             UpdatedAt = DateTime.UtcNow;
         }
-
-        // Legacy getters 
         public string GetEmail() => Email;
         public string GetHashedPassword() => HashedPassword;
         public string GetFullName() => FullName;
         public UserRole GetUserRole() => UserRole;
         public string GetRefreshToken() => RefreshToken;
+        public DateTime GetDateOfBirth() => DateOfBirth; // Thêm getter cho DateOfBirth
+        public DateTime GetCreatedAt() => CreatedAt;
+        public DateTime GetUpdatedAt() => UpdatedAt;
+        public DateTime GetRefreshTokenExpiry() => RefreshTokenExpiry;
         
      }
 }

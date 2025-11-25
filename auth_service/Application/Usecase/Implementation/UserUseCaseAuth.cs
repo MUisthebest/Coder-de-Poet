@@ -32,10 +32,10 @@ namespace auth_service.Application.Usecase.Implementation
                 email: signUpRequest.Email,
                 hashedPassword: hashedPassword,
                 fullName: signUpRequest.FullName,
-                refreshToken: refreshToken,
-                refreshTokenExpiry: refreshTokenExpiry,
+                refreshToken: "", // Empty initially
+                refreshTokenExpiry: DateTime.UtcNow, // Will be updated later
                 dob: signUpRequest.DateOfBirth,
-                avatarUrl_: string.Empty 
+                avatarUrl_: signUpRequest.AvatarUrl ?? ""
             );
 
             // 5. Persist to DB
@@ -50,7 +50,17 @@ namespace auth_service.Application.Usecase.Implementation
                 IsSuccess = true,
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
-                User = user
+                User = new UserPublicInfo
+                    {
+                        Id = user.Id,
+                        Email = user.Email,
+                        FullName = user.FullName ?? string.Empty,
+                        AvatarUrl = user.AvatarUrl,
+                        Role = user.UserRole.ToString(), // hoặc map từ enum
+                        DateOfBirth = user.DateOfBirth,
+                        CreatedAt = user.CreatedAt,
+                        UpdatedAt = DateTime.UtcNow
+                    }
             };
         }
 
@@ -100,7 +110,17 @@ namespace auth_service.Application.Usecase.Implementation
                 IsSuccess = true,
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
-                User = user
+                User = new UserPublicInfo
+                    {
+                        Id = user.Id,
+                        Email = user.Email,
+                        FullName = user.FullName ?? string.Empty,
+                        AvatarUrl = user.AvatarUrl,
+                        Role = user.UserRole.ToString(), // hoặc map từ enum
+                        DateOfBirth = user.DateOfBirth,
+                        CreatedAt = user.CreatedAt,
+                        UpdatedAt = user.UpdatedAt
+                    }
             };
         }
 

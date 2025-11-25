@@ -10,18 +10,114 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Npgsql;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo 
+    { 
+        Title = "Auth Service API", 
+        Version = "v1",
+        Description = "Authentication and Authorization Service API"
+    });
 
+    // Thêm JWT Authentication support trong Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
+string ConvertDatabaseUrl(string url)
+{
+    if (string.IsNullOrEmpty(url))
+    {
+        throw new ArgumentException("Database URL cannot be null or empty");
+    }
+
+    // Parse connection string từ DATABASE_URL format
+    var uri = new Uri(url);
+    var userInfo = uri.UserInfo.Split(':');
+
+    var username = userInfo[0];
+    var password = userInfo.Length > 1 ? userInfo[1] : "";
+
+    var database = uri.LocalPath.TrimStart('/');
+    if (string.IsNullOrEmpty(database))
+    {
+        database = "auth_service"; // database mặc định
+    }
+
+    var port = uri.Port > 0 ? uri.Port : 5432; // PostgreSQL mặc định port 5432
+
+    var connectionString = $"Host={uri.Host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;";
+
+    Console.WriteLine($"Converted connection string: {connectionString.Replace(password, "***")}");
+    return connectionString;
+}
+
 builder.Services.AddDbContext<UserDbContext>(options =>
 {
-    var conn = builder.Configuration["DATABASE_URL"];
-    options.UseNpgsql(conn);
-    options.LogTo(Console.WriteLine, LogLevel.Information);
+    var raw = builder.Configuration["DATABASE_URL"];
+    
+    if (string.IsNullOrEmpty(raw))
+    {
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            throw new InvalidOperationException("Neither DATABASE_URL nor DefaultConnection configuration found");
+        }
+        options.UseNpgsql(connectionString, 
+            npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(5),
+                errorCodesToAdd: null
+            ));
+    }
+    else
+    {
+        try
+        {
+            var conn = ConvertDatabaseUrl(raw);
+            options.UseNpgsql(conn, 
+                npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 3,
+                    maxRetryDelay: TimeSpan.FromSeconds(5),
+                    errorCodesToAdd: null
+                ));
+            Console.WriteLine("Using DATABASE_URL from environment with retry policy");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error converting DATABASE_URL: {ex.Message}");
+            throw;
+        }
+    }
 });
+
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserUseCase, UserUseCase>();
@@ -76,6 +172,13 @@ catch (Exception ex)
 {
     Console.WriteLine($"Database connection failed: {ex.Message}");
 }
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Auth Service API v1");
+    c.RoutePrefix = "swagger"; // Truy cập Swagger UI tại /swagger
+});
 
 if (app.Environment.IsDevelopment())
 {

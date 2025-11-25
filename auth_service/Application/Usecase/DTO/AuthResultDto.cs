@@ -8,6 +8,17 @@ namespace auth_service.Application.Usecase.DTO
         public string? ErrorMessage { get; set; }
         public string? AccessToken { get; set; }
         public string? RefreshToken { get; set; }
-        public User? User { get; set; }
+        public UserPublicInfo? User { get; set; }
     }
+    public class UserPublicInfo
+{
+    public Guid Id { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string? AvatarUrl { get; set; }
+    public string Role { get; set; } = "Normal_Student";
+    public DateTime? DateOfBirth { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
 }

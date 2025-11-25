@@ -1,6 +1,9 @@
 using auth_service.Application.Usecase.Interface;
 using auth_service.Application.Usecase.DTO;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 
 /*
     This file contains Controller for authentication-related endpoints.
@@ -11,11 +14,11 @@ namespace auth_service.Presentation.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AuthController : ControllerBase
+    public class authController : ControllerBase
     {
         private readonly IUserUseCase _userUseCase;
 
-        public AuthController(IUserUseCase userUseCase)
+        public authController(IUserUseCase userUseCase)
         {
             _userUseCase = userUseCase;
         }
@@ -65,18 +68,63 @@ namespace auth_service.Presentation.Controllers
             return Ok(result);
         }
 
-        // PUT /api/auth/users/{id}
-        [HttpPut("users")]
-        public async Task<IActionResult> UpdateUser(
-            Guid id,
-            [FromBody] UpdateUserInfoRequest request)
+    [HttpPut("users/{id:guid}")]  // Fixed route to include {id}
+            [ProducesResponseType(StatusCodes.Status200OK)]
+            [ProducesResponseType(StatusCodes.Status404NotFound)]
+            [ProducesResponseType(StatusCodes.Status400BadRequest)]
+            public async Task<IActionResult> UpdateUser(
+                [FromRoute] Guid id,
+                [FromBody] UpdateUserInfoRequest request)
+            {
+                if (request == null)
+                    return BadRequest("Update request cannot be null.");
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                // Optionally: ensure the authenticated user matches the {id} (security!)
+                // e.g., var userId = User.GetUserId(); if (userId != id) return Forbid();
+
+                var result = await _userUseCase.UpdateUserInfoAsync(id, request);
+
+                if (!result.IsSuccess)
+                {
+                    var firstError = result.Errors.FirstOrDefault();
+                    return firstError?.Code switch
+                    {
+                        "NotFound" => NotFound(result),
+                        _ => BadRequest(result)
+                    };
+                }
+                return Ok(result);
+            }
+
+        [HttpGet("me")]
+        [Authorize] 
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<UserInfoResponse>> GetCurrentUser()
         {
-            var result = await _userUseCase.UpdateUserInfoAsync(request);
+            // Lấy userId từ JWT claim (sub hoặc nameidentifier)
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) 
+                        ?? User.FindFirst(JwtRegisteredClaimNames.Sub);
+
+            if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+            {
+                return Unauthorized("Token không chứa thông tin người dùng.");
+            }
+
+            var result = await _userUseCase.GetCurrentUserInfoAsync(userId);
 
             if (!result.IsSuccess)
-                return NotFound(result);
+            {
+                var errorCode = result.Errors.FirstOrDefault()?.Code;
+                return errorCode == "NotFound" 
+                    ? NotFound("Người dùng không tồn tại.") 
+                    : BadRequest(result);
+            }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
     }
 }
