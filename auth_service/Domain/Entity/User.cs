@@ -95,7 +95,7 @@ namespace auth_service.Domain.Entity
         public string GetFullName() => FullName;
         public UserRole GetUserRole() => UserRole;
         public string GetRefreshToken() => RefreshToken;
-        public DateTime GetDateOfBirth() => DateOfBirth; // Thêm getter cho DateOfBirth
+        public DateTime GetDateOfBirth() => DateOfBirth; 
         public DateTime GetCreatedAt() => CreatedAt;
         public DateTime GetUpdatedAt() => UpdatedAt;
         public DateTime GetRefreshTokenExpiry() => RefreshTokenExpiry;

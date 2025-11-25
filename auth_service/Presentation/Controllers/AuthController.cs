@@ -105,7 +105,6 @@ namespace auth_service.Presentation.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<UserInfoResponse>> GetCurrentUser()
         {
-            // Lấy userId từ JWT claim (sub hoặc nameidentifier)
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) 
                         ?? User.FindFirst(JwtRegisteredClaimNames.Sub);
 
@@ -125,6 +124,38 @@ namespace auth_service.Presentation.Controllers
             }
 
             return Ok(result.Data);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("google-oauth2-signin")]
+        public async Task<IActionResult> GoogleOauthSignIn ([FromBody] GoogleSigninRequest request)
+        {
+            var result = await _userUseCase.GoogleOAuth2SignInAsync(request);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        // PUT /api/auth/users
+        [Authorize]
+        [HttpPut("users")]
+        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserInfoRequest request)
+        {
+            // Extract userId from JWT token claims
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { error = "Invalid or missing user ID in token." });
+            }
+
+            var result = await _userUseCase.UpdateUserInfoAsync(userId, request);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
         }
     }
 }

@@ -293,3 +293,12 @@ C:\Users\NGOHAIBANG\source\repos\Coder-de-Poet\auth_service\obj\Debug\net9.0\ref
 C:\Users\NGOHAIBANG\source\repos\Coder-de-Poet\auth_service\obj\Debug\net9.0\auth_service.pdb
 C:\Users\NGOHAIBANG\source\repos\Coder-de-Poet\auth_service\obj\Debug\net9.0\auth_service.genruntimeconfig.cache
 C:\Users\NGOHAIBANG\source\repos\Coder-de-Poet\auth_service\obj\Debug\net9.0\ref\auth_service.dll
+D:\Nam_4\HK1\Advanced_Web\Exercises\Ex5\auth_service\bin\Debug\net9.0\Google.Apis.dll
+D:\Nam_4\HK1\Advanced_Web\Exercises\Ex5\auth_service\bin\Debug\net9.0\Google.Apis.Auth.dll
+D:\Nam_4\HK1\Advanced_Web\Exercises\Ex5\auth_service\bin\Debug\net9.0\Google.Apis.Core.dll
+D:\Nam_4\HK1\Advanced_Web\Exercises\Ex5\auth_service\bin\Debug\net9.0\Newtonsoft.Json.dll
+D:\Nam_4\HK1\Advanced_Web\Exercises\Ex5\auth_service\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
+D:\Nam_4\HK1\Advanced_Web\Exercises\Ex5\auth_service\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+D:\Nam_4\HK1\Advanced_Web\Exercises\Ex5\auth_service\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+D:\Nam_4\HK1\Advanced_Web\Exercises\Ex5\auth_service\bin\Debug\net9.0\System.Management.dll
+D:\Nam_4\HK1\Advanced_Web\Exercises\Ex5\auth_service\bin\Debug\net9.0\runtimes\win\lib\net7.0\System.Management.dll

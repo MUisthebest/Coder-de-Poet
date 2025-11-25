@@ -123,6 +123,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserUseCase, UserUseCase>();
 builder.Services.AddScoped<IBcryptPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddScoped<IJWTTokenProvidder, JWTTokenProvidder>();
+builder.Services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var secretKey = jwtSection["SecretKey"];

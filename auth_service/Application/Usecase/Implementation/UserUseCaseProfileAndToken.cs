@@ -13,17 +13,14 @@ namespace auth_service.Application.Usecase.Implementation
     {
         var result = new OperationResult<UserInfoResponse>();
 
-        // 1. Kiểm tra userId hợp lệ (dù Guid luôn valid nếu truyền đúng, nhưng phòng trường hợp)
         if (userId == Guid.Empty)
         {
             result.AddError("InvalidUserId", "User ID cannot be empty.");
             return result;
         }
 
-        // 2. Load user từ DB
         var user = await _userRepository.GetUserByIdAsync(userId);
         
-        // Debug log (nên dùng ILogger trong thực tế)
         Console.WriteLine("Debug: Loaded user for update: " + (user != null ? user.Email : "null"));
 
         if (user == null)
@@ -34,14 +31,12 @@ namespace auth_service.Application.Usecase.Implementation
 
         try
         {
-            // 3. Cập nhật thông tin (giữ nguyên method của bạn trên entity)
             user.updateUserInfo(
                 fullName: req.FullName,
                 dob: req.DateOfBirth,
                 avatarUrl_: req.AvatarUrl
             );
 
-            // 4. Lưu vào DB
             await _userRepository.UpdateUserAsync(user);
             // Nếu bạn dùng UnitOfWork:
             // await _unitOfWork.SaveChangesAsync();
