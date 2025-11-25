@@ -4,7 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 
 export default function Navigation_PC() {
   const { isOpen, setIsOpen } = useSidebar();
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading , logout, isAdmin} = useAuth();
 
   return (
     <nav
@@ -38,76 +38,84 @@ export default function Navigation_PC() {
 
         {/* MENU ITEMS */}
         <ul className="flex flex-col space-y-1 text-gray-700 font-medium flex-1 gap-[calc(1vh_+_5px)]">
-          <NavItem to="/" label="Dashboard" icon="home-alt-2" isOpen={isOpen} />
-          <NavItem to="/courses" label="Courses" icon="book" isOpen={isOpen} />
-          <NavItem to="/book" label="Library" icon="book-open" isOpen={isOpen} />
+          <NavItem to={`${isAdmin ? '/admin': '/'}`} label={`${isAdmin ? 'Total': 'Dashboard'}`} icon="home-alt-2" isOpen={isOpen} />
+          <NavItem to="/courses" label={`${isAdmin ? 'Manage Courses': 'Courses'}`} icon="book" isOpen={isOpen} />
+          <NavItem to="/book" label={`${isAdmin ? 'Manage Library': 'Library'}`} icon="book-open" isOpen={isOpen} />
           <NavItem to="/calendar" label="Calendar" icon="calendar-alt" isOpen={isOpen} />
         </ul>
       </div>
 
       {/* USER SECTION - CHỈ HIỂN THỊ KHI ĐÃ ĐĂNG NHẬP */}
-      {isAuthenticated && user && (
-        <div className="flex items-center w-full justify-start mt-[2vh]">
-          <div className="w-[8vw] flex items-center justify-center">
-            <div className="w-[calc(16px_+_3vw)] h-[calc(16px_+_3vw)] rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold 
-                            flex items-center justify-center text-sm transition-colors overflow-hidden">
-              {user.photoURL ? (
-                <img
-                  src={user.photoURL}
-                  alt={user.displayName || "User"}
-                  className="object-cover w-full h-full"
-                />
-              ) : (
-                <span className="text-white text-xs">
-                  {user.displayName?.charAt(0) || user.email?.charAt(0).toUpperCase()}
-                </span>
-              )}
-            </div>
+      <div className={`flex  py-6 justify-start ${isOpen? 'w-[20vw]':'w-[8vw]'}`}>
+        {loading ? (
+          <div className="flex items-center justify-center h-16">
+            <div className="animate-pulse bg-gray-300 rounded-full w-12 h-12"></div>
           </div>
-          {isOpen && (
-            <div className="flex flex-col whitespace-nowrap overflow-hidden transition-all duration-300 flex-1">
-              <span className="text-sm font-medium text-gray-800">
-                {user.displayName || "User"}
-              </span>
-              <span className="text-xs text-gray-500">
-                {user.email || "No email"}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* LOGIN/SIGNUP SECTION - CHỈ HIỂN THỊ KHI CHƯA ĐĂNG NHẬP */}
-      {!isAuthenticated && !loading && (
-        <div className="flex items-center w-full justify-start mt-[2vh]">
-          <div className="w-[8vw] flex items-center justify-center">
-            <div className="w-[calc(16px_+_3vw)] h-[calc(16px_+_3vw)] rounded-2xl bg-gray-400 text-white font-bold 
-                            flex items-center justify-center text-sm transition-colors">
-              <i className="bx bx-user text-[calc(12px_+_1vw)]"></i>
-            </div>
-          </div>
-          {isOpen && (
-            <div className="flex flex-col whitespace-nowrap overflow-hidden transition-all duration-300 flex-1">
-              <span className="text-sm font-medium text-gray-800">Guest</span>
-              <div className="flex gap-2 mt-1">
-                <NavLink 
-                  to="/login" 
-                  className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
-                >
-                  Login
-                </NavLink>
-                <span className="text-xs text-gray-400">|</span>
-                <NavLink 
-                  to="/signup" 
-                  className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
-                >
-                  Sign Up
-                </NavLink>
+        ) : isAuthenticated && user ? (
+          /* ĐÃ ĐĂNG NHẬP */
+          <div className="flex gap-3 group  items-center align-center justify-flex">
+            {/* Avatar */}
+            <div className="w-[8vw] h-[8vw] flex justify-center items-center">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 p-0.5">
+                <div className="w-full h-full rounded-2xl bg-white flex items-center justify-center overflow-hidden">
+                  {user.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.fullName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-xl font-bold text-indigo-600">
+                      {user.fullName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-          )}
-        </div>
-      )}
+
+            {/* Thông tin + Logout button (chỉ hiện khi mở rộng) */}
+            {isOpen && (
+              <div className="transition-all duration-300">
+                <p className="text-sm font-semibold text-gray-800 truncate">
+                  {user.fullName || "User"}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {user.email}
+                </p>
+                <button
+                  onClick={logout}
+                  className="mt-2 px-4 py-2 border-1 bg-white rounded-2xl text-red-700 text-xs   hover:text-white hover:bg-red-600 font-medium transition all duration-200"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* CHƯA ĐĂNG NHẬP */
+          <div className="flex items-center items-center align-center justify-start">
+            <div className="w-[8vw] flex items-center justify-center">
+              <div className="h-[calc(18px_+_2vw)] w-[calc(18px_+_2vw)] rounded-2xl bg-white flex items-center justify-center">
+                <i className="bx bx-user text-2xl text-gray-600"></i>
+              </div>
+            </div>
+            {isOpen && (
+              <div className="flex-1 font-medium transition-all duration-300">
+                <p className="text-sm font-medium text-gray-700">Guest</p>
+                <div className="flex gap-2 mt-2 text-xs">
+                  <NavLink to="/login" className="text-white hover:underline bg-[#D25D5D] border-[1px] border-gray-800 px-2 py-1 rounded-lg">
+                    Login
+                  </NavLink>
+                  <span className="text-gray-400">|</span>
+                  <NavLink to="/signup" className="text-blue-600 hover:underline bg-white border-[1px] border-blue-400 px-2 py-1 rounded-lg">
+                    Sign Up
+                  </NavLink>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </nav>
   );
 }
@@ -121,11 +129,13 @@ function NavItem({ to, label, icon, isOpen }) {
           <div className={`flex items-center justify-start h-[calc(16px_+_3vw)] rounded-md text-sm font-medium transition-all duration-200 hover:bg-[#D9CFC7]`}>
             {/* CỘT ICON - CỐ ĐỊNH */}
             <div className="w-[8vw] h-full flex items-center justify-center px-1">
-              <i
-                className={`bx bx-${icon} text-[calc(16px_+_2vw)] rounded-2xl border border-gray-300 p-1 ${isActive ? 'bg-[#000] text-[#fff]' : 'text-[#000] bg-white'}`}
-              ></i>
+              <div
+                className={`h-[calc(18px+2vw)] w-[calc(18px+2vw)] flex items-center justify-center rounded-xl transition
+                ${isActive ? 'bg-black text-white' : 'bg-white text-black'}`}
+              >
+                <i className={`bx bx-${icon} text-3xl`}></i>
+              </div>
             </div>
-
             {/* CỘT LABEL - ẨN HIỆN MƯỢT */}
             <span
               className={`flex-1 font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out text-[#000] ${isOpen ? 'opacity-100 max-w-xs' : 'opacity-0 max-w-0'}`}

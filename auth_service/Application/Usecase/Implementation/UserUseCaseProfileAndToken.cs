@@ -2,6 +2,7 @@ using auth_service.Application.Usecase.DTO;
 using auth_service.Domain.Common;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Text;
+using System.ComponentModel.DataAnnotations; 
 
 namespace auth_service.Application.Usecase.Implementation
 {
@@ -85,6 +86,15 @@ namespace auth_service.Application.Usecase.Implementation
 
             // 1. Find user by refresh token
             var user = await _userRepository.GetUserByRefreshTokenAsync(refreshToken);
+
+            if (user.GetRefreshTokenExpiry() < DateTime.UtcNow)
+            {
+                return new AuthResult
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Refresh token has expired."
+                };
+            }
             if (user == null)
             {
                 return new AuthResult
@@ -97,15 +107,17 @@ namespace auth_service.Application.Usecase.Implementation
             // 2. Generate new tokens
             var newAccessToken = _jwtTokenProvider.GenerateJWTAccessToken(user);
             var newRefreshToken = _jwtTokenProvider.GenerateRefreshToken();
-
+            var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
             // 3. Persist the new refresh token
-            user.setHashedPassword(newRefreshToken);
+            user.UpdateRefreshToken(newRefreshToken, refreshTokenExpiry); // adjust as needed
             await _userRepository.UpdateUserAsync(user);
 
             // 4. Return result
             return new AuthResult
             {
                 IsSuccess = true,
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken,
                 User = new UserPublicInfo
                 {
                     Id = user.Id,
@@ -141,11 +153,13 @@ namespace auth_service.Application.Usecase.Implementation
             FullName = user.FullName ?? string.Empty,
             DateOfBirth = user.DateOfBirth,
             AvatarUrl = user.AvatarUrl,
-            UpdatedAt = user.UpdatedAt
+            UpdatedAt = user.UpdatedAt,
+            Role = user.GetFormattedRole()
         };
 
         // 5. Trả về thành công
         return OperationResult<UserInfoResponse>.Success(response);
     }
+
     }
 }

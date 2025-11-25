@@ -90,6 +90,20 @@ namespace auth_service.Domain.Entity
             AvatarUrl = avatarUrl_;
             UpdatedAt = DateTime.UtcNow;
         }
+
+        public string GetFormattedRole()
+        {
+            return UserRole switch
+            {
+                UserRole.Normal_Student => "Normal Student",
+                UserRole.Premium_Student => "Premium Student",
+                UserRole.Instructor => "Instructor", 
+                UserRole.Admin => "Admin",
+                _ => UserRole.ToString()
+            };
+        }
+
+
         public string GetEmail() => Email;
         public string GetHashedPassword() => HashedPassword;
         public string GetFullName() => FullName;

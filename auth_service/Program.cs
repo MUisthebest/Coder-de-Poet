@@ -50,6 +50,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddHttpContextAccessor();
 
 string ConvertDatabaseUrl(string url)
 {
@@ -150,12 +151,13 @@ builder.Services
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
+    options.AddPolicy("DevCorsPolicy", policy =>
+        {
+            policy.WithOrigins("http://localhost:3000")  
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials(); 
+        });
 });
 
 var app = builder.Build();
@@ -186,7 +188,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors();
+app.UseCors("DevCorsPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

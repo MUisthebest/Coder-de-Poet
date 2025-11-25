@@ -13,7 +13,7 @@ const ProfileSidebar = ({
 }) => {
   const [activeTab, setActiveTab] = useState('activity');
   const { isOpen, setIsOpen } = useSidebar();
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -67,32 +67,41 @@ const ProfileSidebar = ({
   // Nếu đã đăng nhập, hiển thị profile bình thường
   return (
     <div className={`rounded-2xl bg-[#EFE9E3] overflow-hidden h-[96vh] shadow-lg transition-all duration-300 ${isOpen ? 'w-[8vw]' : 'w-[20vw]'}`}>
+      <div className={`px-[1vw]  mt-5 w-full transition-all duration-300  ${isOpen ? ' flex flex-col mb-10 w-full items-center gap-3' : 'absolute  flex flex-row items-self-start  gap-[14vw]'}`}>
+        <i className='bxr  bx-bell text-[2vw]'></i>
+        <i className='bxr  bx-cog text-[2vw]'></i>  
+      </div>
       {/* Profile Header */}
       <div className="bg-[#EFE9E3] h-[32vh] p-6 text-center">
         {/* Avatar */}
         <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-          <span className="text-white text-2xl font-bold">
-            {user?.name?.charAt(0) || 'U'}
+          <span className="text-white text-[calc(1vw_+_2px)] font-bold">
+            {user?.fullName?.charAt(0) || 'U'}
           </span>
         </div>
         
         {/* Name */}
         <h2 className="text-xl font-bold text-gray-900 mb-2">
-          {user?.name || 'User'}
+          {user?.fullName || 'User'}
         </h2>
         
-        {/* Friends Count */}
-        <div className="text-gray-600 mb-4">274 Friends</div>
+      {/* Button Logout */}
+        <button
+          onClick={logout}
+          className="mt-2 px-4 mb-4 py-2 border-1 bg-white rounded-2xl text-red-700 text-xs   hover:text-white hover:bg-red-600 font-medium transition all duration-200"
+        >
+          Logout
+        </button>
 
         {/* Tabs */}
-        <div className={`flex bg-gray-100 rounded-lg p-1 ${isOpen ? 'hidden' : ''}`}>
+        <div className={`flex bg-gray-100 rounded-lg mb-5 ${isOpen ? 'hidden' : ''}`}>
           {tabs.map((tab) => (
             <button
               key={tab.id}
               className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-gray-600 hover:text-gray-900 bg-gray-100'
               }`}
               onClick={() => setActiveTab(tab.id)}
             >
@@ -103,7 +112,7 @@ const ProfileSidebar = ({
       </div>
 
       {/* Tab Content */}
-      <div className={`bg-[#EFE9E3] p-6 h-[60vh] ${isOpen ? 'hidden' : ''}`}>
+      <div className={`bg-[#EFE9E3] p-6 mt-4 h-[60vh] ${isOpen ? 'hidden' : ''}`}>
         {activeTab === 'friends' && (
           <FriendsList friends={friends} />
         )}

@@ -6,4 +6,6 @@ public class UserInfoResponse
     public DateTime? DateOfBirth { get; set; }
     public string? AvatarUrl { get; set; }
     public DateTime UpdatedAt { get; set; }
+
+    public string Role { get; set; } = "Normal_Student";
 }

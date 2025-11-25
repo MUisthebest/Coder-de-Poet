@@ -1,72 +1,70 @@
+// services/authService.js
 import api from './api';
 
 class AuthService {
-  // Login với email/password
+  _accessToken = null;
+
   async login(credentials) {
-    const response = await api.post('/auth/login', credentials);
-    const { user, accessToken } = response.data;
-    
-    // Lưu token trong memory (không dùng localStorage)
-    this.setAccessToken(accessToken);
-    
-    return { user, accessToken };
-  }
+    try {
+      const response = await api.post('/api/auth/signin', credentials);
+      const { data } = response;
 
-  // Đăng ký user mới
+      // Lưu token
+      this.setAccessToken(data.accessToken);
+      
+    // Trả về structure mà frontend mong đợi
+      return response.data;
+    
+  } catch (error) {
+    console.error('❌ Login service error:', error);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message
+    };
+  }
+}
+
   async signup(userData) {
-    const response = await api.post('/auth/signup', userData);
-    const { user, accessToken } = response.data;
-    
-    this.setAccessToken(accessToken);
-    return { user, accessToken };
-  }
-
-  // Social login
-  async socialLogin(provider, method = 'popup') {
-    if (method === 'popup') {
-      return this.socialLoginPopup(provider);
-    } else {
-      return this.socialLoginRedirect(provider);
-    }
-  }
-
-  async socialLoginPopup(provider) {
-    // Implement popup logic cho Google/Facebook
-    const response = await api.get(`/auth/${provider}`);
-    // Xử lý popup và callback
-    return response.data;
-  }
-
-  // Lấy thông tin user hiện tại
-  async getCurrentUser() {
-    const response = await api.get('/auth/me');
-    return response.data;
-  }
-
-  // Refresh token
-  async refreshToken() {
-    const response = await api.post('/auth/refresh');
+    const response = await api.post('/api/auth/signup', userData);
     const { accessToken } = response.data;
     this.setAccessToken(accessToken);
-    return accessToken;
+    return response.data;
   }
 
-  // Logout
+  async getCurrentUser() {
+    const response = await api.get('/api/auth/me');
+    return response.data; // { fullName, email, avatarUrl, ... }
+  }
+
+  // Refresh token: chỉ gọi API, backend tự đọc cookie
+async refreshToken() {
+  try {
+    const response = await api.post('/api/auth/refresh-token'); // không gửi body
+    const { accessToken } = response.data;
+    this.setAccessToken(accessToken);
+    console.log('Token refreshed successfully');
+    return accessToken;
+  } catch (error) {
+    this.clearAccessToken();
+    throw error; // để interceptor bắt
+  }
+}
+
   async logout() {
     try {
-      await api.post('/auth/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
+      await api.post('/api/auth/logout');
+    } catch (err) {
+      console.error('Logout failed:', err);
     } finally {
       this.clearAccessToken();
+      window.location.href = '/login';
     }
   }
 
-  // Token management (in-memory)
+  // Token management
   setAccessToken(token) {
     this._accessToken = token;
-    // Có thể dùng sessionStorage nếu cần persist qua refresh
-    sessionStorage.setItem('accessToken', token);
+    if (token) sessionStorage.setItem('accessToken', token);
   }
 
   getStoredToken() {

@@ -104,26 +104,24 @@ namespace auth_service.Application.Usecase.Implementation
             user.UpdateRefreshToken(refreshToken, refreshTokenExpiry);
             await _userRepository.UpdateUserAsync(user);
 
-            // 5. Return result
+                        // 5. Return result
             return new AuthResult
             {
                 IsSuccess = true,
                 AccessToken = accessToken,
-                RefreshToken = refreshToken,
                 User = new UserPublicInfo
                     {
                         Id = user.Id,
                         Email = user.Email,
                         FullName = user.FullName ?? string.Empty,
                         AvatarUrl = user.AvatarUrl,
-                        Role = user.UserRole.ToString(), // hoặc map từ enum
                         DateOfBirth = user.DateOfBirth,
+                        Role = user.GetFormattedRole(),
+                        IsAdmin = user.UserRole == UserRole.Admin,
                         CreatedAt = user.CreatedAt,
                         UpdatedAt = user.UpdatedAt
                     }
             };
         }
-
-
     }
 }

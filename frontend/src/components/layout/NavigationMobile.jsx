@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 
 
 export default function Navigation_Mobile() {
 
   const [isOpen, setIsOpen] = useState(false);
-
+  const { user, isAuthenticated, loading , logout} = useAuth();
 
 
   const getNavLinkClasses = ({ isActive }) =>
@@ -277,7 +278,6 @@ export default function Navigation_Mobile() {
         </ul>
 
       </div>
-
     </nav>
 
   );

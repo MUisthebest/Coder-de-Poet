@@ -23,4 +23,5 @@ root {
   --primary-color: #EFE9E3;
   --secondary-color: #C9B59C;
   --font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  overflow: hidden;
 }

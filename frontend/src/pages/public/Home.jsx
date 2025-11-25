@@ -158,18 +158,18 @@ const Home = () => {
 
   return (
     <div className="min-h-screen overflow-hidden">
-      <div className="max-w-8xl mx-auto sm:px-5 flex flex-row gap-5">
+      <div className="mx-auto sm:px-5 flex flex-row gap-5 max-w-8xl align-center items-center">
         {/* Frame 1: Courses Section */}
-        <div className='flex flex-col w-[66vw] gap-8 overflow-y-auto custom-scrollbar p-2' style={{ maxHeight: '90vh' }}>
+        <div className='flex flex-col md:w-[66vw] w-full pt-4 pb-8 gap-8 overflow-y-auto custom-scrollbar p-0 md:p-2' style={{ maxHeight: '90vh' }}>
           {/* Header Section */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-            <h1 className="text-[calc(4vw)] font-bold text-gray-900 mb-4 sm:mb-0">
+            <h1 className="md:text-[calc(25px_+_2vw)] text-[calc(15px_+_2vw)] font-bold text-gray-900 mb-4 sm:mb-0 md:ml-0 ml-5">
               Invest in your education
             </h1>
           </div>
 
           {/* Categories Filter */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 max-w-full mb-4 px-2 max-h-[15vh]">
             {categories.map(({name, image}) => (
               <button
                 key={name}
@@ -181,11 +181,11 @@ const Home = () => {
                 onClick={() => setActiveCategory(name)}
               >
               <div
-                className="h-[calc(2vw+10px)] rounded-full flex items-center justify-center bg-white"
+                className="md:h-[calc(2vw+10px)] h-[calc(5vw+10px)]  rounded-full flex items-center justify-center bg-white"
               >
                 <img src={image} className="h-full w-auto object-contain" />
               </div>
-                <p className='text-[calc(1.2vw)] px-3 font-bold'>{name}</p>
+                <p className='md:text-[calc(1vw_+_5px)] text-[calc(1vw_+_7px)] px-3 font-bold'>{name}</p>
               </button>
             ))}
           </div>
@@ -202,7 +202,7 @@ const Home = () => {
         </div>
 
         {/* Frame 2: Profile Sidebar */}
-        <div className="flex-1">
+        <div className="flex-1 flex h-screen justify-center items-center md:flex hidden">
           <ProfileSidebar 
             weeklyActivities={weeklyActivities}
             myCourses={myCourses}

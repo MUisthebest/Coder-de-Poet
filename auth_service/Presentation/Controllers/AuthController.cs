@@ -50,22 +50,55 @@ namespace auth_service.Presentation.Controllers
             if (!result.IsSuccess)
                 return BadRequest(result);
 
-            return Ok(result);
-        }
+            if (!string.IsNullOrEmpty(result.RefreshToken))
+            {
+                Response.Cookies.Append("refreshToken", result.RefreshToken, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = false,           // DEV: false
+                    SameSite = SameSiteMode.Lax,
+                    Expires = DateTime.UtcNow.AddDays(7),
+                    Path = "/"
+                });
+            }
 
+        return Ok(new
+            {
+                accessToken = result.AccessToken,
+                user = result.User
+            });        
+    }
 
-        // POST /api/auth/refresh-token
-        // Body: { "refreshToken": "..." }
 
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken([FromBody] string RefreshToken)
+        [AllowAnonymous]
+        public async Task<IActionResult> RefreshToken()
         {
-            var result = await _userUseCase.RefreshTokenAsync(RefreshToken);
+            // 1. Đọc refresh token từ httpOnly cookie (frontend KHÔNG gửi gì cả)
+            var refreshToken = Request.Cookies["refreshToken"];
+
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                return Unauthorized(new { message = "No refresh token provided" });
+            }
+
+            // 2. Gọi UseCase để xử lý
+            var result = await _userUseCase.RefreshTokenAsync(refreshToken);
 
             if (!result.IsSuccess)
+            {
+                // Nếu token sai hoặc hết hạn → xóa cookie luôn cho sạch
+                Response.Cookies.Delete("refreshToken");
                 return Unauthorized(result);
+            }
 
-            return Ok(result);
+
+            // 4. Trả về access token mới + user info
+            return Ok(new
+            {
+                accessToken = result.AccessToken,
+                user = result.User
+            });
         }
 
     [HttpPut("users/{id:guid}")]  // Fixed route to include {id}

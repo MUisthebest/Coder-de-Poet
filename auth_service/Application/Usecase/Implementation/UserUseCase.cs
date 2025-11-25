@@ -4,6 +4,7 @@ using auth_service.Application.Usecase.Interface;
 using auth_service.Domain.Entity;
 using auth_service.Domain.Repository;
 
+
 namespace auth_service.Application.Usecase.Implementation
 {
     public partial class UserUseCase : IUserUseCase
@@ -11,6 +12,7 @@ namespace auth_service.Application.Usecase.Implementation
         private readonly IUserRepository _userRepository;
         private readonly IJWTTokenProvidder _jwtTokenProvider;
         private readonly IBcryptPasswordHasher _passwordHasher;
+
 
         public UserUseCase(
             IUserRepository userRepository,
@@ -21,5 +23,6 @@ namespace auth_service.Application.Usecase.Implementation
             _jwtTokenProvider = jwtTokenProvider;
             _passwordHasher = passwordHasher;
         }
-    }
+
+}
 }
