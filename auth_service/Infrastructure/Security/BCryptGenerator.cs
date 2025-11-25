@@ -9,15 +9,15 @@ namespace auth_service.Infrastructure.Security
 {
     public class BcryptPasswordHasher : IBcryptPasswordHasher
     {
-        const int SufferHashingRounds = 12;
+        const int SufferHashingRounds = 10;
         public string HashBcryptPassword (string password)
         {
             return BCrypt.Net.BCrypt.HashPassword(password, SufferHashingRounds);
         }
 
-        public bool VerifyBcryptHashedPassword (string hashedPassword, string providedPassword)
+        public bool VerifyBcryptHashedPassword (string storedHashPassword, string inputPassword)
         {
-            return BCrypt.Net.BCrypt.Verify(providedPassword, hashedPassword);
+            return BCrypt.Net.BCrypt.Verify(inputPassword, storedHashPassword);
         }
     }
 }

@@ -18,34 +18,16 @@ namespace auth_service.Infrastructure.Database
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
-             {
-                 entity.ToTable("Users");
-                 entity.HasKey(e => e.Id);
-
-                 entity.HasIndex(e => e.Email).IsUnique();
-
-                 entity.Property(e => e.Email)
-                      .IsRequired()
-                      .HasMaxLength(255)
-                      .Metadata.SetIsUnicode(false);
-
-                 entity.Property(e => e.HashedPassword)
-                      .IsRequired()
-                      .HasMaxLength(255)
-                      .Metadata.SetIsUnicode(false);
-
-                 entity.Property(e => e.FullName)
-                      .IsRequired()
-                      .HasMaxLength(255);
-
-                 entity.Property(e => e.UserRole)
-                      .HasDefaultValue(UserRole.Normal_Student)
-                      .IsRequired();
-
-                 entity.Property(e => e.RefreshToken)
-                      .HasMaxLength(500);   
-             }
-        );
+            {
+                entity.ToTable("Users");
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Email).IsUnique();
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.HashedPassword).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.FullName).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.UserRole).HasDefaultValue(UserRole.Normal_Student).IsRequired();
+                entity.Property(e => e.RefreshToken).HasMaxLength(500);
+            });
         }
     }
 

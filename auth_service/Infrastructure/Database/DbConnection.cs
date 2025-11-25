@@ -14,10 +14,10 @@ namespace auth_service.Infrastructure.Database
 
         private readonly IConfiguration _configuration;
 
-        public DbConnection (IConfiguration configuration)
+        public DbConnection(IConfiguration configuration)
         {
             _configuration = configuration;
-            _connectionString = _configuration.GetConnectionString("DATABASE_URL:") ?? string.Empty;
+            _connectionString = _configuration["DATABASE_URL"] ?? string.Empty;
         }
 
 
@@ -25,9 +25,10 @@ namespace auth_service.Infrastructure.Database
         {
             try
             {
-                await using var conn = new NpgsqlConnection(_connectionString);
+                var connection = new NpgsqlConnection(_connectionString);
+                await connection.OpenAsync();
                 Console.WriteLine("Database connection established.");
-                return conn;
+                return connection;
             }
 
             catch (Exception ex)

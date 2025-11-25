@@ -20,19 +20,15 @@ namespace auth_service.Domain.Entity
     {
         public Guid Id { get; private set; }
         public string Email { get; private set; } = string.Empty;
-        //Hased password for security
         public string HashedPassword { get; private set; } = string.Empty;
-
         public string FullName { get; private set; } = string.Empty;
         public string AvatarUrl { get; private set; } = string.Empty;
-
-        public UserRole UserRole { get; private set; }  // renamed from Role
-
-        public DateTime dateofBirth {get; private set;} = DateTime.MinValue;
-        public DateTime CreatedAt {get; private set;} = DateTime.UtcNow;
-        public DateTime UpdatedAt {get; private set;} = DateTime.UtcNow;
+        public UserRole UserRole { get; private set; }
+        private DateTime dateofBirth = DateTime.MinValue;
+        private DateTime CreatedAt = DateTime.UtcNow;
+        private DateTime UpdatedAt = DateTime.UtcNow;
         public string RefreshToken { get; private set; } = string.Empty;
-        public DateTime RefreshTokenExpiry {get; private set;} = DateTime.UtcNow;
+        private DateTime RefreshTokenExpiry = DateTime.UtcNow;
 
         //ORM Constructor
         protected User() {}
@@ -40,6 +36,7 @@ namespace auth_service.Domain.Entity
         //Constructors
         public User (string email, string hashedPassword, string fullName, string refreshToken, DateTime refreshTokenExpiry, DateTime dob, string avatarUrl_)
         {
+            Id = Guid.NewGuid();
             Email = email;
             HashedPassword = hashedPassword;
             FullName = fullName;
@@ -52,6 +49,12 @@ namespace auth_service.Domain.Entity
           
         //Getters and Setters 
 
+        public void setHashedPassword(string hashedPassword)
+        {
+            HashedPassword = hashedPassword;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
         public void UpdateEmailPassword (string email, string hashedPassword)
         {
             Email = email;
@@ -60,10 +63,11 @@ namespace auth_service.Domain.Entity
         }
 
         //Update RefreshToken 
-        public void UpdateRefreshToken (string refreshToken, DateTime refreshTokenExpiry)
+        public void UpdateRefreshToken (string refreshToken, DateTime expiry)
         {
             RefreshToken = refreshToken;
-            RefreshTokenExpiry = refreshTokenExpiry;
+            RefreshTokenExpiry = expiry;
+            UpdatedAt = DateTime.UtcNow;
         }
 
         //Update User Role  
@@ -81,7 +85,7 @@ namespace auth_service.Domain.Entity
             UpdatedAt = DateTime.UtcNow;
         }
 
-        // Keep legacy getters if needed
+        // Legacy getters 
         public string GetEmail() => Email;
         public string GetHashedPassword() => HashedPassword;
         public string GetFullName() => FullName;
