@@ -1,0 +1,19 @@
+# Build folders
+bin/
+obj/
+
+# NuGet
+*.nupkg
+*.snupkg
+project.assets.json
+*.nuget.props
+*.nuget.targets
+*.nuget.cache
+*.dgspec.json
+
+# Visual Studio
+.vs/
+
+# User specific
+*.user
+*.suo
