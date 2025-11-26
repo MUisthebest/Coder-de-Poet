@@ -2,20 +2,11 @@
     Model defines the User entity for the Learnix application.
 
 */
-using System.ComponentModel.DataAnnotations.Schema;
 
-using System;
 
 namespace auth_service.Domain.Entity
 {
-    public enum UserRole
-    {
-        Normal_Student,
-        Premium_Student,
-        Instructor,
-        Admin
-
-    }
+    
 
     public class User
     {
@@ -24,8 +15,7 @@ namespace auth_service.Domain.Entity
         public string HashedPassword { get; private set; } = string.Empty;
         public string FullName { get; private set; } = string.Empty;
         public string AvatarUrl { get; private set; } = string.Empty;
-        public UserRole UserRole { get; private set; }
-        [Column("dateofBirth")]
+        public string UserRole { get; private set; } = string.Empty;
         public DateTime DateOfBirth { get; set; }
 
         public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
@@ -40,14 +30,14 @@ namespace auth_service.Domain.Entity
         //Constructors
         public User (string email, string hashedPassword, string fullName, string refreshToken, DateTime refreshTokenExpiry, DateTime dob, string avatarUrl_)
         {
-            Id = Guid.NewGuid();
+            //Id = Guid.NewGuid();
             Email = email;
             HashedPassword = hashedPassword;
             FullName = fullName;
-            UserRole = UserRole.Normal_Student;
+            UserRole = User_Role.Normal_Student; 
             RefreshToken = refreshToken;
             RefreshTokenExpiry = refreshTokenExpiry;
-            DateOfBirth = dob;
+            DateOfBirth = dob != DateTime.MinValue ? dob : DateTime.MinValue;
             AvatarUrl = avatarUrl_;
             CreatedAt = DateTime.UtcNow;
             UpdatedAt = DateTime.UtcNow;
@@ -77,7 +67,7 @@ namespace auth_service.Domain.Entity
         }
 
         //Update User Role  
-        public void updateUserRole (UserRole newRole)
+        public void updateUserRole (string newRole)
         {
             UserRole = newRole;
             UpdatedAt = DateTime.UtcNow;
@@ -93,7 +83,7 @@ namespace auth_service.Domain.Entity
         public string GetEmail() => Email;
         public string GetHashedPassword() => HashedPassword;
         public string GetFullName() => FullName;
-        public UserRole GetUserRole() => UserRole;
+        public string GetUserRole() => UserRole;
         public string GetRefreshToken() => RefreshToken;
         public DateTime GetDateOfBirth() => DateOfBirth; 
         public DateTime GetCreatedAt() => CreatedAt;

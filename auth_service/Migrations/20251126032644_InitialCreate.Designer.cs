@@ -12,7 +12,7 @@ using auth_service.Infrastructure.Database;
 namespace auth_service.Migrations
 {
     [DbContext(typeof(UserDbContext))]
-    [Migration("20251125022353_InitialCreate")]
+    [Migration("20251126032644_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -38,10 +38,12 @@ namespace auth_service.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .IsUnicode(false)
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("FullName")
@@ -52,7 +54,6 @@ namespace auth_service.Migrations
                     b.Property<string>("HashedPassword")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .IsUnicode(false)
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("RefreshToken")
@@ -66,20 +67,22 @@ namespace auth_service.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("UserRole")
+                    b.Property<string>("UserRole")
+                        .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
-
-                    b.Property<DateTime>("dateofBirth")
-                        .HasColumnType("timestamp with time zone");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Normal_Student");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_User_UserRole_Enum", "\"UserRole\" IN ('Normal_Student', 'Premium_Student', 'Instructor', 'Admin')");
+                        });
                 });
 #pragma warning restore 612, 618
         }

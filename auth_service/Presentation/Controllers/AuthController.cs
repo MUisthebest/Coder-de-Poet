@@ -13,12 +13,12 @@ using System.IdentityModel.Tokens.Jwt;
 namespace auth_service.Presentation.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
-    public class authController : ControllerBase
+    [Route("api/auth")]
+    public class AuthController : ControllerBase
     {
         private readonly IUserUseCase _userUseCase;
 
-        public authController(IUserUseCase userUseCase)
+        public AuthController(IUserUseCase userUseCase)
         {
             _userUseCase = userUseCase;
         }

@@ -11,8 +11,7 @@ namespace auth_service.Infrastructure.Security
 
         public GoogleTokenValidator(IConfiguration config)
         {
-            _clientId = config["Google:ClientId"]
-                        ?? throw new InvalidOperationException("Google:ClientId is missing");
+            _clientId = config["Google:ClientId"] ?? throw new InvalidOperationException("Google:ClientId is missing");
         }
 
         public async Task<GoogleUserInfo?> VerifyIdTokenAsync (string idToken)

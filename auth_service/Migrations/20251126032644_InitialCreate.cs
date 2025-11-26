@@ -16,12 +16,12 @@ namespace auth_service.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Email = table.Column<string>(type: "character varying(255)", unicode: false, maxLength: 255, nullable: false),
-                    HashedPassword = table.Column<string>(type: "character varying(255)", unicode: false, maxLength: 255, nullable: false),
+                    Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    HashedPassword = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     FullName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     AvatarUrl = table.Column<string>(type: "text", nullable: false),
-                    UserRole = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
-                    dateofBirth = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UserRole = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, defaultValue: "Normal_Student"),
+                    DateOfBirth = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     RefreshToken = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
@@ -30,6 +30,7 @@ namespace auth_service.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
+                    table.CheckConstraint("CK_User_UserRole_Enum", "\"UserRole\" IN ('Normal_Student', 'Premium_Student', 'Instructor', 'Admin')");
                 });
 
             migrationBuilder.CreateIndex(
