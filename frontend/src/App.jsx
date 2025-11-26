@@ -91,7 +91,7 @@ function Layout() {
 
 function App() {
   return (
-    <GoogleOAuthProvider clientId="495894353988-baera0mlp9p6not9a205qi2pjtlml58t.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={`${process.env.clientId}`}>
         <AuthProvider>
           <SidebarProvider>
             <Layout />
