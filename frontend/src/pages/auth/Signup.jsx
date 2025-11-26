@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '../../services/authService';
+import { GoogleLogin } from '@react-oauth/google';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -65,17 +66,33 @@ const SignUp = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  // GoogleLogin component success handler
+  const handleGoogleSuccess = async (credentialResponse) => {
     setIsLoading(true);
     setError('');
+    
     try {
-      await authService.socialLogin('google', 'popup');
-      navigate(from, { replace: true });
+      console.log('✅ Google credential received:', credentialResponse);
+      
+      // Gọi socialLogin với credential (JWT token từ Google)
+      const result = await authService.socialLogin('google', credentialResponse.credential);
+      
+      if (result.success) {
+        navigate(from, { replace: true });
+      } else {
+        setError(result.error || 'Google login failed');
+      }
     } catch (err) {
+      console.error('❌ Google login error:', err);
       setError('Google login failed. Please try again.');
-    } finally {
-      setIsLoading(false);
     }
+    
+    setIsLoading(false);
+  };
+
+  const handleGoogleError = () => {
+    console.error('❌ Google Login Failed');
+    setError('Google login failed. Please try again.');
   };
 
   return (
@@ -198,19 +215,21 @@ const SignUp = () => {
             <div className="flex-1 h-px bg-gray-300"></div>
           </div>
 
-          {/* Google Login */}
-          <button
-            onClick={handleGoogleLogin}
-            disabled={isLoading}
-            className="flex items-center justify-center gap-3 bg-white border border-gray-300 py-3 rounded-full hover:bg-gray-50 transition font-medium text-sm md:text-base"
-          >
-            <img 
-              src="https://www.google.com/favicon.ico" 
-              alt="Google" 
-              className="w-4 h-4 md:w-5 md:h-5" 
-            />
-            <span>Continue with Google</span>
-          </button>
+          {/* Google Login Component */}
+          <div className="flex justify-center">
+            <div className="w-full overflow-hidden rounded-full">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                useOneTap={false}
+                theme="filled_blue"
+                size="large"
+                text="continue_with"
+                shape="pill"
+                width="100%"
+              />
+            </div>
+          </div>
 
           <p className="text-center text-xs md:text-sm text-gray-600 mt-4">
             Already have an account?{' '}

@@ -50,17 +50,18 @@ export const AuthProvider = ({ children }) => {
     return { success: true };
   };
 
-  const socialLogin = async (provider, accessToken) => {
+  const socialLogin = async (provider, socialData) => {
     try {
-      const result = await authService.socialLogin(provider, accessToken);
+      // socialData can be either a string (legacy token) or an object with token, email, fullName, avatarUrl
+      const result = await authService.socialLogin(provider, socialData);
       
       if (result.success) {
-        const userData = await authService.getCurrentUser();
-        setUser(userData);
+        // User is already set from API response in authService
+        setUser(result.user);
         return { 
           success: true, 
-          role: userData.role,
-          user: userData 
+          role: result.user?.role,
+          user: result.user 
         };
       } else {
         return result;

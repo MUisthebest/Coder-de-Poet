@@ -12,6 +12,7 @@ import AdminRoute from './components/admin/AdminRoute';
 import { SidebarProvider } from "./contexts/SidebarContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import GoogleCallbackHandler from './components/auth/GoogleCallbackHandler'; // Import component
 
 // Component để xử lý redirect dựa trên role
 function RoleBasedRedirect() {
@@ -38,8 +39,10 @@ function Layout() {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
   
-  // Ẩn navigation ở trang login, signup
-  const hideNavigation = location.pathname === "/login" || location.pathname === "/signup";
+  // Ẩn navigation ở trang login, signup, và google callback
+  const hideNavigation = location.pathname === "/login" || 
+                        location.pathname === "/signup" || 
+                        location.pathname === "/auth/google/callback";
 
   return (
     <div className="flex flex-col md:flex-row md:items-center min-h-screen md:h-screen md:px-5 bg-[color(var(--bg-color))] text-[color(var(--text-color))] overflow-hidden">
@@ -61,6 +64,7 @@ function Layout() {
           <Route path="/login" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/auth/google/callback" element={<GoogleCallbackHandler />} />
           
           {/* Protected admin routes */}
           <Route 
@@ -91,7 +95,7 @@ function Layout() {
 
 function App() {
   return (
-    <GoogleOAuthProvider clientId={`${process.env.clientId}`}>
+    <GoogleOAuthProvider clientId="495894353988-baera0mlp9p6not9a205qi2pjtlml58t.apps.googleusercontent.com">
         <AuthProvider>
           <SidebarProvider>
             <Layout />

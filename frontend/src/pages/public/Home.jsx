@@ -2,25 +2,30 @@ import React, { useState, useEffect } from 'react';
 import CourseCard from '../../components/home/CourseCard';
 import ProfileSidebar from '../../components/home/ProfileSideBar';
 import PopularCategories from '../../components/home/PopularCategories';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Home = () => {
   const [activeCategory, setActiveCategory] = useState('All');
+  const { user, isAuthenticated, getUserRole } = useAuth();
 
   const categories = [
     {
       id: 0,
-     name:'All',
-    image: 'https://res.cloudinary.com/drjlezbo7/image/upload/v1763998803/menu_13984545_qzoaog.png'},
+      name: 'All',
+      image: 'https://res.cloudinary.com/drjlezbo7/image/upload/v1763998803/menu_13984545_qzoaog.png'
+    },
     {
       id: 1,
-     name:'Internet of Things',
-    image: 'https://res.cloudinary.com/drjlezbo7/image/upload/v1764001094/iot_1185915_vnnpug.png'},    
+      name: 'Internet of Things',
+      image: 'https://res.cloudinary.com/drjlezbo7/image/upload/v1764001094/iot_1185915_vnnpug.png'
+    },
     {
       id: 2,
-     name:'Data Science',
-    image: 'https://res.cloudinary.com/drjlezbo7/image/upload/v1764001094/data-science_9304571_umtgjl.png'}
+      name: 'Data Science',
+      image: 'https://res.cloudinary.com/drjlezbo7/image/upload/v1764001094/data-science_9304571_umtgjl.png'
+    }
   ];
-  
+
   const courses = [
     {
       id: 1,
@@ -140,7 +145,6 @@ const Home = () => {
     : courses.filter(course => course.category === activeCategory);
 
   // Lấy thêm ảnh của category từ categories để hiển thị trên nút
-
   filteredCourses.forEach(course => {
     const category = categories.find(cat => cat.name === course.category);
     if (category) {
@@ -166,6 +170,15 @@ const Home = () => {
             <h1 className="md:text-[calc(25px_+_2vw)] text-[calc(15px_+_2vw)] font-bold text-gray-900 mb-4 sm:mb-0 md:ml-0 ml-5">
               Invest in your education
             </h1>
+            
+            {/* Hiển thị user info nếu đã login */}
+            {isAuthenticated && (
+              <div className="bg-green-100 px-4 py-2 rounded-full">
+                <span className="text-green-800 font-medium">
+                  👋 Welcome, {user?.fullName || user?.email}!
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Categories Filter */}
@@ -207,10 +220,13 @@ const Home = () => {
             weeklyActivities={weeklyActivities}
             myCourses={myCourses}
             friends={friends}
+            user={user}
+            isAuthenticated={isAuthenticated}
           />
         </div>
       </div>
-            <style jsx>{`
+      
+      <style jsx>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
         }
@@ -231,7 +247,6 @@ const Home = () => {
         }
       `}</style>
     </div>
-    
   );
 };
 

@@ -31,41 +31,47 @@ class AuthService {
     return response.data;
   }
 
-  async socialLogin(provider, accessToken) {
-    try {
-      const response = await api.post('/api/auth/social-login', {
-        provider,
-        accessToken
-      });
-
-      const { data } = response;
-
-      console.log("hi",data);
-
-      // Lưu token
-      this.setAccessToken(data.accessToken);
-      
-      return {
-        success: true,
-        accessToken: data.accessToken,
-        user: data.user
-      };
+async socialLogin(provider, accessToken) {
+  try {
+    console.log('🔄 Processing social login with access token...');
     
-    } catch (error) {
-      console.error('❌ Social login service error:', error);
-      
-      // Xử lý lỗi từ backend
-      const errorMessage = error.response?.data?.errorMessage 
-        || error.response?.data?.message 
-        || error.message 
-        || 'Social login failed';
+    const payload = {
+      Provider: "google",
+      AccessToken: accessToken
+    };
 
-      return {
-        success: false,
-        error: errorMessage
-      };
+    console.log('📤 Sending to backend:', payload);
+
+    const response = await api.post('/api/auth/social-login', payload);
+    const { data } = response;
+
+    console.log("✅ Social login response:", data);
+
+    if (data.accessToken) {
+      this.setAccessToken(data.accessToken);
     }
+    
+    return {
+      success: true,
+      accessToken: data.accessToken,
+      user: data.user,
+      role: data.user?.role
+    };
+    
+  } catch (error) {
+    console.error('❌ Social login service error:', error);
+    
+    const errorMessage = error.response?.data?.errorMessage 
+      || error.response?.data?.message 
+      || error.message 
+      || 'Social login failed';
+
+    return {
+      success: false,
+      error: errorMessage
+    };
   }
+}
 
   async getCurrentUser() {
     const response = await api.get('/api/auth/me');
