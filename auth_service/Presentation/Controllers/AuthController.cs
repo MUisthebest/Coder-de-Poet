@@ -101,6 +101,46 @@ namespace auth_service.Presentation.Controllers
             });
         }
 
+        [HttpPost("social-login")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SocialLogin([FromBody] SocialLoginRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await _userUseCase.SocialLoginAsync(request);
+
+            if (!result.IsSuccess)
+            {
+                return BadRequest(new
+                {
+                    errorMessage = result.ErrorMessage
+                    // XÓA: errors = result.Errors (vì không tồn tại)
+                });
+            }
+
+            // Set refresh token as httpOnly cookie
+            if (!string.IsNullOrEmpty(result.RefreshToken))
+            {
+                Response.Cookies.Append("refreshToken", result.RefreshToken, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = false,
+                    SameSite = SameSiteMode.Lax,
+                    Expires = DateTime.UtcNow.AddDays(7),
+                    Path = "/"
+                });
+            }
+
+            return Ok(new
+            {
+                accessToken = result.AccessToken,
+                user = result.User
+            });
+        }
+
     [HttpPut("users/{id:guid}")]  // Fixed route to include {id}
             [ProducesResponseType(StatusCodes.Status200OK)]
             [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -158,6 +198,89 @@ namespace auth_service.Presentation.Controllers
             }
 
             return Ok(result.Data);
+        }
+        [HttpGet("admin")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public IActionResult GetAdminDashboard()
+        {
+            // Lấy thông tin user từ token
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            return Ok(new
+            {
+                message = "Welcome to Admin Dashboard!",
+                user = userEmail,
+                role = userRole,
+                dashboardData = new
+                {
+                    totalUsers = 1250,
+                    activeCourses = 45,
+                    revenue = 125000,
+                    recentActivities = new[]
+                    {
+                        new { action = "User registered", time = "2 hours ago" },
+                        new { action = "Course created", time = "5 hours ago" }
+                    }
+                },
+                timestamp = DateTime.UtcNow
+            });
+        }
+        [HttpGet("admin/courses")]
+        [Authorize(Roles = "Admin,Instructor")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public IActionResult GetAdminCourses()
+        {
+            var userName = User.FindFirst(ClaimTypes.Name)?.Value;
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            var courses = new[]
+            {
+                new
+                {
+                    id = 1,
+                    title = "Advanced C# Programming",
+                    instructor = "John Doe",
+                    students = 125,
+                    price = 49.99,
+                    status = "Active",
+                    createdDate = "2024-01-15"
+                },
+                new
+                {
+                    id = 2,
+                    title = "ASP.NET Core Web API",
+                    instructor = "Jane Smith",
+                    students = 89,
+                    price = 39.99,
+                    status = "Active",
+                    createdDate = "2024-02-01"
+                },
+                new
+                {
+                    id = 3,
+                    title = "Microservices Architecture",
+                    instructor = "Mike Johnson",
+                    students = 67,
+                    price = 59.99,
+                    status = "Draft",
+                    createdDate = "2024-02-10"
+                }
+            };
+
+            return Ok(new
+            {
+                message = $"Course management accessed by {userName} ({userRole})",
+                totalCourses = courses.Length,
+                courses = courses,
+                userRole = userRole,
+                accessTime = DateTime.UtcNow
+            });
         }
     }
 }

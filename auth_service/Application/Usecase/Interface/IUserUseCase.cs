@@ -23,7 +23,7 @@ namespace auth_service.Application.Usecase.Interface
         public Task <OperationResult<UserInfoResponse>> GetCurrentUserInfoAsync (Guid userId);
 
         // //Social login (Google Oauth2) - later release
-        // public Task<AuthResult> GoogleOAuth2SignInAsync (string idToken);
+        public Task<AuthResult> SocialLoginAsync (SocialLoginRequest request);
 
         // //Reset Password 
         // public Task<bool> SendResetPasswordEmailAsync (string email);

@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Npgsql;
 using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -153,8 +154,24 @@ builder.Services
             ValidIssuer = issuer ?? "auth-service",
             ValidAudience = audience ?? "auth-service-client",
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-            ClockSkew = TimeSpan.Zero
+            ClockSkew = TimeSpan.Zero,
+            RoleClaimType = ClaimTypes.Role
         };
+    });
+
+    builder.Services.AddAuthorization(options =>
+    {
+        // Policy chỉ dành cho Admin
+        options.AddPolicy("AdminOnly", policy => 
+            policy.RequireRole("Admin"));
+        
+        // Policy dành cho Admin và Instructor
+        options.AddPolicy("AdminOrInstructor", policy => 
+            policy.RequireRole("Admin", "Instructor"));
+        
+        // Policy dành cho Premium users trở lên
+        options.AddPolicy("PremiumOrHigher", policy => 
+            policy.RequireRole("Premium_Student", "Instructor", "Admin"));
     });
 
 // CORS Configuration

@@ -3,6 +3,7 @@ using auth_service.Application.Usecase.DTO;
 using auth_service.Application.Usecase.Interface;
 using auth_service.Domain.Entity;
 using auth_service.Domain.Repository;
+using System.Text.Json;
 
 
 namespace auth_service.Application.Usecase.Implementation

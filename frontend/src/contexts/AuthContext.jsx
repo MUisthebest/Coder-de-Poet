@@ -50,6 +50,31 @@ export const AuthProvider = ({ children }) => {
     return { success: true };
   };
 
+  const socialLogin = async (provider, accessToken) => {
+    try {
+      const result = await authService.socialLogin(provider, accessToken);
+      
+      if (result.success) {
+        const userData = await authService.getCurrentUser();
+        setUser(userData);
+        return { 
+          success: true, 
+          role: userData.role,
+          user: userData 
+        };
+      } else {
+        return result;
+      }
+    } catch (error) {
+      console.error('Social login error:', error);
+      return { 
+        success: false, 
+        error: 'Social login failed. Please try again.' 
+      };
+    }
+  };
+
+
   const logout = async () => {
     await authService.logout();
     setUser(null);
@@ -60,6 +85,7 @@ export const AuthProvider = ({ children }) => {
     login,
     signup,
     logout,
+    socialLogin,
     loading,
     isAdmin,
     isAuthenticated: !!user,

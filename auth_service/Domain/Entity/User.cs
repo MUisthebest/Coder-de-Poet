@@ -98,8 +98,8 @@ namespace auth_service.Domain.Entity
         {
             return UserRole switch
             {
-                UserRole.Normal_Student => "Normal Student",
-                UserRole.Premium_Student => "Premium Student",
+                UserRole.Normal_Student => "Normal_Student",
+                UserRole.Premium_Student => "Premium_Student",
                 UserRole.Instructor => "Instructor", 
                 UserRole.Admin => "Admin",
                 _ => UserRole.ToString()

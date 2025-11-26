@@ -1,5 +1,6 @@
 using auth_service.Application.Usecase.DTO;
 using auth_service.Domain.Entity;
+using System.Text.Json;
 
 namespace auth_service.Application.Usecase.Implementation
 {
@@ -121,6 +122,171 @@ namespace auth_service.Application.Usecase.Implementation
                         CreatedAt = user.CreatedAt,
                         UpdatedAt = user.UpdatedAt
                     }
+            };
+        }
+        
+        public async Task<AuthResult> SocialLoginAsync(SocialLoginRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.Provider) || string.IsNullOrEmpty(request.AccessToken))
+                {
+                    return new AuthResult
+                    {
+                        IsSuccess = false,
+                        ErrorMessage = "Provider and access token are required."
+                    };
+                }
+
+                if (request.Provider.ToLower() == "google")
+                {
+                    return await HandleGoogleLoginAsync(request.AccessToken);
+                }
+
+                return new AuthResult
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Unsupported provider: {request.Provider}"
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Social login error: {ex.Message}");
+                return new AuthResult
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Social login failed. Please try again."
+                };
+            }
+        }
+
+        private async Task<AuthResult> HandleGoogleLoginAsync(string accessToken)
+        {
+            try
+            {
+                // Get user info from Google API
+                var googleUser = await GetGoogleUserInfoAsync(accessToken);
+                
+                if (googleUser == null || string.IsNullOrEmpty(googleUser.Email))
+                {
+                    return new AuthResult
+                    {
+                        IsSuccess = false,
+                        ErrorMessage = "Invalid Google token or email not provided."
+                    };
+                }
+
+                // Check if user exists
+                var existingUser = await _userRepository.GetUserByEmailAsync(googleUser.Email);
+                
+                if (existingUser != null)
+                {
+                    // User exists - login
+                    return await GenerateAuthResultAsync(existingUser);
+                }
+                else
+                {
+                    // Create new user
+                    var newUser = new User(
+                        email: googleUser.Email,
+                        hashedPassword: "SOCIAL_AUTH_NO_PASSWORD",
+                        fullName: googleUser.Name ?? $"{googleUser.GivenName} {googleUser.FamilyName}".Trim(),
+                        refreshToken: _jwtTokenProvider.GenerateRefreshToken(),
+                        refreshTokenExpiry: DateTime.UtcNow.AddDays(7),
+                        dob: DateTime.UtcNow.AddYears(-18),
+                        avatarUrl_: googleUser.Picture ?? string.Empty
+                    );
+
+                    await _userRepository.CreateUserAsync(newUser);
+                    return await GenerateAuthResultAsync(newUser);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Google login error: {ex.Message}");
+                return new AuthResult
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Google login failed."
+                };
+            }
+        }
+
+        private async Task<GoogleUserInfo?> GetGoogleUserInfoAsync(string accessToken)
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                
+                // Verify token với Google API
+                var verificationResponse = await httpClient.GetAsync($"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={accessToken}");
+                
+                if (!verificationResponse.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("Google token verification failed");
+                    return null;
+                }
+
+                // Lấy user info từ Google API
+                httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                
+                var userInfoResponse = await httpClient.GetAsync("https://www.googleapis.com/oauth2/v2/userinfo");
+                
+                if (userInfoResponse.IsSuccessStatusCode)
+                {
+                    var content = await userInfoResponse.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Google user info: {content}");
+                    
+                    var userInfo = JsonSerializer.Deserialize<GoogleUserInfo>(content, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                    
+                    return userInfo;
+                }
+                else
+                {
+                    Console.WriteLine($"Google user info failed: {userInfoResponse.StatusCode}");
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Google user info error: {ex.Message}");
+                return null;
+            }
+        }
+
+        private async Task<AuthResult> GenerateAuthResultAsync(User user)
+        {
+            // Sửa _tokenProvider thành _jwtTokenProvider
+            var accessToken = _jwtTokenProvider.GenerateJWTAccessToken(user);
+            var refreshToken = _jwtTokenProvider.GenerateRefreshToken();
+            
+            // Update refresh token in database
+            user.UpdateRefreshToken(refreshToken, DateTime.UtcNow.AddDays(7));
+            await _userRepository.UpdateUserAsync(user);
+
+            var userInfo = new UserPublicInfo
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FullName = user.FullName,
+                AvatarUrl = user.AvatarUrl,
+                Role = user.GetFormattedRole(),
+                IsAdmin = user.UserRole == UserRole.Admin,
+                DateOfBirth = user.DateOfBirth,
+                CreatedAt = user.CreatedAt,
+                UpdatedAt = user.UpdatedAt
+            };
+
+            return new AuthResult
+            {
+                IsSuccess = true,
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                User = userInfo
             };
         }
     }

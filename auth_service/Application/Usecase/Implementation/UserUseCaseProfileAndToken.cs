@@ -86,6 +86,15 @@ namespace auth_service.Application.Usecase.Implementation
 
             // 1. Find user by refresh token
             var user = await _userRepository.GetUserByRefreshTokenAsync(refreshToken);
+            
+            if (user == null)
+            {
+                return new AuthResult
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Invalid refresh token."
+                };
+            }
 
             if (user.GetRefreshTokenExpiry() < DateTime.UtcNow)
             {

@@ -40,7 +40,7 @@ namespace auth_service.Infrastructure.Security
                 {
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(ClaimTypes.Email, user.GetEmail()),
-                    new Claim(ClaimTypes.Role, user.GetUserRole().ToString())
+                    new Claim(ClaimTypes.Role, user.GetFormattedRole())
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(_accessTokenExpiryMinutes),
                 Issuer = _issuer,

@@ -7,15 +7,38 @@ import SignUp from './pages/auth/Signup';
 import Unauthorized from './pages/auth/Unauthorized';
 import ProtectedRoute from './components/admin/ProtectedRoute';
 import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminUsers from './pages/admin/AdminUsers';
+import AdminCourses from './pages/admin/AdminCourses';
 import AdminRoute from './components/admin/AdminRoute';
 import { SidebarProvider } from "./contexts/SidebarContext";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
+// Component để xử lý redirect dựa trên role
+function RoleBasedRedirect() {
+  const { isAdmin, isAuthenticated, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+  
+  // Nếu là admin → redirect đến /admin
+  if (isAuthenticated && isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
+  
+  // Nếu là user thường → redirect đến home
+  return <Navigate to="/" replace />;
+}
 
 function Layout() {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
   
-  // nếu đang ở trang home => không hiển thị navigation
+  // Ẩn navigation ở trang login, signup
   const hideNavigation = location.pathname === "/login" || location.pathname === "/signup";
 
   return (
@@ -38,6 +61,7 @@ function Layout() {
           <Route path="/login" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
+          
           {/* Protected admin routes */}
           <Route 
             path="/admin" 
@@ -49,16 +73,16 @@ function Layout() {
           />
           
           <Route 
-            path="/admin/users" 
+            path="/admin/courses" 
             element={
               <AdminRoute>
-                <AdminUsers />
+                <AdminCourses />
               </AdminRoute>
             } 
           />
           
-          {/* Catch all route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Catch all route - redirect dựa trên role */}
+          <Route path="*" element={<RoleBasedRedirect />} />
         </Routes>
       </main>
     </div>
@@ -67,11 +91,13 @@ function Layout() {
 
 function App() {
   return (
-    <AuthProvider>
-      <SidebarProvider>
-        <Layout />
-      </SidebarProvider>
-    </AuthProvider>
+    <GoogleOAuthProvider clientId="495894353988-baera0mlp9p6not9a205qi2pjtlml58t.apps.googleusercontent.com">
+        <AuthProvider>
+          <SidebarProvider>
+            <Layout />
+          </SidebarProvider>
+        </AuthProvider>
+    </GoogleOAuthProvider>
   );
 }
 

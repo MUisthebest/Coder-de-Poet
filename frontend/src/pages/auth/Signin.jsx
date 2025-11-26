@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useGoogleLogin } from '@react-oauth/google';
 
 const SignIn = () => {
   const [email, setEmail] = useState('');
@@ -21,30 +22,47 @@ const SignIn = () => {
     const result = await login({ email, password });
 
     if (result.success) {
-
       if (result.role === "Admin") {
-          navigate('/admin', { replace: true });
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+    } else {
+      setError(result.error);
+    }
+
+    setIsLoading(false);
+  };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsLoading(true);
+      setError('');
+      
+      try {
+        const result = await socialLogin('google', tokenResponse.access_token);
+        
+        if (result.success) {
+          if (result.role === "Admin") {
+            navigate('/admin', { replace: true });
+          } else {
+            navigate(from, { replace: true });
+          }
         } else {
-          navigate('/', { replace: true });
+          setError(result.error);
         }
-    } else {
-      setError(result.error);
-    }
-
-    setIsLoading(false);
-  };
-
-  const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    setError('');
-    const result = await socialLogin('google');
-    if (result.success) {
-      navigate(from, { replace: true });
-    } else {
-      setError(result.error);
-    }
-    setIsLoading(false);
-  };
+      } catch (err) {
+        setError('Google login failed. Please try again.');
+      }
+      
+      setIsLoading(false);
+    },
+    onError: (error) => {
+      console.error('Google Login Failed:', error);
+      setError('Google login failed. Please try again.');
+    },
+    flow: 'implicit', // or 'auth-code' for server-side
+  });
 
   return (
     <div className="flex items-center justify-center min-h-screen via-white to-amber-100 px-5">
@@ -106,18 +124,26 @@ const SignIn = () => {
             <div className="flex-1 h-px bg-gray-300"></div>
           </div>
 
+          {/* Google Login Button */}
           <button
-            onClick={handleGoogleLogin}
+            onClick={() => googleLogin()}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 bg-white border py-3 rounded-full hover:bg-gray-50 font-medium"
+            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 py-3 rounded-full hover:bg-gray-50 font-medium disabled:opacity-50"
           >
-            <img src="https://www.google.com/favicon.ico" alt="G" className="w-5 h-5" />
+            <img 
+              src="https://www.google.com/favicon.ico" 
+              alt="Google" 
+              className="w-5 h-5" 
+            />
             Continue with Google
           </button>
 
           <p className="text-center text-sm text-gray-600 mt-8">
             Don't have an account?{' '}
-            <button onClick={() => navigate('/signup')} className="underline hover:text-black font-medium">
+            <button 
+              onClick={() => navigate('/signup')} 
+              className="underline hover:text-black font-medium"
+            >
               Sign Up
             </button>
           </p>
