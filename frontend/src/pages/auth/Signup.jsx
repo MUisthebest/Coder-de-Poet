@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '../../services/authService';
-import { GoogleLogin } from '@react-oauth/google';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -64,35 +63,6 @@ const SignUp = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // GoogleLogin component success handler
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setIsLoading(true);
-    setError('');
-    
-    try {
-      console.log('✅ Google credential received:', credentialResponse);
-      
-      // Gọi socialLogin với credential (JWT token từ Google)
-      const result = await authService.socialLogin('google', credentialResponse.credential);
-      
-      if (result.success) {
-        navigate(from, { replace: true });
-      } else {
-        setError(result.error || 'Google login failed');
-      }
-    } catch (err) {
-      console.error('❌ Google login error:', err);
-      setError('Google login failed. Please try again.');
-    }
-    
-    setIsLoading(false);
-  };
-
-  const handleGoogleError = () => {
-    console.error('❌ Google Login Failed');
-    setError('Google login failed. Please try again.');
   };
 
   return (
@@ -208,28 +178,6 @@ const SignUp = () => {
               {isLoading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
-
-          <div className="flex items-center my-4">
-            <div className="flex-1 h-px bg-gray-300"></div>
-            <span className="px-3 text-gray-500 text-sm">or</span>
-            <div className="flex-1 h-px bg-gray-300"></div>
-          </div>
-
-          {/* Google Login Component */}
-          <div className="flex justify-center">
-            <div className="w-full overflow-hidden rounded-full">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                useOneTap={false}
-                theme="filled_blue"
-                size="large"
-                text="continue_with"
-                shape="pill"
-                width="100%"
-              />
-            </div>
-          </div>
 
           <p className="text-center text-xs md:text-sm text-gray-600 mt-4">
             Already have an account?{' '}
