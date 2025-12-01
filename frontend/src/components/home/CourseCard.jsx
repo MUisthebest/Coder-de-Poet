@@ -1,9 +1,11 @@
 import React from 'react';
+import { NavLink } from 'react-router-dom';
 
 const CourseCard = ({ course }) => {
   return (
-    <div
-      className={`bg-white rounded-xl shadow-sm p-6 relative ${
+    <NavLink
+      to={`/courses/${course.id}`}
+      className={`block bg-white rounded-xl shadow-sm p-6 relative hover:shadow-md transition ${
         course.featured ? 'border-2 border-blue-500' : 'border border-gray-200'
       }`}
     >
@@ -12,15 +14,13 @@ const CourseCard = ({ course }) => {
           Featured course
         </div>
       )}
-      
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
         <h3 className="text-xl font-semibold text-gray-900 mb-2 sm:mb-0 flex-1 mr-4">
           {course.title}
         </h3>
         <div className="flex items-center gap-2">
-          <div className="flex text-amber-400">
-            {'★'.repeat(5)}
-          </div>
+          <div className="flex text-amber-400">{'★'.repeat(5)}</div>
           <span className="text-gray-600 text-sm">{course.rating}</span>
         </div>
       </div>
@@ -38,9 +38,8 @@ const CourseCard = ({ course }) => {
         </div>
       </div>
 
-      {/* Progress Bar */}
       <div className="w-full bg-gray-200 rounded-full h-2">
-        <div 
+        <div
           className="bg-green-500 h-2 rounded-full transition-all duration-300"
           style={{ width: `${course.progress}%` }}
         ></div>
@@ -49,7 +48,7 @@ const CourseCard = ({ course }) => {
         <span>Progress</span>
         <span>{course.progress}%</span>
       </div>
-    </div>
+    </NavLink>
   );
 };
 

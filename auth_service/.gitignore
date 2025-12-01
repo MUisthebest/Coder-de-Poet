@@ -1,6 +1,6 @@
 # Build folders
-bin/
-obj/
+bin
+obj
 
 # NuGet
 *.nupkg

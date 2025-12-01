@@ -1,8 +1,24 @@
+// import { Module } from '@nestjs/common';
+// import { ConfigModule } from '@nestjs/config';
+// import { CoursesModule } from './modules/courses/courses.module';
+// import { CategoryModule } from './modules/category/category.module';
+// import { DatabaseModule } from './database/database.module';
+
+// @Module({
+//   imports: [ConfigModule.forRoot({
+//     isGlobal: true,
+//     envFilePath: `.env`,
+//   }), 
+//     CoursesModule, CategoryModule, DatabaseModule],
+// })
+// export class AppModule {}
+
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
-import { CategoryModule } from './category/category.module';
+import { DatabaseModule } from './database/database.module';
+import { CategoryModule } from './modules/category/category.module';
+import { CoursesModule } from './modules/courses/courses.module';
 
 @Module({
   imports: [
@@ -10,20 +26,16 @@ import { CategoryModule } from './category/category.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-
-    // TypeORM root configuration
     TypeOrmModule.forRoot({
       type: 'postgres',
-      url: process.env.DATABASE_URL,  
-      autoLoadEntities: true,         
-      synchronize: true,              
-      ssl: {
-        rejectUnauthorized: false,   
-      },
+      url: process.env.DATABASE_URL,
+      autoLoadEntities: true,
+      synchronize: true,
+      ssl: { rejectUnauthorized: false },
     }),
-
-    // Import Category module
-    CategoryModule,
+    DatabaseModule,
+    CategoryModule, // dùng TypeORM
+    CoursesModule,  // dùng DatabaseModule + pg Pool
   ],
 })
 export class AppModule {}

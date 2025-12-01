@@ -12,8 +12,9 @@ import AdminRoute from './components/admin/AdminRoute';
 import { SidebarProvider } from "./contexts/SidebarContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import GoogleCallbackHandler from './components/auth/GoogleCallbackHandler'; // Import component
-
+import GoogleCallbackHandler from './components/auth/GoogleCallbackHandler';
+import CourseDetail from './pages/course/CourseDetail';
+ 
 // Component để xử lý redirect dựa trên role
 function RoleBasedRedirect() {
   const { isAdmin, isAuthenticated, loading } = useAuth();
@@ -64,6 +65,7 @@ function Layout() {
           <Route path="/login" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/courses/:id" element={<CourseDetail />} />
           <Route path="/auth/google/callback" element={<GoogleCallbackHandler />} />
           
           {/* Protected admin routes */}
