@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsUUID, IsEnum, IsInt, Min, IsUrl } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsUUID, IsEnum, IsInt, Min, IsUrl, IsDateString } from 'class-validator';
 
 export class CreateLessonDto {
   @IsUUID()
@@ -9,24 +9,24 @@ export class CreateLessonDto {
   @IsNotEmpty()
   title: string;
 
-  @IsString()
-  @IsOptional()
-  content?: string; // text content (markdown or HTML)
-
   @IsEnum(['text', 'video', 'pdf'])
   @IsNotEmpty()
   contentType: string;
 
   @IsUrl()
   @IsOptional()
-  videoUrl?: string; // video link (YouTube, Vimeo, etc.)
+  contentUrl?: string; // video link (YouTube, Vimeo, etc.)
 
-  @IsUrl()
+  @IsString()
   @IsOptional()
-  fileUrl?: string; // file attachment (PDF, slides)
+  contentBody?: string; // text content or base64-encoded PDF
 
   @IsInt()
   @Min(0)
   @IsOptional()
   position?: number; // lesson order in course
+
+  @IsDateString()
+  @IsOptional()
+  updatedAt?: Date;
 }
