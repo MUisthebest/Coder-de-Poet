@@ -139,4 +139,8 @@ export class CoursesService {
         if (!exists) throw new NotFoundException('Course not found');
     }
 
+    async findByInstructor(instructorId: string) {
+        return this.repo.findByInstructorId(instructorId);
+    }
+
 }

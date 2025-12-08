@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { LessonsService } from './lessons.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
@@ -37,4 +37,15 @@ export class LessonsController {
   remove(@Param('id') id: string) {
     return this.lessonsService.remove(id);
   }
+
+  @UseGuards(AuthGuard)
+  @Get()
+  async findByInstructor(
+    @Query('courseId') courseId: string,
+    @Req() req
+  ) {
+    const instructorId = req.user.id;
+    return this.lessonsService.listByInstructor(courseId, instructorId);
+  }
+
 }

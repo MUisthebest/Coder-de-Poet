@@ -35,4 +35,8 @@ export class LessonsService {
     if (!deleted) throw new NotFoundException('Lesson not found');
     return deleted;
   }
+
+  async listByInstructor(courseId: string, instructorId: string) {
+    return this.repo.findByCourseAndInstructor(courseId, instructorId);
+  }
 }
