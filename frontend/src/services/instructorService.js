@@ -72,11 +72,9 @@ const instructorService = {
         }
     },
 
-    getLessonsByInstructor: async (courseId) => {
+    getLessonsByCourse: async (courseId) => {
         try {
-            const response = await apiCourse.get(`/lessons`, {
-            params: { courseId },
-            });
+            const response = await apiCourse.get(`/lessons/by-instructor?courseId=${courseId}`);
             return response.data;
         } catch (error) {
             console.error("Error fetching instructor lessons:", error);

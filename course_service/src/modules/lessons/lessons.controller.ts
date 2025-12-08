@@ -10,6 +10,7 @@ export class LessonsController {
   constructor(private readonly lessonsService: LessonsService) {}
 
   @Post()
+  @UseGuards(AuthGuard)
   create(@Body() dto: CreateLessonDto) {
     return this.lessonsService.create(dto);
   }
@@ -38,14 +39,12 @@ export class LessonsController {
     return this.lessonsService.remove(id);
   }
 
-  @UseGuards(AuthGuard)
-  @Get()
+  //UseGuards(AuthGuard)
+  @Get('by-instructor')
   async findByInstructor(
     @Query('courseId') courseId: string,
-    @Req() req
   ) {
-    const instructorId = req.user.id;
-    return this.lessonsService.listByInstructor(courseId, instructorId);
+    return this.lessonsService.listByInstructor(courseId);
   }
 
 }

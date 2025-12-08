@@ -36,7 +36,7 @@ export class LessonsService {
     return deleted;
   }
 
-  async listByInstructor(courseId: string, instructorId: string) {
-    return this.repo.findByCourseAndInstructor(courseId, instructorId);
+  async listByInstructor(courseId: string) {
+    return this.repo.findByCourseAndInstructor(courseId);
   }
 }

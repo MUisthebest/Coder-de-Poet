@@ -19,8 +19,9 @@ const CourseDetailModal = ({ course, onClose }) => {
       if (!course?.id) return;
       try {
         setLoading(true);
-        const data = await instructorService.getLessonsByInstructor(course.id);
+        const data = await instructorService.getLessonsByCourse(course.id);
         setLessons(data);
+        console.log("Fetched lessons:", data);
       } catch (err) {
         console.error("Error fetching lessons:", err);
       } finally {
