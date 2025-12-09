@@ -1,4 +1,5 @@
 import apiCourse from './apiCourse';
+import { authService } from './authService';
 
 const instructorService = {
     getCourses: async () => {
@@ -74,7 +75,11 @@ const instructorService = {
 
     getLessonsByCourse: async (courseId) => {
         try {
-            const response = await apiCourse.get(`/lessons/by-instructor?courseId=${courseId}`);
+            const token = authService.getStoredToken();
+            console.log("Fetching lessons for courseId:", courseId, "with token:", token);
+            const response = await apiCourse.get(`/lessons/instructor/${courseId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+            });
             return response.data;
         } catch (error) {
             console.error("Error fetching instructor lessons:", error);

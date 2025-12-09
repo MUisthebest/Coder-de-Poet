@@ -39,12 +39,9 @@ export class LessonsController {
     return this.lessonsService.remove(id);
   }
 
-  //UseGuards(AuthGuard)
-  @Get('by-instructor')
-  async findByInstructor(
-    @Query('courseId') courseId: string,
-  ) {
-    return this.lessonsService.listByInstructor(courseId);
+  @UseGuards(AuthGuard)
+  @Get('/instructor/:courseId')
+  getLessonsForInstructor(@Param('courseId') courseId: string) {
+    return this.lessonsService.listByCourse(courseId);
   }
-
 }
