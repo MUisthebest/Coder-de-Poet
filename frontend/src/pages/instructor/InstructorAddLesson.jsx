@@ -14,7 +14,7 @@ const quillModules = {
   ],
 };
 
-const InstructorAddLesson = ({ onClose }) => {
+const InstructorAddLesson = ({ onClose, preSelectedCourse }) => {
   const [courses, setCourses] = useState([]);
   const [courseId, setCourseId] = useState("");
   const [title, setTitle] = useState("");
@@ -32,6 +32,12 @@ const InstructorAddLesson = ({ onClose }) => {
     };
     fetchCourses();
   }, []);
+
+  useEffect(() => {
+    if (preSelectedCourse?.id) {
+      setCourseId(preSelectedCourse.id);
+    }
+  }, [preSelectedCourse]);
 
   const handleVideoUpload = async (e) => {
     const file = e.target.files[0];

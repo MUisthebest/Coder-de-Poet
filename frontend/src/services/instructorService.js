@@ -4,7 +4,10 @@ import { authService } from './authService';
 const instructorService = {
     getCourses: async () => {
         try {
-            const response = await apiCourse.get('/courses');
+            const token = authService.getStoredToken();
+            const response = await apiCourse.get('/courses', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             console.log("Fetched instructor courses:", response.data);
             return response.data.items || [];
         } catch (error) {
@@ -55,7 +58,10 @@ const instructorService = {
 
     createLesson: async (payload) => {
         try {
-            const response = await apiCourse.post('/lessons', payload);
+            const token = authService.getStoredToken();
+            const response = await apiCourse.post('/lessons', payload, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             return response.data;
         } catch (error) {
             console.error('Error creating lesson:', error);

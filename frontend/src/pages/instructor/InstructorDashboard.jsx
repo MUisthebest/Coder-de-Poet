@@ -22,6 +22,7 @@ const InstructorDashboard = () => {
 
   const [showAddLesson, setShowAddLesson] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [preSelectedCourse, setPreSelectedCourse] = useState(null);
 
   useEffect(() => {
     console.log("Fetching courses for instructor:", instructorId.id);
@@ -149,7 +150,11 @@ const InstructorDashboard = () => {
 
       {showAddLesson && (
         <InstructorAddLesson
-          onClose={() => setShowAddLesson(false)}
+          onClose={() => {
+            setShowAddLesson(false);
+            setPreSelectedCourse(null);
+          }}
+          preSelectedCourse={preSelectedCourse}
         />
       )}
 
@@ -175,6 +180,11 @@ const InstructorDashboard = () => {
         <CourseDetailModal
           course={selectedCourse}
           onClose={() => setSelectedCourse(null)}
+          onAddLesson={(course) => {
+            setPreSelectedCourse(course);
+            setShowAddLesson(true);
+            setSelectedCourse(null);
+          }}
         />
       )}
 

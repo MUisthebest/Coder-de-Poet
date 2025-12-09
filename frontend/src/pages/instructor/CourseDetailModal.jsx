@@ -9,7 +9,7 @@ import {
 } from "react-icons/fi";
 import instructorService from "../../services/instructorService";
 
-const CourseDetailModal = ({ course, onClose }) => {
+const CourseDetailModal = ({ course, onClose, onAddLesson }) => {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -134,6 +134,12 @@ const CourseDetailModal = ({ course, onClose }) => {
             className="px-5 py-2.5 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
           >
             Close
+          </button>
+          <button
+            onClick={() => onAddLesson && onAddLesson(course)}
+            className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
+          >
+            Add Lesson
           </button>
           <button
             onClick={() => alert("Navigate to edit")}
