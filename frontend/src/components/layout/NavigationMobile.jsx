@@ -2,12 +2,12 @@ import React, { useState } from "react";
 
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-
+import { useSidebar } from "../../contexts/SidebarContext";
 
 
 export default function Navigation_Mobile() {
 
-  const [isOpen, setIsOpen] = useState(false);
+  const { isOpen, setIsOpen } = useSidebar();
   const { user, isAuthenticated, loading , logout} = useAuth();
 
 
@@ -53,11 +53,11 @@ export default function Navigation_Mobile() {
 
     // CẬP NHẬT: Thêm 'relative' để làm neo cho menu absolute
 
-    <nav className="bg-[#EFE9E3] shadow-lg rounded-3xl p-4 w-full relative">
+    <nav className="bg-[#E3E3E3] shadow-lg rounded-3xl p-4 w-full relative">
 
       {/* CẬP NHẬT: Thêm 'relative z-20' để luôn nổi lên trên menu blur */}
 
-      <div className="container mx-auto flex justify-between items-center relative z-20">
+      <div className="container mx-auto flex justify-between items-center relative z-90">
 
         
 

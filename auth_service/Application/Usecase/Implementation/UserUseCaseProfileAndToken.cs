@@ -115,10 +115,6 @@ namespace auth_service.Application.Usecase.Implementation
 
             // 2. Generate new tokens
             var newAccessToken = _jwtTokenProvider.GenerateJWTAccessToken(user);
-            var newRefreshToken = _jwtTokenProvider.GenerateRefreshToken();
-            var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
-            // 3. Persist the new refresh token
-            user.UpdateRefreshToken(newRefreshToken, refreshTokenExpiry); // adjust as needed
             await _userRepository.UpdateUserAsync(user);
 
             // 4. Return result
@@ -126,7 +122,6 @@ namespace auth_service.Application.Usecase.Implementation
             {
                 IsSuccess = true,
                 AccessToken = newAccessToken,
-                RefreshToken = newRefreshToken,
                 User = new UserPublicInfo
                 {
                     Id = user.Id,

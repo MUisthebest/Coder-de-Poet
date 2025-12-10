@@ -98,7 +98,7 @@ const InstructorAddLesson = ({ onClose, preSelectedCourse }) => {
   return (
     // 🌟 Overlay sáng + blur mờ nền
     <div className="fixed inset-0 backdrop-blur-sm bg-white/40 flex justify-center items-center z-50">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 relative animate-fadeIn border border-gray-100">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[100vh] overflow-y-auto p-6 relative animate-fadeIn border border-gray-100">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -107,7 +107,7 @@ const InstructorAddLesson = ({ onClose, preSelectedCourse }) => {
           <FiX className="text-2xl" />
         </button>
 
-        <h1 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <h1 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2 h-[5vh]">
           <FiBook className="text-blue-600" />
           Add New Lesson
         </h1>
@@ -123,7 +123,7 @@ const InstructorAddLesson = ({ onClose, preSelectedCourse }) => {
           </div>
         )}
 
-        <div className="space-y-5">
+        <div className="space-y-5 h-[calc(88vh_-_12px)]">
           {/* Select Course */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -217,7 +217,7 @@ const InstructorAddLesson = ({ onClose, preSelectedCourse }) => {
           </div>
 
           {/* Rich Text Editor */}
-          <div> 
+          <div className="max-h-[250px]"> 
             <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2"> 
                 <FiFileText /> Lesson Content 
             </label> 
@@ -234,7 +234,7 @@ const InstructorAddLesson = ({ onClose, preSelectedCourse }) => {
             {`
                 .ql-container {
                 min-height: 150px;
-                max-height: 250px;
+                max-height: 200px;
                 }
                 .ql-editor {
                 max-height: 200px;
@@ -243,19 +243,19 @@ const InstructorAddLesson = ({ onClose, preSelectedCourse }) => {
         </style>
 
           {/* Buttons */}
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-3 pt-4 h-[calc(8vh_-_4px)]">
             <button
               onClick={onClose}
-              className="px-5 py-2.5 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
+              className="px-5 py-2.5 text-gray-700 border border-gray-300 flex items-center rounded-lg hover:bg-gray-100 transition"
             >
-              Cancel
+              <p>Cancel</p>
             </button>
             <button
               disabled={saving || uploading}
               onClick={handleSaveLesson}
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-lg font-medium shadow-sm transition"
+              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 flex items-center text-white rounded-lg font-medium shadow-sm transition"
             >
-              {saving ? "Saving..." : "Save Lesson"}
+              <p>{saving ? "Saving..." : "Save Lesson"}</p>
             </button>
           </div>
         </div>

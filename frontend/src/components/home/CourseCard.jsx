@@ -53,7 +53,7 @@ const CourseCard = ({ course }) => {
   return (
     <NavLink
       to={`/courses/${course.id}`}
-      className={`border border-gray-200 rounded-xl p-4 block bg-gradient-to-br from-[#EFE9E3] to-[#EFECE3] hover:border-blue-400 hover:shadow-md transition-all duration-300`}
+      className={`border border-gray-200 rounded-xl p-4 block bg-gradient-to-br from-[#E3E3E3] to-[#fff] hover:border-blue-400 hover:shadow-md transition-all duration-300`}
     >
       <div className="flex flex-row gap-4">
         {/* Image */}

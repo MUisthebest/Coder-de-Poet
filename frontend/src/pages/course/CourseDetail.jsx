@@ -314,14 +314,14 @@ const CourseDetail = () => {
 
   // Render chính - HIỂN THỊ KHÓA HỌC DÙ CHƯA ĐĂNG KÝ
   return (
-    <div className="flex flex-row max-w-8xl mx-auto p-4 gap-1 min-h-screen">
-      <div className={`flex flex-col gap-1 px-10 ${isOpen?'w-[70%]':'w-[75%]'}`}>
+    <div className="flex flex-col md:flex-row max-w-8xl mx-auto md:p-4 gap-1 min-h-screen overflow-y-auto md:overflow-hidden w-full">
+      <div className={`flex w-full md:w-[66vw] flex-col gap-1 md:px-10`}>
         {/* Course Info - ĐÃ TÍCH HỢP COMPONENT CourseInfo */}
         {courseData && (
           <>
             {/* Preview Video (chỉ show nếu có current lesson và đã đăng ký) */}
             {isEnrolled && currentLesson ? (
-              <div className="flex-grow">
+              <div className="flex-grow sm:w-[60vw]">
                 <PlayVideo
                   currentLesson={currentLesson}
                   lessons={lessons}
@@ -330,7 +330,7 @@ const CourseDetail = () => {
               </div>
             ) : (
               // Preview for non-enrolled users
-              <div className="flex-grow bg-gray-50 rounded-xl p-6 border border-gray-200">
+              <div className="flex-grow bg-gray-50 rounded-xl p-6 border border-gray-200 w-full">
                 <h2 className="text-xl font-bold text-gray-800 mb-4">
                   Xem trước khóa học
                 </h2>
@@ -360,7 +360,7 @@ const CourseDetail = () => {
       </div>
       
       {/* Playlist - Hiển thị cho cả người chưa đăng ký (nhưng chỉ show tên bài học) */}
-      <div className={isOpen ? "w-[30%]" : "w-[25%]"}>
+      <div className={isOpen ? "w-full md:w-[8vw]" : "w-full md:w-[20vw]"}>
         <CoursePlaylist
           lessons={lessons}
           currentLesson={currentLesson}

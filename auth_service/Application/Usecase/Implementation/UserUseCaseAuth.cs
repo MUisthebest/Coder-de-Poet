@@ -1,6 +1,7 @@
 using auth_service.Application.Usecase.DTO;
 using auth_service.Domain.Entity;
 using System.Text.Json;
+using auth_service.Domain.Common;
 
 namespace auth_service.Application.Usecase.Implementation
 {
@@ -288,6 +289,91 @@ namespace auth_service.Application.Usecase.Implementation
                 RefreshToken = refreshToken,
                 User = userInfo
             };
+        }
+        public async Task<OperationResult> RevokeRefreshTokenAsync(string refreshToken)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(refreshToken))
+                {
+                    return OperationResult.Failure(
+                        "BadRequest", 
+                        "Refresh token is required."
+                    );
+                }
+
+                // 1. Tìm user bằng refresh token
+                var user = await _userRepository.GetUserByRefreshTokenAsync(refreshToken);
+                if (user == null)
+                {
+                    return OperationResult.Failure(
+                        "InvalidToken", 
+                        "Invalid refresh token."
+                    );
+                }
+
+                // 2. Kiểm tra token đã bị revoke chưa
+                if (string.IsNullOrEmpty(user.RefreshToken) || 
+                    user.RefreshToken != refreshToken)
+                {
+                    return OperationResult.Failure(
+                        "AlreadyRevoked", 
+                        "Refresh token is already revoked or invalid."
+                    );
+                }
+
+                // 3. Kiểm tra token còn hạn không
+                if (user.RefreshTokenExpiry <= DateTime.UtcNow)
+                {
+                    return OperationResult.Failure(
+                        "TokenExpired", 
+                        "Refresh token has expired."
+                    );
+                }
+
+                // 4. Revoke token
+                user.ClearRefreshToken();
+                await _userRepository.UpdateUserAsync(user);
+
+                return OperationResult.Success();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error revoking refresh token");
+                return OperationResult.Failure(
+                    "ServerError", 
+                    "Failed to revoke refresh token."
+                );
+            }
+        }
+
+        public async Task<OperationResult> RevokeAllRefreshTokensAsync(Guid userId)
+        {
+            try
+            {
+                // 1. Lấy user
+                var user = await _userRepository.GetUserByIdAsync(userId);
+                if (user == null)
+                {
+                    return OperationResult.Failure(
+                        "NotFound", 
+                        "User not found."
+                    );
+                }
+
+                user.ClearRefreshToken();
+                await _userRepository.UpdateUserAsync(user);
+
+                return OperationResult.Success();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error revoking all refresh tokens for user {UserId}", userId);
+                return OperationResult.Failure(
+                    "ServerError", 
+                    "Failed to revoke all refresh tokens."
+                );
+            }
         }
     }
 }

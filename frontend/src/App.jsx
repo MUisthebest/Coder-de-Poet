@@ -9,6 +9,7 @@ import ProtectedRoute from './components/admin/ProtectedRoute';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCourses from './pages/admin/AdminCourses';
 import AdminRoute from './components/admin/AdminRoute';
+import InstructorRoute from './components/instructor/InstructorRoute';
 import { SidebarProvider } from "./contexts/SidebarContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -20,7 +21,7 @@ import CourseDetailModal from './pages/instructor/CourseDetailModal';
  
 // Component để xử lý redirect dựa trên role
 function RoleBasedRedirect() {
-  const { isAdmin, isAuthenticated, loading } = useAuth();
+  const { isAdmin, isAuthenticated, loading, user } = useAuth();
   
   if (loading) {
     return (
@@ -33,6 +34,10 @@ function RoleBasedRedirect() {
   // Nếu là admin → redirect đến /admin
   if (isAuthenticated && isAdmin) {
     return <Navigate to="/admin" replace />;
+  }
+
+  if (user.role === "Instructor") {
+    return <Navigate to='/instructor/dashboard' replace/>;
   }
   
   // Nếu là user thường → redirect đến home
@@ -53,7 +58,7 @@ function Layout() {
       
       {!hideNavigation && (
         <>
-          <div className="block md:hidden w-full p-2">
+          <div className="absolute md:hidden w-full p-2  z-60 sticky">
             <Navigation_Mobile />
           </div>
           <div className="hidden md:block">
@@ -62,7 +67,7 @@ function Layout() {
         </>
       )}
 
-      <main className="flex-1 w-full md:px-0 md:h-[100vh] overflow-hidden">
+      <main className="flex-1 md:w-full h-[100vh] md:px-0  z-10">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<SignIn />} />
@@ -75,9 +80,9 @@ function Layout() {
           <Route 
             path="/instructor/dashboard" 
             element={ 
-              <ProtectedRoute>
+              <InstructorRoute>
                 <InstructorDashboard />
-              </ProtectedRoute>
+              </InstructorRoute>
             } 
           />
           

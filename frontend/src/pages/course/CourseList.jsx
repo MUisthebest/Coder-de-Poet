@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import CourseItem from '../../components/course/CourseItem';
+import {useSidebar} from '../../contexts/SidebarContext'
 
 const CourseSkeleton = () => (
   <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 animate-pulse">
@@ -22,6 +23,7 @@ const CourseList = () => {
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const { isOpen, setIsOpen } = useSidebar();
   const [selectedCategory, setSelectedCategory] = useState('');
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -30,12 +32,33 @@ const CourseList = () => {
   const [currentMode, setCurrentMode] = useState('search');
   const [isScrolling, setIsScrolling] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
-
+  const [isExpanded, setIsExpanded] = useState(true);
   const observer = useRef();
   const containerRef = useRef();
   const scrollIndicatorRef = useRef();
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
   const TAKE = 20;
+
+  // Chỉ chặn scroll trên mobile khi sidebar mở
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768; // md breakpoint
+    
+    if (isMobile && isOpen) {
+      // Chỉ chặn scroll trên mobile khi sidebar mở
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      // Cho phép scroll
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
+    }
+
+    // Cleanup khi component unmount
+    return () => {
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
+    };
+  }, [isOpen]);
 
   // Load danh mục
   useEffect(() => {
@@ -207,23 +230,40 @@ const CourseList = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 h-[calc(100vh)] overflow-y-auto scroll-smooth pb-24">
         {/* Header với phong cách đơn sắc sang trọng */}
-        <div className="flex flex-col sm:sticky top-4 z-40 bg-white backdrop-blur-sm rounded-2xl shadow-sm p-6 mb-8 border border-gray-200">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center border border-gray-300">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
+        <div className={`flex flex-col sm:sticky top-4 z-40 bg-white backdrop-blur-sm rounded-2xl shadow-sm mb-8 border border-gray-200 ${isExpanded ? 'p-6': 'w-fit justify-self-end'}`}>
+          <div className={`flex items-center justify-between ${isExpanded ? 'mb-6': ''}`}>
+            <div className={`flex flex-row items-center w-full ${isExpanded ? 'justify-between': 'justify-end'}`}>
+              <div className={`flex flex-row gap-3 ${isExpanded ? '': 'hidden'}`}>
+                <div className="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center border border-gray-300">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                  Khóa Học
+                </h1>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-                Khóa Học
-              </h1>
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="w-[10vw] md:w-[15vw] gap-2 h-10 flex flex-row items-center  justify-center rounded-2xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-500 transition-all duration-200 hover:shadow-sm active:scale-95"
+              >
+                <p className={`text-[1vw] transition-all duration-200 ${isExpanded ? 'hidden': 'md:block hidden '}`}>Show Search Bar</p>
+                <p className={`text-[1vw]  transition-all duration-200 ${isExpanded ? 'md:block hidden': 'hidden'}`}>Hide Search Bar</p>
+                <svg 
+                  className={`w-6 h-6 transition-transform duration-300 ${isExpanded ? 'rotate-180' : 'rotate-0'}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
             </div>
             
             {(searchTerm || selectedCategory) && (
               <button
                 onClick={clearFilters}
-                className="px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg border border-gray-300 transition-all duration-200 flex items-center gap-2 group"
+                className={`px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg border border-gray-300 transition-all duration-200 flex items-center gap-2 group ${isExpanded ? '': 'hidden'}`}
               >
                 <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -233,7 +273,7 @@ const CourseList = () => {
             )}
           </div>
 
-          <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-6">
+          <div className={`flex flex-col md:flex-row justify-between items-stretch md:items-center gap-6 ${isExpanded ? '': 'hidden'}`}>
             {/* Search input với style minimalist */}
             <div className="relative flex-1 md:max-w-lg">
               <input
@@ -276,7 +316,7 @@ const CourseList = () => {
           </div>
 
           {/* Results summary */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className={`mt-6 pt-6 border-t border-gray-200 ${isExpanded ? '': 'hidden'}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="text-3xl font-bold text-gray-900">

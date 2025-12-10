@@ -106,6 +106,18 @@ namespace auth_service.Domain.Entity
             };
         }
 
+        public void ClearRefreshToken()
+        {
+            RefreshToken = string.Empty;
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(-1); 
+        }
+
+        public void RemoveRefreshToken()
+        {
+            RefreshToken = null;
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(0);
+        }
+
 
         public string GetEmail() => Email;
         public string GetHashedPassword() => HashedPassword;

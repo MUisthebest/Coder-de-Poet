@@ -8,9 +8,10 @@ import InstructorAddLesson from "./InstructorAddLesson";
 import CourseDetailModal from "./CourseDetailModal";
 import { FiPlus } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
+import ProfileSidebar from '../../components/home/ProfileSideBar';
 
 const InstructorDashboard = () => {
-  const { user: instructorId } = useAuth();
+  const { user: instructorId, isAuthenticated, user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -57,6 +58,53 @@ const InstructorDashboard = () => {
       alert("Failed to delete course.");
     }
   };
+  const weeklyActivities = [
+    { day: 'Mon', hours: 2.5, type: 'learning' },
+    { day: 'Tue', hours: 1.8, type: 'practice' },
+    { day: 'Wed', hours: 3.2, type: 'learning' },
+    { day: 'Thu', hours: 2.0, type: 'project' },
+    { day: 'Fri', hours: 4.1, type: 'learning' },
+    { day: 'Sat', hours: 1.5, type: 'review' },
+    { day: 'Sun', hours: 2.8, type: 'practice' }
+  ];
+
+  const myCourses = [
+    {
+      id: 1,
+      title: 'Crawler with Python for Beginners',
+      category: 'Python Tutorials',
+      progress: 85,
+      students: 9530,
+      nextLesson: 'State Management',
+      timeLeft: '2h 15m'
+    },
+    {
+      id: 2,
+      title: 'Ardunio for Beginners',
+      category: 'Python',
+      progress: 60,
+      students: 8500,
+      nextLesson: 'Market Analysis',
+      timeLeft: '4h 30m'
+    },
+    {
+      id: 3,
+      title: 'Machine Learning A-Z™: Hands-On Python & R In Data Science',
+      category: 'Computer Science',
+      progress: 45,
+      students: 15000,
+      nextLesson: 'SEO Basics',
+      timeLeft: '6h 45m'
+    }
+  ];
+
+  const friends = [
+    { id: 1, name: 'Alex Johnson', course: 'React Native' },
+    { id: 2, name: 'Maria Garcia', course: 'UI/UX Design' },
+    { id: 3, name: 'Tom Wilson', course: 'Data Science' },
+    { id: 4, name: 'Sarah Chen', course: 'Web Development' },
+    { id: 5, name: 'Mike Brown', course: 'Cloud Computing' }
+  ];
 
   const stats = useMemo(() => {
     const totalCourses = courses.length;
@@ -120,105 +168,106 @@ const InstructorDashboard = () => {
   }, [courses]);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-5 sm:px-10">
-      {/* HEADER */}
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-1">
-            Instructor Dashboard
-          </h1>
-          <p className="text-gray-500">
-            Welcome back! Manage and track your courses.
-          </p>
-        </div>
-        {/* <button
-          onClick={handleCreateCourse}
-          className="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow-sm transition"
-        >
-          + Create New Course
-        </button> */}
+    <div className="flex flex-row min-h-screen w-full">
+      <div className="min-h-screen mx-auto bg-gray-50 py-10 px-5 sm:px-10 max-w-8xl md:flex flex-col w-full">
+          {/* HEADER */}
+          <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-1">
+                Instructor Dashboard
+              </h1>
+              <p className="text-gray-500">
+                Welcome back! Manage and track your courses.
+              </p>
+            </div>
+            {/* <button
+              onClick={handleCreateCourse}
+              className="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow-sm transition"
+            >
+              + Create New Course
+            </button> */}
 
-        <button
-          onClick={() => setShowAddLesson(true)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-        >
-          <FiPlus className="text-lg" />
-          Add Lesson
-        </button>
+            <button
+              onClick={() => setShowAddLesson(true)}
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              <FiPlus className="text-lg" />
+              Add Lesson
+            </button>
 
-      </header>
+          </header>
+          {showAddLesson && (
+            <InstructorAddLesson
+              onClose={() => setShowAddLesson(false)}
+            />
+          )}
 
-      {showAddLesson && (
-        <InstructorAddLesson
-          onClose={() => {
-            setShowAddLesson(false);
-            setPreSelectedCourse(null);
-          }}
-          preSelectedCourse={preSelectedCourse}
-        />
-      )}
+          {/* STATS */}
+          <InstructorStats stats={stats} />
 
-      {/* STATS */}
-      <InstructorStats stats={stats} />
+          {/* FILTERS */}
+          {/* <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100 mb-6">
+            <CoursesFilterBar
+              search={search}
+              onSearchChange={setSearch}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              categoryFilter={categoryFilter}
+              onCategoryFilterChange={setCategoryFilter}
+              sortBy={sortBy}
+              onSortByChange={setSortBy}
+              categories={categories}
+            />
+          </div> */}
 
-      {/* FILTERS */}
-      <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100 mb-6">
-        <CoursesFilterBar
-          search={search}
-          onSearchChange={setSearch}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          categoryFilter={categoryFilter}
-          onCategoryFilterChange={setCategoryFilter}
-          sortBy={sortBy}
-          onSortByChange={setSortBy}
-          categories={categories}
-        />
-      </div>
+          {selectedCourse && (
+            <CourseDetailModal
+              course={selectedCourse}
+              onClose={() => setSelectedCourse(null)}
+            />
+          )}
 
-      {selectedCourse && (
-        <CourseDetailModal
-          course={selectedCourse}
-          onClose={() => setSelectedCourse(null)}
-          onAddLesson={(course) => {
-            setPreSelectedCourse(course);
-            setShowAddLesson(true);
-            setSelectedCourse(null);
-          }}
-        />
-      )}
+          {/* MAIN CONTENT */}
+          <div className="bg-white rounded-lg shadow-md border border-gray-100 p-6 flex flex-1 flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-gray-800">
+                My Courses
+              </h2>
+              <span className="text-sm text-gray-500">
+                {filteredCourses.length} / {courses.length} courses
+              </span>
+            </div>
 
-      {/* MAIN CONTENT */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-100 p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-800">
-            My Courses
-          </h2>
-          <span className="text-sm text-gray-500">
-            {filteredCourses.length} / {courses.length} courses
-          </span>
-        </div>
-
-        {loading ? (
-          <div className="text-center py-10 text-gray-500">Loading...</div>
-        ) : error ? (
-          <div className="text-center text-red-500 py-10">{error}</div>
-        ) : courses.length === 0 ? (
-          <EmptyCoursesState/>
-        ) : filteredCourses.length === 0 ? (
-          <div className="text-center py-10 text-gray-500">
-            No courses found for your filters.
+            {loading ? (
+              <div className="text-center py-10 text-gray-500">Loading...</div>
+            ) : error ? (
+              <div className="text-center text-red-500 py-10">{error}</div>
+            ) : courses.length === 0 ? (
+              <EmptyCoursesState/>
+            ) : filteredCourses.length === 0 ? (
+              <div className="text-center py-10 text-gray-500">
+                No courses found for your filters.
+              </div>
+            ) : (
+              <CoursesTable
+                courses={filteredCourses}
+                onView={handleViewCourse}
+                onEdit={(c) => console.log("Edit", c.id)}
+                onAnalytics={(c) => console.log("Analytics", c.id)}
+                onDelete={handleDeleteCourse}
+              />
+            )}
           </div>
-        ) : (
-          <CoursesTable
-            courses={filteredCourses}
-            onView={handleViewCourse}
-            onEdit={(c) => console.log("Edit", c.id)}
-            onAnalytics={(c) => console.log("Analytics", c.id)}
-            onDelete={handleDeleteCourse}
+        </div>
+        <div className="flex h-screen justify-center items-center sticky top-0">
+          <ProfileSidebar 
+            weeklyActivities={weeklyActivities}
+            myCourses={myCourses}
+            friends={friends}
+            user={user}
+            isAuthenticated={isAuthenticated}
           />
-        )}
-      </div>
+        </div>
     </div>
   );
 };

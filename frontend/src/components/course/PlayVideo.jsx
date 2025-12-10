@@ -2,20 +2,20 @@ import React from "react";
 
 const PlayVideo = ({ currentLesson, lessons, getEmbedUrl }) => {
   return (
-    <div className="w-full flex gap-3 h-[60vh] transition-all duration-100">
+    <div className="w-full flex gap-3 h-auto transition-all duration-100">
       {/* Current Lesson Section - Chiếm 2/3 */}
-      <div className="w-full space-y-4 ">
+      <div className="w-full space-y-1">
         {currentLesson ? (
           <>
             {/* Header */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
                 {currentLesson.position && (
                   <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
                     Bài {currentLesson.position}
                   </span>
                 )}
-                <h2 className="text-2xl font-bold text-gray-800">
+                <h2 className="text-[calc(1vw_+_12px)] font-bold text-gray-800">
                   {currentLesson.title}
                 </h2>
               </div>
@@ -33,7 +33,7 @@ const PlayVideo = ({ currentLesson, lessons, getEmbedUrl }) => {
             )}
 
             {/* Video Player */}
-            <div className="w-full h-[65vh] aspect-video bg-black rounded-xl overflow-hidden shadow-lg">
+            <div className="w-[60vw] md:h-[65vh] h-auto aspect-video bg-black rounded-xl overflow-hidden shadow-lg">
               {currentLesson.content_url ? (
                 <iframe
                   src={getEmbedUrl(currentLesson.content_url)}

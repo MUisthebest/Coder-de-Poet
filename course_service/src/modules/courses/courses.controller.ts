@@ -14,6 +14,7 @@ import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { QueryCourseDto } from './dto/query-course.dto';
+import { BadRequestException } from '@nestjs/common';
 
 @Controller('courses')
 export class CoursesController {
@@ -56,6 +57,15 @@ export class CoursesController {
         return this.coursesService.getCoursesByCategory(categoryId, query);
     }
 
+    @Get('instructor/:instructorId')
+    findAllByInstructor(@Param('instructorId') instructorId: string) {
+    console.log('Controller: instructorId from param:', instructorId);
+    if (!instructorId) {
+        throw new BadRequestException('instructorId is required');
+    }
+    return this.coursesService.findByInstructor(instructorId);
+    }
+
     @Get(':id')
     findOne(@Param('id') id: string) {
         return this.coursesService.findOne(id);
@@ -86,9 +96,11 @@ export class CoursesController {
         return this.coursesService.draft(id);
     }
 
-    @Get()
-    findAllByInstructor(@Param('instructorId') instructorId: string) {
-        return this.coursesService.findByInstructor(instructorId);
-    }
-
+  @Get(':id/details')
+  async findOneWithOwnership(
+    @Param('id') id: string,
+    @Query('instructorId') instructorId?: string,
+  ) {
+    return this.coursesService.findOneWithOwnershipCheck(id, instructorId);
+  }
 }

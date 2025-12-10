@@ -33,7 +33,7 @@ const PopularCategories = ({ courses }) => {
   if (topCourses.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6">
+    <div className="bg-white rounded-xl shadow-sm md:p-6 p-1">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-lg font-semibold text-gray-900">Top Popular Courses</h3>
         <span className="text-black text-sm font-medium">
