@@ -83,6 +83,18 @@ const instructorService = {
             return [];
         }
     },
+    async checkCourseOwnership(courseId, instructorId) {
+        try {
+        const res = await apiCourse.get(`/courses/${courseId}/details`, {
+            params: { instructorId },
+        });
+
+        return res.data; // { isAccess: true/false, ... }
+        } catch (error) {
+        console.error("Lỗi kiểm tra quyền quản lý:", error);
+        throw error;
+        }
+  },
 }
 
 export default instructorService;

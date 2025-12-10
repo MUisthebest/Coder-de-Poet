@@ -1,8 +1,17 @@
-import React, { useState } from "react";
-import QuizPanel from "./QuizzPanel"; // Import QuizPanel component
+import React, { useState, useEffect } from "react";
+import QuizPanel from "./QuizzPanel";
+import { useAuth } from "../../contexts/AuthContext";
 
 const CourseInfo = ({ courseData, user, isEnrolled = false, onEnroll, enrolling = false }) => {
   const [showQuiz, setShowQuiz] = useState(false);
+  const {checkingPermission, canManageCourse, checkCourseOwnership} = useAuth();
+
+  useEffect(() => {
+    // Kiểm tra quyền quản lý khóa học nếu user là giáo viên
+    if (user?.role === "Instructor" && courseData?.id) {
+      checkCourseOwnership(courseData.id, user.id);
+    }
+  }, [user, courseData]);
 
   if (!courseData) return null;
 
@@ -44,9 +53,13 @@ const CourseInfo = ({ courseData, user, isEnrolled = false, onEnroll, enrolling 
 
         {/* Right: Action buttons */}
         <div className="flex gap-3 items-center full-h">
-          {user?.role === "Instructor" && (
-            <button className="px-4 py-4 bg-blue-600 text-[2vh] text-white rounded-lg shadow hover:bg-blue-700 transition">
-              📤 Upload bài học
+          {/* Chỉ hiển thị nút Upload nếu là giáo viên VÀ có quyền quản lý khóa học */}
+          {user?.role === "Instructor" && canManageCourse && (
+            <button 
+              className="px-4 py-4 bg-blue-600 text-[2vh] text-white rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-50"
+              disabled={checkingPermission}
+            >
+              {checkingPermission ? "Đang kiểm tra..." : "📤 Upload bài học"}
             </button>
           )}
 

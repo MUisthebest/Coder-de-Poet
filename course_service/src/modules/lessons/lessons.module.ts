@@ -7,9 +7,10 @@ import { EnrollmentsRepository } from '../enrollments/enrollments.repository';
 import { EnrolledGuard } from '../../common/guards/enrolled.guard';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthGuard } from '../auth/jwt-auth.guard';
+import { CoursesModule } from '../courses/courses.module';
 
 @Module({
-  imports: [DatabaseModule, JwtModule.register({})],
+  imports: [DatabaseModule, JwtModule.register({}), CoursesModule],
   controllers: [LessonsController],
   providers: [LessonsService, LessonsRepository, EnrollmentsRepository, EnrolledGuard, AuthGuard],
   exports: [LessonsService],

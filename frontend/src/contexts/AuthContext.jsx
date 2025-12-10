@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
+import instructorService from '../services/instructorService';
 
 const AuthContext = createContext();
 
@@ -13,6 +14,9 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const isAdmin = user?.isAdmin === true || user?.role === 'Admin';
+  const [canManageCourse, setCanManageCourse] = useState(false);
+  const [checkingPermission, setCheckingPermission] = useState(false);
+
   // Khởi động: kiểm tra token → gọi /me → giữ đăng nhập
   useEffect(() => {
     const initAuth = async () => {
@@ -85,6 +89,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const checkCourseOwnership = async (courseData, id) => {
+    setCheckingPermission(true);
+
+    try {
+      const data = await instructorService.checkCourseOwnership(courseData, id);
+      console.log(data);
+
+      setCanManageCourse(data?.isAccess || false);
+    } catch (error) {
+      setCanManageCourse(false);
+    } finally {
+      setCheckingPermission(false);
+    }
+  };
+
   const logout = async () => {
     await authService.logout();
     setUser(null);
@@ -99,6 +118,9 @@ export const AuthProvider = ({ children }) => {
     loading,
     isAdmin,
     isAuthenticated: !!user,
+    checkCourseOwnership,
+    checkingPermission,
+    canManageCourse
   };
 
   return (
