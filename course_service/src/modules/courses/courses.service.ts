@@ -12,15 +12,14 @@ import { CoursesRepository } from './courses.repository';
 export class CoursesService {
     constructor(private readonly repo: CoursesRepository) {}
 
-    async create(dto: CreateCourseDto) {
+    async create(dto: CreateCourseDto, instructorId: string) {
         const exist = await this.repo.findBySlug(dto.slug);
         if (exist) {
             throw new BadRequestException('Course with this slug already exists');
         }
 
         dto.status = dto.status ?? 'draft';
-        const created = await this.repo.create(dto);
-        console.log('Service created course:', created);
+        const created = await this.repo.create({dto, instructorId});
         return created;
     }
     
@@ -62,7 +61,7 @@ export class CoursesService {
         const course = await this.repo.findById(id);
         if (!course) throw new NotFoundException('Course not found');
 
-        if (course.instructorId !== userId) {
+        if (course.instructor_id !== userId) {
             throw new ForbiddenException('You can only delete your own courses');
         }
 

@@ -14,7 +14,7 @@ const quillModules = {
   ],
 };
 
-const InstructorAddLesson = ({ onClose, preSelectedCourse }) => {
+const InstructorAddLesson = ({ onClose, MyCourse, preSelectedCourse }) => {
   const [courses, setCourses] = useState([]);
   const [courseId, setCourseId] = useState("");
   const [title, setTitle] = useState("");
@@ -45,6 +45,9 @@ const InstructorAddLesson = ({ onClose, preSelectedCourse }) => {
 
     const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
+
+    console.log(uploadPreset);
+    console.log(cloudName)
 
     const formData = new FormData();
     formData.append("file", file);
@@ -98,7 +101,7 @@ const InstructorAddLesson = ({ onClose, preSelectedCourse }) => {
   return (
     // 🌟 Overlay sáng + blur mờ nền
     <div className="fixed inset-0 backdrop-blur-sm bg-white/40 flex justify-center items-center z-50">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[100vh] overflow-y-auto p-6 relative animate-fadeIn border border-gray-100">
+      <div className="bg-white shadow-xl w-full max-w-3xl max-h-[100vh] overflow-y-auto p-6 relative animate-fadeIn border border-gray-100">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -135,7 +138,7 @@ const InstructorAddLesson = ({ onClose, preSelectedCourse }) => {
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-500"
             >
               <option value="">Select course...</option>
-              {courses.map((c) => (
+              {MyCourse.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.title}
                 </option>

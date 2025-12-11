@@ -9,7 +9,10 @@ import { QueryCourseDto } from './dto/query-course.dto';
 export class CoursesRepository {
   constructor(@Inject(PG_POOL) private pool: Pool) {}
 
-  async create(dto: CreateCourseDto) {
+// courses.service.ts
+  async create(createData: { dto: CreateCourseDto, instructorId: string }) {
+    const { dto, instructorId } = createData;
+    
     const query = `
       INSERT INTO courses (
         instructor_id,
@@ -24,25 +27,23 @@ export class CoursesRepository {
         updated_at,
         student_count
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,now())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, now(), 0)
       RETURNING *;
     `;
 
     const values = [
-      dto.instructorId,
+      instructorId, 
       dto.categoryId,
       dto.title,
       dto.slug,
       dto.description ?? null,
-      dto.tag ?? null,
+      dto.tag ? JSON.stringify(dto.tag) : null, 
       dto.accessType,
       dto.status ?? 'draft',
       dto.thumbnailUrl ?? null,
-      dto.updatedAt ?? null,
     ];
 
     const { rows } = await this.pool.query(query, values);
-    console.log('Created course:', rows[0]);
     return rows[0];
   }
 

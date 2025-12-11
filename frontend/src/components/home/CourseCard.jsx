@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { getThumbnailUrl } from '../../utils/thumbnailHelper';
 
 const CourseCard = ({ course }) => {
   const formatStudents = (students) => {
@@ -13,32 +14,6 @@ const CourseCard = ({ course }) => {
     return uniqueTags.slice(0, limit);
   };
 
-  const getYouTubeThumbnail = (url) => {
-  if (!url) return 'https://placehold.co/600x400';
-
-  // Trường hợp đã là ảnh thumbnail rồi → trả về luôn
-  if (url.includes('ytimg.com') || url.includes('hqdefault.jpg')) {
-    return url;
-  }
-
-  let videoId = '';
-
-  // Xử lý các dạng link YouTube phổ biến
-  if (url.includes('youtube.com/watch?v=')) {
-    videoId = url.split('v=')[1]?.split('&')[0];
-  } else if (url.includes('youtu.be/')) {
-    videoId = url.split('youtu.be/')[1]?.split('?')[0];
-  } else if (url.includes('youtube.com/embed/')) {
-    videoId = url.split('embed/')[1]?.split('?')[0];
-  }
-
-  if (!videoId) return 'https://placehold.co/600x400?text=No+Preview';
-
-  // Trả về ảnh chất lượng cao nhất có thể
-  return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-  // Nếu maxresdefault không tồn tại, browser tự fallback → dùng hqdefault cũng được:
-  // return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-};
 
 
   const formatTag = (tag) => {
@@ -60,7 +35,7 @@ const CourseCard = ({ course }) => {
         <div className="flex-shrink-0 w-[50%]">
           <div className="relative w-full pt-[56.25%] bg-white rounded-lg overflow-hidden">
             <img 
-              src={getYouTubeThumbnail(course.image)} 
+              src={getThumbnailUrl(course.image)} 
               alt={course.title} 
               className="absolute inset-0 w-full h-full object-cover" 
               onError={(e) => {

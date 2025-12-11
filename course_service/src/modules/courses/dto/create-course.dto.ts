@@ -9,9 +9,6 @@ import {
 } from 'class-validator';
 
 export class CreateCourseDto {
-    @IsUUID()
-    @IsNotEmpty()
-    instructorId: string;
 
     @IsUUID()
     @IsNotEmpty()

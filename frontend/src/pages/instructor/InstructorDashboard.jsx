@@ -5,12 +5,16 @@ import CoursesFilterBar from "../../components/instructor/CoursesFilterBar";
 import CoursesTable from "../../components/instructor/CoursesTable";
 import EmptyCoursesState from "../../components/instructor/EmptyCoursesState";
 import InstructorAddLesson from "./InstructorAddLesson";
+import InstructorAddCourse from "./InstructorAddCourse";
 import CourseDetailModal from "./CourseDetailModal";
 import { FiPlus } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import ProfileSidebar from '../../components/home/ProfileSideBar';
+import MyCourses from "../../components/home/MyCourses";
+import axios from 'axios';
 
 const InstructorDashboard = () => {
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
   const { user: instructorId, isAuthenticated, user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,8 +24,10 @@ const InstructorDashboard = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+  const [categories, setCategories] = useState([]);
 
   const [showAddLesson, setShowAddLesson] = useState(false);
+  const [showAddCourse, setShowAddCourse] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [preSelectedCourse, setPreSelectedCourse] = useState(null);
 
@@ -43,6 +49,7 @@ const InstructorDashboard = () => {
     };
     fetchCourses();
   }, []);
+
 
   const handleViewCourse = (course) => {
     console.log("View course", course.id);
@@ -161,11 +168,21 @@ const InstructorDashboard = () => {
   //   console.log("Navigate to create course page");
   // };
 
-  const categories = useMemo(() => {
-    const set = new Set();
-    courses.forEach((c) => c.category && set.add(c.category));
-    return Array.from(set);
-  }, [courses]);
+
+    useEffect(() => {
+      const fetchCategories = async () => {
+        try {
+          const response = await axios.get(`${API_URL}/categories`);
+          if (response.data && response.data.categories) {
+            setCategories(response.data.categories);
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      };
+
+      fetchCategories();
+    }, []);
 
   return (
     <div className="flex flex-row min-h-screen w-full">
@@ -186,22 +203,37 @@ const InstructorDashboard = () => {
             >
               + Create New Course
             </button> */}
+            <div className="flex flex-row gap-2">
+              <button
+                onClick={() => setShowAddCourse(true)}
+                className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+              >
+                <FiPlus className="text-lg" />
+                Add Course
+              </button>
 
-            <button
-              onClick={() => setShowAddLesson(true)}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-            >
-              <FiPlus className="text-lg" />
-              Add Lesson
-            </button>
+              <button
+                onClick={() => setShowAddLesson(true)}
+                className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+              >
+                <FiPlus className="text-lg" />
+                Add Lesson
+              </button>
+            </div>
+
 
           </header>
           {showAddLesson && (
             <InstructorAddLesson
-              onClose={() => setShowAddLesson(false)}
+              onClose={() => setShowAddLesson(false)} MyCourse = {filteredCourses}
             />
           )}
 
+          {showAddCourse && (
+            <InstructorAddCourse
+              onClose={() => setShowAddCourse(false)} categories={categories}
+            />
+          )}
           {/* STATS */}
           <InstructorStats stats={stats} />
 
@@ -228,7 +260,7 @@ const InstructorDashboard = () => {
           )}
 
           {/* MAIN CONTENT */}
-          <div className="bg-white rounded-lg shadow-md border border-gray-100 p-6 flex flex-1 flex-col">
+          <div className="bg-white rounded-lg shadow-md border border-gray-100 p-6 flex flex-1 flex-col md:max-h-[60vh]">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-800">
                 My Courses

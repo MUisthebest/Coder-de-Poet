@@ -28,13 +28,24 @@ const instructorService = {
 
     createCourse: async (payload) => {
         try {
-            const response = await apiCourse.post('/courses', payload);
+            const token = authService.getStoredToken();
+            console.log('kk', token)
+            const response = await apiCourse.post(
+                '/courses',
+                payload,
+                {
+                headers: { Authorization: `Bearer ${token}` }
+                }
+            );
+
             return response.data;
+
         } catch (error) {
             console.error('Error creating course:', error);
             throw error;
         }
     },
+
 
     updateCourse: async (courseId, payload) => {
         try {
@@ -48,7 +59,10 @@ const instructorService = {
 
     deleteCourse: async (courseId) => {
         try {
-            const response = await apiCourse.delete(`/courses/${courseId}`);
+            const token = authService.getStoredToken();
+            const response = await apiCourse.delete(`/courses/${courseId}`,{
+                headers: { Authorization: `Bearer ${token}` }
+            });
             return response.data;
         } catch (error) {
             console.error('Error deleting course:', error);

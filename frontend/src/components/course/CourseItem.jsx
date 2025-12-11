@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-
+import { getThumbnailUrl } from "../../utils/thumbnailHelper";
   const getPopularTags = (courseTags, limit = 3) => {
     if (!courseTags || !Array.isArray(courseTags)) return [];
     const uniqueTags = [...new Set(courseTags)];
@@ -14,33 +14,6 @@ import { NavLink } from "react-router-dom";
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   };
-
-const getYouTubeThumbnail = (url) => {
-  if (!url) return 'https://placehold.co/600x400';
-
-  // Trường hợp đã là ảnh thumbnail rồi → trả về luôn
-  if (url.includes('ytimg.com') || url.includes('hqdefault.jpg')) {
-    return url;
-  }
-
-  let videoId = '';
-
-  // Xử lý các dạng link YouTube phổ biến
-  if (url.includes('youtube.com/watch?v=')) {
-    videoId = url.split('v=')[1]?.split('&')[0];
-  } else if (url.includes('youtu.be/')) {
-    videoId = url.split('youtu.be/')[1]?.split('?')[0];
-  } else if (url.includes('youtube.com/embed/')) {
-    videoId = url.split('embed/')[1]?.split('?')[0];
-  }
-
-  if (!videoId) return 'https://placehold.co/600x400?text=No+Preview';
-
-  // Trả về ảnh chất lượng cao nhất có thể
-  return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-  // Nếu maxresdefault không tồn tại, browser tự fallback → dùng hqdefault cũng được:
-  // return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-};
 
 const CourseItem = ({ course }) => {
   const {
@@ -66,7 +39,7 @@ const CourseItem = ({ course }) => {
   
   <div className="relative">
     <img
-      src={getYouTubeThumbnail(thumbnail_url)}
+      src={getThumbnailUrl(thumbnail_url)}
       alt={title}
       className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
       onError={(e) => {

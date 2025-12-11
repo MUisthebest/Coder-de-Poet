@@ -19,7 +19,7 @@ export class SearchService {
       search = '',
       skip = 0,
       take = 20,
-      status,
+      status = "published",
       access_type,
       sort = 'latest',
     } = params;

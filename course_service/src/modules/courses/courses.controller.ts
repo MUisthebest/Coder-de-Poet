@@ -6,6 +6,7 @@ import {
     Param,
     Patch,
     Post,
+    ParseUUIDPipe, 
     Query,
     Req,
     UseGuards,
@@ -15,14 +16,16 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { QueryCourseDto } from './dto/query-course.dto';
 import { BadRequestException } from '@nestjs/common';
+import { AuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('courses')
 export class CoursesController {
     constructor(private readonly coursesService: CoursesService) {}
 
+    @UseGuards(AuthGuard)
     @Post()
     create(@Body() dto: CreateCourseDto, @Req() req) {
-        return this.coursesService.create({ ...dto, instructorId: req.user.id });
+        return this.coursesService.create(dto, req.user.id );
     }
 
     @Get()
@@ -59,7 +62,6 @@ export class CoursesController {
 
     @Get('instructor/:instructorId')
     findAllByInstructor(@Param('instructorId') instructorId: string) {
-    console.log('Controller: instructorId from param:', instructorId);
     if (!instructorId) {
         throw new BadRequestException('instructorId is required');
     }
@@ -70,15 +72,17 @@ export class CoursesController {
     findOne(@Param('id') id: string) {
         return this.coursesService.findOne(id);
     }
-
+    
+    @UseGuards(AuthGuard)
     @Patch(':id')
     update(@Param('id') id: string, @Body() dto: UpdateCourseDto, @Req() req) {
-        return this.coursesService.update(id, dto, req.user.userId);
+        return this.coursesService.update(id, dto, req.user.id);
     }
 
+    @UseGuards(AuthGuard)
     @Delete(':id')
     remove(@Param('id') id: string, @Req() req) {
-        return this.coursesService.remove(id, req.user.userId);
+        return this.coursesService.remove(id, req.user.id);
     }
 
     @Post(':id/publish')

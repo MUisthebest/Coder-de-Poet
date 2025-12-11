@@ -4,6 +4,7 @@ import {
   FiBarChart2,
   FiTrash2,
 } from "react-icons/fi";
+import { getThumbnailUrl } from "../../utils/thumbnailHelper";
 
 const CoursesTable = ({ courses, onView, onEdit, onAnalytics, onDelete }) => (
   <div className="overflow-x-auto">
@@ -31,7 +32,7 @@ const CoursesTable = ({ courses, onView, onEdit, onAnalytics, onDelete }) => (
               onClick={() => onView(course)}
             >
               <img
-                src={course.thumbnailUrl || "https://via.placeholder.com/80"}
+                src={getThumbnailUrl(course.thumbnail_url) || "https://via.placeholder.com/80"}
                 alt={course.title}
                 className="w-16 h-10 rounded-lg object-cover flex-shrink-0"
               />
@@ -61,14 +62,14 @@ const CoursesTable = ({ courses, onView, onEdit, onAnalytics, onDelete }) => (
               </span>
             </td>
 
-            <td className="px-4 py-3 text-center">{course.studentsCount}</td>
+            <td className="px-4 py-3 text-center">{course.student_count}</td>
 
             <td className="px-4 py-3 text-center">
               {course.rating ? `${course.rating.toFixed(1)} ⭐` : "-"}
             </td>
 
             <td className="px-4 py-3 text-center">
-              {new Date(course.createdAt).toLocaleDateString()}
+              {new Date(course.updated_at).toLocaleDateString()}
             </td>
 
             {/* Hành động (icon) */}
