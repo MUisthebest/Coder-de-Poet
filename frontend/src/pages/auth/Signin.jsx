@@ -10,17 +10,22 @@ const SignIn = () => {
   const [error, setError] = useState('');
   const [isComponentMounted, setIsComponentMounted] = useState(true);
 
-  const { login, socialLogin, isAuthenticated, loading, isAdmin } = useAuth();
+  const { login, socialLogin, isAuthenticated, loading, isAdmin, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
 
   // Redirect if already authenticated
   useEffect(() => {
+    if (!user) return;
     if (!loading && isAuthenticated) {
       if (isAdmin) {
         navigate('/admin', { replace: true });
-      } else {
+      }
+      else if (user.role === "Instructor") {
+        navigate('/instructor/dashboard', {replace: true});
+      }
+      else {
         navigate('/', { replace: true });
       }
     }
@@ -93,7 +98,12 @@ const SignIn = () => {
           
           if (result.role === "Admin") {
             navigate('/admin', { replace: true });
-          } else {
+          }
+          else if (result.role === "Instructor") {
+            console.log('kkk')
+            navigate('/instructor/dashboard', {replace: true});
+          }
+          else {
             navigate(redirectPath, { replace: true });
           }
         } else {

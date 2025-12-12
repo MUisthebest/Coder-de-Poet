@@ -9,7 +9,10 @@ import { QueryCourseDto } from './dto/query-course.dto';
 export class CoursesRepository {
   constructor(@Inject(PG_POOL) private pool: Pool) {}
 
-  async create(dto: CreateCourseDto) {
+// courses.service.ts
+  async create(createData: { dto: CreateCourseDto, instructorId: string }) {
+    const { dto, instructorId } = createData;
+    
     const query = `
       INSERT INTO courses (
         instructor_id,
@@ -24,25 +27,23 @@ export class CoursesRepository {
         updated_at,
         student_count
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,now())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, now(), 0)
       RETURNING *;
     `;
 
     const values = [
-      dto.instructorId,
+      instructorId, 
       dto.categoryId,
       dto.title,
       dto.slug,
       dto.description ?? null,
-      dto.tag ?? null,
+      dto.tag ? JSON.stringify(dto.tag) : null, 
       dto.accessType,
       dto.status ?? 'draft',
       dto.thumbnailUrl ?? null,
-      0
     ];
 
     const { rows } = await this.pool.query(query, values);
-    console.log('Created course:', rows[0]);
     return rows[0];
   }
 
@@ -301,5 +302,34 @@ export class CoursesRepository {
       skip,
       take,
     };
+  }
+
+  async findByInstructorId(instructorId: string) {
+    console.log('findByInstructorId called with:', instructorId);
+    console.log('Type of instructorId:', typeof instructorId);
+    console.log('Length:', instructorId.length);
+    
+    const { rows } = await this.pool.query(
+      `SELECT * FROM courses WHERE instructor_id = $1 ORDER BY updated_at DESC NULLS LAST`,
+      [instructorId],
+    );
+    
+    console.log('Number of rows returned:', rows.length);
+    if (rows.length > 0) {
+      console.log('First row instructor_id:', rows[0].instructor_id);
+    }
+    
+    return rows;
+  }
+  async checkInstructorOwnership(courseId: string, instructorId: string): Promise<boolean> {
+    const { rows } = await this.pool.query(
+      `SELECT EXISTS(
+        SELECT 1 FROM courses 
+        WHERE id = $1 AND instructor_id = $2
+      ) AS is_owner`,
+      [courseId, instructorId]
+    );
+    
+    return rows[0].is_owner;
   }
 }

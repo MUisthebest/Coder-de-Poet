@@ -69,6 +69,24 @@ namespace auth_service.Presentation.Controllers
             });        
     }
 
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout()
+    {
+        var refreshToken = Request.Cookies["refreshToken"];
+        
+        if (!string.IsNullOrEmpty(refreshToken))
+        {
+            // Nên có cơ chế revoke token ở phía server
+            await _userUseCase.RevokeRefreshTokenAsync(refreshToken);
+        }
+        
+        // Xóa cookie
+        Response.Cookies.Delete("refreshToken");
+        
+        return Ok(new { message = "Logged out successfully" });
+    }
+
 
         [HttpPost("refresh-token")]
         [AllowAnonymous]

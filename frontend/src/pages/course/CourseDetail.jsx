@@ -126,7 +126,7 @@ const CourseDetail = () => {
   const [checkingEnrollment, setCheckingEnrollment] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
   const { isOpen } = useSidebar();
-  const { user } = useAuth();
+  const { user, canManageCourse } = useAuth();
   const [courseLoading, setCourseLoading] = useState(true);
   const [relatedCourses, setRelatedCourses] = useState([]);
   const [relatedLoading, setRelatedLoading] = useState(false);
@@ -394,37 +394,21 @@ const CourseDetail = () => {
 
   // Render chính - HIỂN THỊ KHÓA HỌC DÙ CHƯA ĐĂNG KÝ
   return (
-    <div className="flex flex-row max-w-8xl mx-auto p-4 gap-1 min-h-screen">
-      <div className={`flex flex-col gap-1 px-10 ${isOpen?'w-[70%]':'w-[75%]'}`}>
+    <div className="flex flex-col md:flex-row max-w-8xl mx-auto md:p-4 gap-1 min-h-screen overflow-y-auto md:overflow-hidden w-full">
+      <div className={`flex w-full md:w-[66vw] flex-col gap-1 md:px-10`}>
         {/* Course Info - ĐÃ TÍCH HỢP COMPONENT CourseInfo */}
         {courseData && (
           <>
-            {/* Preview Video (chỉ show nếu có current lesson và đã đăng ký) */}
-            {isEnrolled && currentLesson ? (
-              <div className="flex-grow">
-                <PlayVideo
-                  currentLesson={currentLesson}
-                  lessons={lessons}
-                  getEmbedUrl={getEmbedUrl}
-                />
-              </div>
-            ) : (
-              // Preview for non-enrolled users
-              <div className="flex-grow bg-gray-50 rounded-xl p-6 border border-gray-200">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">
-                  Xem trước khóa học
-                </h2>
-                <div className="aspect-video bg-black rounded-xl overflow-hidden">
-                  <div className="w-full h-full flex items-center justify-center text-white">
-                    <div className="text-center">
-                      <div className="text-6xl mb-4">🔒</div>
-                      <p className="text-lg">Đăng ký để xem video</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
+            <div className="flex-grow sm:w-[60vw]">
+              <PlayVideo
+                currentLesson={currentLesson}
+                lessons={lessons}
+                courseId={courseData.id}
+                getEmbedUrl={getEmbedUrl}
+                isEnrolled={isEnrolled}
+              />
+            </div>
+          
             {/* Component CourseInfo đã được tích hợp với đầy đủ props */}
             <div className="mt-1">
               <CourseInfo 
@@ -433,6 +417,7 @@ const CourseDetail = () => {
                 isEnrolled={isEnrolled} 
                 onEnroll={handleEnroll} 
                 enrolling={enrolling} 
+                currentLesson={currentLesson}
               />
             </div>
           </>
@@ -440,11 +425,11 @@ const CourseDetail = () => {
       </div>
       
       {/* Playlist - Hiển thị cho cả người chưa đăng ký (nhưng chỉ show tên bài học) */}
-      <div className={isOpen ? "w-[30%]" : "w-[25%]"}>
+      <div className={isOpen ? "w-full md:w-[8vw]" : "w-full md:w-[20vw]"}>
         <CoursePlaylist
           lessons={lessons}
           currentLesson={currentLesson}
-          setCurrentLesson={isEnrolled ? setCurrentLesson : () => {}} // Chỉ cho phép click khi đã đăng ký
+          setCurrentLesson={isEnrolled || canManageCourse ? setCurrentLesson : () => {}} // Chỉ cho phép click khi đã đăng ký
           loading={loading}
           getThumbnail={getThumbnail}
           isEnrolled={isEnrolled}

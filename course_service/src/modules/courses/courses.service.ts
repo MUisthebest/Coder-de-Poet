@@ -1,5 +1,6 @@
 import { 
     BadRequestException,
+    ForbiddenException,
     Injectable,
     NotFoundException
 } from '@nestjs/common';
@@ -11,15 +12,14 @@ import { CoursesRepository } from './courses.repository';
 export class CoursesService {
     constructor(private readonly repo: CoursesRepository) {}
 
-    async create(dto: CreateCourseDto) {
+    async create(dto: CreateCourseDto, instructorId: string) {
         const exist = await this.repo.findBySlug(dto.slug);
         if (exist) {
             throw new BadRequestException('Course with this slug already exists');
         }
 
         dto.status = dto.status ?? 'draft';
-        const created = await this.repo.create(dto);
-        console.log('Service created course:', created);
+        const created = await this.repo.create({dto, instructorId});
         return created;
     }
     
@@ -46,11 +46,15 @@ export class CoursesService {
         return course;
     }
 
-    async update(id: string, dto: UpdateCourseDto) {
-        const exists = await this.repo.findById(id);
-        if (!exists) throw new NotFoundException('Course not found');
+    async update(id: string, dto: UpdateCourseDto, userId: any) {
+        const course = await this.repo.findById(id);
+        if (!course) throw new NotFoundException('Course not found');
 
-        if (dto.slug && dto.slug !== exists.slug) {
+        if (course.instructorId !== userId) {
+            throw new BadRequestException('You are not the instructor of this course');
+        }
+
+        if (dto.slug && dto.slug !== course.slug) {
             const slugCourse = await this.repo.findBySlug(dto.slug);
             if (slugCourse && slugCourse.id !== id)
                 throw new BadRequestException('Course with this slug already exists');
@@ -58,9 +62,15 @@ export class CoursesService {
         return this.repo.update(id, dto);
     }
     
-    async remove(id: string) {
+    async remove(id: string, userId: any) {
+        const course = await this.repo.findById(id);
+        if (!course) throw new NotFoundException('Course not found');
+
+        if (course.instructor_id !== userId) {
+            throw new ForbiddenException('You can only delete your own courses');
+        }
+
         const deleted = await this.repo.delete(id);
-        if (!deleted) throw new NotFoundException('Course not found');
         return deleted;
     }
 
@@ -133,4 +143,20 @@ export class CoursesService {
         if (!exists) throw new NotFoundException('Course not found');
     }
 
+
+    async findByInstructor(id: string) {
+        return await this.repo.findByInstructorId(id);
+    }
+    async findOneWithOwnershipCheck(id: string, instructorId?: string) {
+    const course = await this.findOne(id);
+    
+    let isOwner = false;
+        if (instructorId) {
+            isOwner = await this.repo.checkInstructorOwnership(id, instructorId);
+        }
+        
+        return {
+            isAccess: isOwner
+        };
+    }
 }

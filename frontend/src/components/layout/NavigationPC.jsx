@@ -8,7 +8,7 @@ export default function Navigation_PC() {
 
   return (
     <nav
-      className={`bg-[#EFE9E3] shadow-lg rounded-3xl border-[#e0e0e0] border-[1px] h-[96vh] flex flex-col transition-all duration-300 ease-in-out
+      className={`bg-[#E3E3E3] shadow-lg rounded-3xl border-[1px] border-[#aaa] h-[96vh] flex flex-col transition-all duration-300 ease-in-out
         ${isOpen ? "w-[20vw]" : "w-[8vw]"}`}
     >
       {/* TOP SECTION */}
@@ -38,7 +38,7 @@ export default function Navigation_PC() {
 
         {/* MENU ITEMS */}
         <ul className="flex flex-col space-y-1 text-gray-700 font-medium flex-1 gap-[calc(1vh_+_5px)]">
-          <NavItem to={`${isAdmin ? '/admin': '/'}`} label={`${isAdmin ? 'Total': 'Dashboard'}`} icon="home-alt-2" isOpen={isOpen} />
+          <NavItem to={`${user === null ? '/' : user.role === "Admin" ? '/admin': user.role === "Instructor" ? '/instructor/dashboard':'/'}`} label={`${isAdmin ? 'Total': 'Dashboard'}`} icon="home-alt-2" isOpen={isOpen} />
           <NavItem to={`${isAdmin ? '/admin/courses': '/courses'}`} label={`${isAdmin ? 'Manage Courses': 'Courses'}`} icon="book" isOpen={isOpen} />
           <NavItem to="/book" label={`${isAdmin ? 'Manage Library': 'Library'}`} icon="book-open" isOpen={isOpen} />
           <NavItem to="/calendar" label="Calendar" icon="calendar-alt" isOpen={isOpen} />
@@ -126,7 +126,7 @@ function NavItem({ to, label, icon, isOpen }) {
     <li>
       <NavLink to={to} end>
         {({ isActive }) => (
-          <div className={`flex items-center justify-start h-[calc(16px_+_3vw)] rounded-md text-sm font-medium transition-all duration-200 hover:bg-[#D9CFC7]`}>
+          <div className={`flex items-center justify-start h-[calc(16px_+_3vw)] rounded-md text-sm font-medium transition-all duration-200 hover:bg-[#ccc]`}>
             {/* CỘT ICON - CỐ ĐỊNH */}
             <div className="w-[8vw] h-full flex items-center justify-center px-1">
               <div

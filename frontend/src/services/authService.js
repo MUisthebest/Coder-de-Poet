@@ -34,7 +34,6 @@ class AuthService {
 
 async socialLogin(provider, accessToken) {
   try {
-    console.log('🔄 Processing social login with access token...');
     
     const payload = {
       Provider: "google",
@@ -76,7 +75,6 @@ async socialLogin(provider, accessToken) {
 
   async getCurrentUser() {
     const response = await api.get('/api/auth/me');
-    console.log(response);
     return response.data; 
   }
 

@@ -11,6 +11,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AiKafkaEventsController } from './Message/kafka.events';
 import { QuizStore } from './store/quiz.store';
 import { AiKafkaClient } from './Message/kafka.client';
+import { CoursesModule } from '../courses/courses.module';
 
 
 const brokers =
@@ -34,7 +35,8 @@ const brokers =
           },
         }
       }
-    ])
+    ]),
+    CoursesModule
   ],
   controllers: [LessonsController, AiKafkaEventsController],
   providers: [LessonsService, LessonsRepository, EnrollmentsRepository, EnrolledGuard, AuthGuard, QuizStore, AiKafkaClient],

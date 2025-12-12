@@ -6,21 +6,26 @@ import {
     Param,
     Patch,
     Post,
+    ParseUUIDPipe, 
     Query,
+    Req,
+    UseGuards,
  } from '@nestjs/common';
-
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { QueryCourseDto } from './dto/query-course.dto';
+import { BadRequestException } from '@nestjs/common';
+import { AuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('courses')
 export class CoursesController {
     constructor(private readonly coursesService: CoursesService) {}
 
+    @UseGuards(AuthGuard)
     @Post()
-    create(@Body() dto: CreateCourseDto) {
-        return this.coursesService.create(dto);
+    create(@Body() dto: CreateCourseDto, @Req() req) {
+        return this.coursesService.create(dto, req.user.id );
     }
 
     // Return course list with trending tags
@@ -56,19 +61,29 @@ export class CoursesController {
         return this.coursesService.getCoursesByCategory(categoryId, query);
     }
 
+    @Get('instructor/:instructorId')
+    findAllByInstructor(@Param('instructorId') instructorId: string) {
+    if (!instructorId) {
+        throw new BadRequestException('instructorId is required');
+    }
+    return this.coursesService.findByInstructor(instructorId);
+    }
+
     @Get(':id')
     findOne(@Param('id') id: string) {
         return this.coursesService.findOne(id);
     }
-
+    
+    @UseGuards(AuthGuard)
     @Patch(':id')
-    update(@Param('id') id: string, @Body() dto: UpdateCourseDto) {
-        return this.coursesService.update(id, dto);
+    update(@Param('id') id: string, @Body() dto: UpdateCourseDto, @Req() req) {
+        return this.coursesService.update(id, dto, req.user.id);
     }
 
+    @UseGuards(AuthGuard)
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.coursesService.remove(id);
+    remove(@Param('id') id: string, @Req() req) {
+        return this.coursesService.remove(id, req.user.id);
     }
 
     @Post(':id/publish')
@@ -86,5 +101,11 @@ export class CoursesController {
         return this.coursesService.draft(id);
     }
 
-
+  @Get(':id/details')
+  async findOneWithOwnership(
+    @Param('id') id: string,
+    @Query('instructorId') instructorId?: string,
+  ) {
+    return this.coursesService.findOneWithOwnershipCheck(id, instructorId);
+  }
 }

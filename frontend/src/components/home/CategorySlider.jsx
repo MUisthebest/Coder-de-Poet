@@ -30,9 +30,9 @@ export default function CategorySlider({ categories, activeCategory, setActiveCa
         container.removeEventListener('scroll', checkScroll);
       };
     }
-  }, [categories]); // Re-check khi categories thay đổi
+  }, [categories]);
 
-  // Scroll functions (tùy chọn)
+  // Scroll functions
   const scrollLeft = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
@@ -47,22 +47,22 @@ export default function CategorySlider({ categories, activeCategory, setActiveCa
 
   return (
     <div className="w-full relative">
-      {/* Left blur overlay */}
+      {/* Blur overlays - nằm dưới các nút điều hướng nhưng trên content */}
       {showLeftBlur && (
         <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
       )}
 
-      {/* Right blur overlay */}
       {showRightBlur && (
         <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
       )}
 
-      {/* Optional navigation buttons - chỉ hiện trên desktop */}
+      {/* Nút điều hướng - z-index cao hơn blur */}
       <div className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-20">
         <button
           onClick={scrollLeft}
           className="p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow"
           aria-label="Scroll left"
+          disabled={!showLeftBlur}
         >
           <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -75,6 +75,7 @@ export default function CategorySlider({ categories, activeCategory, setActiveCa
           onClick={scrollRight}
           className="p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow"
           aria-label="Scroll right"
+          disabled={!showRightBlur}
         >
           <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -82,34 +83,29 @@ export default function CategorySlider({ categories, activeCategory, setActiveCa
         </button>
       </div>
 
-      {/* Scroll container với blur effect */}
+      {/* Scroll container - z-index thấp nhất */}
       <div
         ref={scrollContainerRef}
-        className="flex gap-4 overflow-x-auto scrollbar-hide py-3 px-6
+        className="flex gap-4 overflow-x-auto scrollbar-hide py-3 px-8 md:px-12
                    snap-x snap-mandatory scroll-pl-6
                    [-ms-overflow-style:'none'] [scrollbar-width:'none']
                    [&::-webkit-scrollbar]:hidden
-                   relative z-0"
+                   relative z-0"  // Đảm bảo z-0 thấp hơn blur (z-10)
       >
         {categories.map((category) => (
           <button
             key={category.id}
             onClick={() => setActiveCategory(category.name)}
             className={`flex-shrink-0 flex items-center gap-3 px-5 py-3 rounded-full border transition-all duration-200
-              snap-start relative
+              snap-start
               ${
                 activeCategory === category.name
-                  ? "bg-[#333] text-white border-white shadow-md z-10"
-                  : "bg-[#EFE9E3] text-gray-700 border-gray-300 hover:border-gray-500 hover:shadow-sm"
+                  ? "bg-[#333] text-white border-white shadow-md relative z-30"  // Tăng z-index khi active
+                  : "bg-[#E3E3E3] text-gray-700 border-gray-300 hover:border-gray-500 hover:shadow-sm relative z-0"
               }`}
-            style={{
-              // Thêm backdrop-filter cho blur effect khi bị che
-              backdropFilter: 'blur(2px)',
-              WebkitBackdropFilter: 'blur(2px)',
-            }}
           >
             <div className={`h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0
-              ${activeCategory === category.name ? 'bg-white/20' : 'bg-white'}`}>
+              ${activeCategory === category.name ? 'bg-white' : 'bg-white'}`}>
               <img
                 src={category.image}
                 alt={category.name}

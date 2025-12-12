@@ -13,6 +13,5 @@ using auth_service.Domain.Entity;
         Task<User?> GetUserByIdAsync (Guid id);
         Task UpdateUserAsync (User user);
         Task<User?> GetUserByRefreshTokenAsync (string refreshToken);    
-
     }
 }

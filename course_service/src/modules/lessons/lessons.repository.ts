@@ -84,4 +84,17 @@ export class LessonsRepository {
     );
     return rows[0] ?? null;
   }
+
+  async findByCourseAndInstructor(courseId: string) {
+    const query = `
+      SELECT l.*
+      FROM lessons l
+      JOIN courses c ON l.course_id = c.id
+      WHERE l.course_id = $1
+      ORDER BY l.position ASC, l.updated_at DESC;
+    `;
+
+    const { rows } = await this.pool.query(query, [courseId]);
+    return rows;
+  }
 }

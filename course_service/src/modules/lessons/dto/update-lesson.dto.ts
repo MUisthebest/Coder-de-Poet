@@ -4,4 +4,5 @@ export class UpdateLessonDto {
   contentUrl?: string;
   contentBody?: string;
   position?: number;
+  updatedAt?: Date;
 }

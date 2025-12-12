@@ -73,13 +73,25 @@ const MyCourses = ({ courses: coursesProp = [], user }) => {
       
       setLoading(true);
       try {
+        let data = null;
         const token = authService.getStoredToken();
-        const res = await axios.get(`${API_URL}/enrollments/user/${user.id}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        });
+        if (user && user.role === "Instructor") {
+          const res = await axios.get(`${API_URL}/courses/instructor/${user.id}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          });
+          data = res.data;
+          console.log("API response:", data);
+        }
+        else {
+          const res = await axios.get(`${API_URL}/enrollments/user/${user.id}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          });
+          data = res.data;
+          console.log("API response:", data);
+        }
+
         
-        let data = res.data;
-        console.log("API response:", data);
+
         
         if (data?.items) data = data.items;
         if (!Array.isArray(data)) {
@@ -127,6 +139,8 @@ const MyCourses = ({ courses: coursesProp = [], user }) => {
     if (!window.confirm('Bạn có chắc chắn muốn hủy đăng ký khóa học này?')) {
       return;
     }
+
+    if(user.role === "Instructor" || user.role === "Admin") return;
     
     setUnenrollingCourseId(courseId);
     try {

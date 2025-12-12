@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+    IsDateString,
     IsIn,
     IsInt,
     IsOptional,
@@ -42,5 +43,9 @@ export class QueryCourseDto {
     @IsUUID()
     @IsOptional()
     instructorId?: string;
+
+    @IsDateString()
+    @IsOptional()
+    updatedAt?: Date;
 }
 

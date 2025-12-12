@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import Navigation_PC from "./components/layout/NavigationPC";
-import Navigation_Mobile from "./components/layout/NavigationMobile";
+import NavigationPC from "./components/layout/NavigationPC";
+import NavigationMobile from "./components/layout/NavigationMobile";
 import Home from "./pages/public/Home";
 import SignIn from "./pages/auth/Signin";
 import SignUp from './pages/auth/Signup';
@@ -9,16 +9,19 @@ import ProtectedRoute from './components/admin/ProtectedRoute';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCourses from './pages/admin/AdminCourses';
 import AdminRoute from './components/admin/AdminRoute';
+import InstructorRoute from './components/instructor/InstructorRoute';
 import { SidebarProvider } from "./contexts/SidebarContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import GoogleCallbackHandler from './components/auth/GoogleCallbackHandler';
 import CourseDetail from './pages/course/CourseDetail';
 import CourseList from './pages/course/CourseList';
+import InstructorDashboard from './pages/instructor/InstructorDashboard';
+import CourseDetailModal from './pages/instructor/CourseDetailModal';
  
 // Component để xử lý redirect dựa trên role
 function RoleBasedRedirect() {
-  const { isAdmin, isAuthenticated, loading } = useAuth();
+  const { isAdmin, isAuthenticated, loading, user } = useAuth();
   
   if (loading) {
     return (
@@ -31,6 +34,10 @@ function RoleBasedRedirect() {
   // Nếu là admin → redirect đến /admin
   if (isAuthenticated && isAdmin) {
     return <Navigate to="/admin" replace />;
+  }
+
+  if (user.role === "Instructor") {
+    return <Navigate to='/instructor/dashboard' replace/>;
   }
   
   // Nếu là user thường → redirect đến home
@@ -51,16 +58,16 @@ function Layout() {
       
       {!hideNavigation && (
         <>
-          <div className="block md:hidden w-full p-2">
-            <Navigation_Mobile />
+          <div className="absolute md:hidden w-full p-2  z-60 sticky">
+            <NavigationMobile />
           </div>
           <div className="hidden md:block">
-            <Navigation_PC />
+            <NavigationPC />
           </div>
         </>
       )}
 
-      <main className="flex-1 w-full md:px-0 md:h-[100vh] overflow-hidden">
+      <main className="flex-1 md:w-full h-[100vh] md:px-0  z-10">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<SignIn />} />
@@ -69,6 +76,15 @@ function Layout() {
           <Route path="/courses/:id" element={<CourseDetail />} />
           <Route path="/auth/google/callback" element={<GoogleCallbackHandler />} />
           <Route path="/courses" element={<CourseList />}/>
+
+          <Route 
+            path="/instructor/dashboard" 
+            element={ 
+              <InstructorRoute>
+                <InstructorDashboard />
+              </InstructorRoute>
+            } 
+          />
           
           {/* Protected admin routes */}
           <Route 

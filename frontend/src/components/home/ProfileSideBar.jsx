@@ -27,7 +27,7 @@ const ProfileSidebar = ({
   // Hiển thị loading state
   if (loading) {
     return (
-      <div className={`rounded-2xl bg-[#EFE9E3] overflow-hidden h-[96vh] shadow-lg transition-all duration-300 ${isOpen ? 'w-[8vw]' : 'w-[20vw]'}`}>
+      <div className={`rounded-2xl bg-[#E3E3E3] overflow-hidden h-[96vh] shadow-lg transition-all duration-300 ${isOpen ? 'w-[8vw]' : 'w-[20vw]'}`}>
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -41,9 +41,9 @@ const ProfileSidebar = ({
   // Nếu chưa đăng nhập, hiển thị login prompt
   if (!isAuthenticated) {
     return (
-      <div className={`rounded-2xl bg-[#EFE9E3] overflow-hidden h-[96vh] shadow-lg transition-all duration-300 ${isOpen ? 'w-[8vw]' : 'w-[20vw]'}`}>
+      <div className={`rounded-2xl bg-[#E3E3E3] border-[1px] border-[#aaa] overflow-hidden h-[96vh] shadow-lg transition-all duration-300 ${isOpen ? 'w-[8vw]' : 'w-[20vw]'}`}>
         {/* Login Prompt */}
-        <div className="bg-[#EFE9E3] h-full p-6 text-center flex flex-col items-center justify-center">
+        <div className="bg-[#E3E3E3] h-full p-6 text-center flex flex-col items-center justify-center">
           {/* Default Avatar */}
           <div className="w-20 h-20 bg-gradient-to-r from-gray-400 to-gray-600 rounded-full mx-auto mb-4 flex items-center justify-center">
             <span className="text-white text-2xl font-bold">?</span>
@@ -67,18 +67,27 @@ const ProfileSidebar = ({
 
   // Nếu đã đăng nhập, hiển thị profile bình thường
   return (
-    <div className={`rounded-2xl bg-[#EFE9E3] overflow-hidden h-[96vh] shadow-lg transition-all duration-300 ${isOpen ? 'w-[8vw]' : 'w-[20vw]'}`}>
+    <div className={`rounded-2xl border-[1px] border-[#aaa] bg-[#E3E3E3] border-[1px] border-[#ccc] overflow-hidden h-[96vh] shadow-lg transition-all duration-300 ${isOpen ? 'w-[8vw]' : 'w-[20vw]'}`}>
       <div className={`px-[1vw]  mt-5 w-full transition-all duration-300  ${isOpen ? ' flex flex-col mb-10 w-full items-center gap-3' : 'absolute  flex flex-row items-self-start  gap-[14vw]'}`}>
         <i className='bxr  bx-bell text-[2vw]'></i>
         <i className='bxr  bx-cog text-[2vw]'></i>  
       </div>
       {/* Profile Header */}
-      <div className="bg-[#EFE9E3] h-[32vh] p-6 text-center">
-        {/* Avatar */}
-        <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-          <span className="text-white text-[calc(1vw_+_2px)] font-bold">
-            {user?.fullName?.charAt(0) || 'U'}
-          </span>
+      <div className="bg-[#E3E3E3] h-[32vh] p-6 text-center">
+        <div className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden">
+          {user?.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt="Avatar"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center">
+              <span className="text-white text-[calc(1vw_+_2px)] font-bold">
+                {user?.fullName?.charAt(0) || 'U'}
+              </span>
+            </div>
+          )}
         </div>
         
         {/* Name */}
@@ -113,7 +122,7 @@ const ProfileSidebar = ({
       </div>
 
       {/* Tab Content */}
-      <div className={`bg-[#EFE9E3] p-6 mt-4 h-[60vh] ${isOpen ? 'hidden' : ''}`}>
+      <div className={`bg-[#E3E3E3] p-6 mt-4 h-[60vh] ${isOpen ? 'hidden' : ''}`}>
         {activeTab === 'friends' && (
           <FriendsList friends={friends} />
         )}
