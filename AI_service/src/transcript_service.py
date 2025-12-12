@@ -31,6 +31,15 @@ def download_video(video_url: str, filename_hint: str | None = None) -> str:
 
     return local_filename
 
+'''
+    Delete video file after transcription to save space.
+'''
+
+def delete_video(file_path: str) -> None:
+    if not os.path.exists(file_path):
+        return
+    os.remove(file_path)
+
 
 def transcribe_video(video_path: str, language: str = "en") -> str:
     segments, info = model.transcribe(video_path, language=language)

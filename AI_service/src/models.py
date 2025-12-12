@@ -8,9 +8,6 @@ from typing import List, Optional
 from enum import Enum
 
 
-
-
-
 class Question (BaseModel):
     question: str = None
     options: List[str] = []
@@ -27,6 +24,7 @@ class GenerateLessonQuizCommand (BaseModel):
     
     difficulty: str = "medium"  # "easy", "medium", "hard"
     question_type : List[str] = ["multiple_choice", "true_false"]  # "multiple_choice", "true_false"
+    #source_type: str 
 
 
 class LessonQuizGeneratedEvent (BaseModel):

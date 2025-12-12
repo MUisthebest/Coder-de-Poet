@@ -25,7 +25,7 @@ from .message_service import (
     parse_generate_lesson_quiz_command,
     send_lesson_quiz_generated_event,
 )
-from .transcript_service import download_video, transcribe_video
+from .transcript_service import download_video, transcribe_video, delete_video
 from .quiz_service import generate_quiz_from_transcript
 
 
@@ -134,6 +134,13 @@ async def consume_loop(consumer):
 
             # 6. Publish event
             await send_lesson_quiz_generated_event(producer, event)
+
+            # 7. Clean up downloaded video
+            try:
+                if 'video_path' in locals():
+                    delete_video(video_path)
+            except Exception:
+                logger.warning("Failed to delete video file.", exc_info=True)
 
     except asyncio.CancelledError:
         logger.info("Consumer loop cancelled.")

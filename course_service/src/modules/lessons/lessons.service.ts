@@ -1,11 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { LessonsRepository } from './lessons.repository';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
+import { AiKafkaClient } from './Message/kafka.client';
+import {GenerateLessonQuizCommand, LessonQuizGeneratedEvent} from './dto/quiz.dto';
+import {QuizStore} from './store/quiz.store';
+/**
+    Sending GenerateLessonQuizCommand to AI_service via Kafka.
+**/
 
 @Injectable()
 export class LessonsService {
-  constructor(private readonly repo: LessonsRepository) {}
+  private readonly logger = new Logger(LessonsService.name);
+  constructor(private readonly aiKafkaClient: AiKafkaClient, private readonly quizStore: QuizStore ,private readonly repo: LessonsRepository) {}
 
   async create(dto: CreateLessonDto) {
     // basic validation
@@ -35,4 +42,22 @@ export class LessonsService {
     if (!deleted) throw new NotFoundException('Lesson not found');
     return deleted;
   }
+
+
+
+  // quiz service: 
+  async createQuiz(dto: any): Promise<string> {
+
+
+        const command: GenerateLessonQuizCommand = {
+            lesson_id: dto.lesson_id,
+            course_id: dto.course_id,
+            lesson_name: dto.lesson_name,
+            video_url: dto.video_url,
+
+        };
+
+        await this.aiKafkaClient.sendGenerateLessonQuizCommand(command);
+        return dto.lesson_id;
+    }
 }

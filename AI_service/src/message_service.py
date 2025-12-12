@@ -45,8 +45,10 @@ async def create_consumer(loop = None) -> AIOKafkaConsumer:
 
 def parse_generate_lesson_quiz_command(value: str) -> GenerateLessonQuizCommand:
     data = json.loads(value)
+    print(data)
     command = GenerateLessonQuizCommand(**data)
     return command
+
     
 async def send_lesson_quiz_generated_event(producer: AIOKafkaProducer, event: LessonQuizGeneratedEvent) -> None:
     key_bytes = build_partition_key (event.course_id or "", event.lesson_id)
