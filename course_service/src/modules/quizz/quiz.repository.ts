@@ -1,0 +1,550 @@
+// quiz.repository.ts
+import { Injectable, Inject, BadRequestException } from '@nestjs/common';
+import { Pool } from 'pg';
+import { CreateQuizDto } from './dto/create-quiz.dto';
+
+interface FindOptions {
+  where?: Record<string, any>;
+  relations?: string[];
+}
+
+interface QuizFilters {
+  lessonId?: number;
+  status?: string;
+  title?: string;
+}
+
+@Injectable()
+export class QuizRepository {
+  constructor(
+    @Inject('PG_POOL') private readonly pool: Pool,
+  ) {}
+
+  // Tạo quiz mới với questions
+  async createQuizWithQuestions(createQuizDto: CreateQuizDto): Promise<any> {
+    const client = await this.pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+
+      // 1. Insert quiz
+      const quizQuery = `
+        INSERT INTO quizzes (title, description, lesson_id, duration, max_attempts, status)
+        VALUES ($1, $2, $3, $4, $5, 'draft')
+        RETURNING *;
+      `;
+      const quizValues = [
+        createQuizDto.title,
+        createQuizDto.description || null,
+        createQuizDto.lessonId,
+        createQuizDto.duration,
+        createQuizDto.maxAttempts || 1,
+      ];
+      
+      const quizResult = await client.query(quizQuery, quizValues);
+      const quiz = quizResult.rows[0];
+
+      // 2. Insert questions nếu có
+      if (createQuizDto.questions && createQuizDto.questions.length > 0) {
+        const questions = createQuizDto.questions;
+        
+        for (let i = 0; i < questions.length; i++) {
+          const question = questions[i];
+          const questionQuery = `
+            INSERT INTO questions (
+              quiz_id, content, type, options, correct_answer, points, order_index
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING *;
+          `;
+          
+          const questionValues = [
+            quiz.id,
+            question.content,
+            question.type,
+            question.options ? JSON.stringify(question.options) : null,
+            question.correctAnswer,
+            question.points,
+            i + 1, // order_index
+          ];
+          
+          await client.query(questionQuery, questionValues);
+        }
+      }
+
+      await client.query('COMMIT');
+      
+      // 3. Lấy quiz đầy đủ với questions
+      const fullQuiz = await this.findByIdWithQuestions(quiz.id);
+      return fullQuiz;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Error creating quiz:', error);
+      throw new BadRequestException('Failed to create quiz');
+    } finally {
+      client.release();
+    }
+  }
+
+  // Tạo instance (chỉ tạo object, không lưu DB)
+  create(createQuizDto: CreateQuizDto): any {
+    return {
+      title: createQuizDto.title,
+      description: createQuizDto.description,
+      lessonId: createQuizDto.lessonId,
+      duration: createQuizDto.duration,
+      maxAttempts: createQuizDto.maxAttempts || 1,
+      status: 'draft',
+    };
+  }
+
+  // Lưu quiz (không dùng trong trường hợp này, nhưng để phục vụ interface)
+  async save(quiz: any): Promise<any> {
+    const query = `
+      INSERT INTO quizzes (title, description, course_id, duration, max_attempts, status)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *;
+    `;
+    
+    const values = [
+      quiz.title,
+      quiz.description,
+      quiz.courseId,
+      quiz.duration,
+      quiz.maxAttempts,
+      quiz.status,
+    ];
+    
+    const result = await this.pool.query(query, values);
+    return result.rows[0];
+  }
+
+  // Tìm tất cả quiz
+  async find(options?: FindOptions): Promise<any[]> {
+    let query = `
+      SELECT 
+        q.*,
+        COUNT(qu.id) as question_count,
+        c.title as course_title
+      FROM quizzes q
+      LEFT JOIN questions qu ON q.id = qu.quiz_id
+      LEFT JOIN courses c ON q.course_id = c.id
+    `;
+    
+    const values: any[] = [];
+    
+    if (options?.where) {
+      const conditions: string[] = [];
+      Object.keys(options.where).forEach((key: string) => {
+        conditions.push(`${key} = $${values.length + 1}`);
+        values.push(options.where![key]);
+      });
+      if (conditions.length > 0) {
+        query += ` WHERE ${conditions.join(' AND ')}`;
+      }
+    }
+    
+    query += ` GROUP BY q.id, c.title ORDER BY q.created_at DESC`;
+    
+    const result = await this.pool.query(query, values);
+    return result.rows;
+  }
+
+  // Tìm quiz theo điều kiện
+  async findOne(options: FindOptions): Promise<any | null> {
+    const { where, relations } = options;
+    
+    let query = 'SELECT * FROM quizzes';
+    const values: any[] = [];
+    const conditions: string[] = [];
+    
+    if (where) {
+      Object.keys(where).forEach((key: string, index: number) => {
+        conditions.push(`${key} = $${index + 1}`);
+        values.push(where[key]);
+      });
+    }
+    
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
+    
+    query += ' LIMIT 1';
+    
+    const result = await this.pool.query(query, values);
+    
+    if (result.rows.length === 0) {
+      return null;
+    }
+    
+    const quiz = result.rows[0];
+    
+    // Nếu có relations và cần lấy questions
+    if (relations && relations.includes('questions')) {
+      const questionsQuery = `
+        SELECT * FROM questions 
+        WHERE quiz_id = $1 
+        ORDER BY order_index ASC
+      `;
+      const questionsResult = await this.pool.query(questionsQuery, [quiz.id]);
+      quiz.questions = questionsResult.rows.map((q: any) => {
+        // Sửa lỗi parse JSON - thêm try-catch
+        let options = null;
+        if (q.options) {
+          try {
+            // Kiểm tra nếu options đã là array thì không cần parse
+            if (typeof q.options === 'string') {
+              options = JSON.parse(q.options);
+            } else {
+              options = q.options;
+            }
+          } catch (error) {
+            console.error('Error parsing options JSON:', error, 'Raw options:', q.options);
+            options = null;
+          }
+        }
+        
+        return {
+          ...q,
+          options: options,
+        };
+      });
+    }
+    
+    return quiz;
+  }
+
+  // Tìm quiz theo ID với questions
+  async findByIdWithQuestions(id: string): Promise<any | null> {
+    // Lấy thông tin quiz
+    const quizQuery = 'SELECT * FROM quizzes WHERE id = $1';
+    const quizResult = await this.pool.query(quizQuery, [id]);
+    
+    if (quizResult.rows.length === 0) {
+      return null;
+    }
+    
+    const quiz = quizResult.rows[0];
+    
+    // Lấy questions
+    const questionsQuery = `
+      SELECT * FROM questions 
+      WHERE quiz_id = $1 
+      ORDER BY order_index ASC
+    `;
+    const questionsResult = await this.pool.query(questionsQuery, [id]);
+    
+    quiz.questions = questionsResult.rows.map((q: any) => {
+      // Sửa lỗi parse JSON - thêm try-catch
+      let options = null;
+      if (q.options) {
+        try {
+          // Kiểm tra nếu options đã là array thì không cần parse
+          if (typeof q.options === 'string') {
+            options = JSON.parse(q.options);
+          } else {
+            options = q.options;
+          }
+        } catch (error) {
+          console.error('Error parsing options JSON:', error, 'Raw options:', q.options);
+          options = null;
+        }
+      }
+      
+      return {
+        ...q,
+        options: options,
+      };
+    });
+    
+    return quiz;
+  }
+
+  // Tìm quiz theo course ID
+  async findByCourseId(lessonId: number): Promise<any[]> {
+    const query = `
+      SELECT 
+        q.*,
+        COUNT(qu.id) as question_count
+      FROM quizzes q
+      LEFT JOIN questions qu ON q.id = qu.quiz_id
+      WHERE q.course_id = $1
+      GROUP BY q.id
+      ORDER BY q.created_at DESC
+    `;
+    
+    const result = await this.pool.query(query, [lessonId]);
+    return result.rows;
+  }
+
+  // Cập nhật quiz (id là string)
+  async update(id: string, updateData: Record<string, any>): Promise<any> {
+    const fields: string[] = [];
+    const values: any[] = [];
+    let index = 1;
+    
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] !== undefined) {
+        fields.push(`${key} = $${index}`);
+        values.push(updateData[key]);
+        index++;
+      }
+    });
+    
+    if (fields.length === 0) {
+      return this.findByIdWithQuestions(id);
+    }
+    
+    values.push(id);
+    
+    const query = `
+      UPDATE quizzes 
+      SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $${index}
+      RETURNING *
+    `;
+    
+    const result = await this.pool.query(query, values);
+    
+    if (result.rows.length === 0) {
+      return null;
+    }
+    
+    return this.findByIdWithQuestions(id);
+  }
+
+  // Xóa quiz (id là string)
+  async delete(id: string): Promise<void> {
+    const query = 'DELETE FROM quizzes WHERE id = $1';
+    await this.pool.query(query, [id]);
+  }
+
+  // Thêm questions vào quiz (quizId là string)
+  async addQuestionsToQuiz(quizId: string, questionsDto: any[]): Promise<any> {
+    const client = await this.pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      // Lấy order_index hiện tại
+      const orderQuery = `
+        SELECT COALESCE(MAX(order_index), 0) as max_order 
+        FROM questions 
+        WHERE quiz_id = $1
+      `;
+      const orderResult = await client.query(orderQuery, [quizId]);
+      let currentOrder = orderResult.rows[0]?.max_order || 0;
+      
+      // Thêm từng question
+      for (let i = 0; i < questionsDto.length; i++) {
+        const question = questionsDto[i];
+        currentOrder++;
+        
+        const questionQuery = `
+          INSERT INTO questions (
+            quiz_id, content, type, options, correct_answer, points, order_index
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+          RETURNING *;
+        `;
+        
+        const questionValues = [
+          quizId,
+          question.content,
+          question.type,
+          question.options ? JSON.stringify(question.options) : null,
+          question.correctAnswer,
+          question.points,
+          currentOrder,
+        ];
+        
+        await client.query(questionQuery, questionValues);
+      }
+      
+      await client.query('COMMIT');
+      return this.findByIdWithQuestions(quizId);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Error adding questions:', error);
+      throw new BadRequestException('Failed to add questions to quiz');
+    } finally {
+      client.release();
+    }
+  }
+
+  // Xóa question khỏi quiz (questionId là string)
+  async removeQuestionFromQuiz(quizId: string, questionId: string): Promise<void> {
+    // Kiểm tra question thuộc quiz
+    const checkQuery = 'SELECT id FROM questions WHERE id = $1 AND quiz_id = $2';
+    const checkResult = await this.pool.query(checkQuery, [questionId, quizId]);
+    
+    if (checkResult.rows.length === 0) {
+      throw new BadRequestException('Question not found in this quiz');
+    }
+    
+    // Xóa question
+    const deleteQuery = 'DELETE FROM questions WHERE id = $1';
+    await this.pool.query(deleteQuery, [questionId]);
+    
+    // Cập nhật order_index của các question còn lại
+    const updateOrderQuery = `
+      WITH ranked AS (
+        SELECT id, ROW_NUMBER() OVER (ORDER BY order_index) as new_order
+        FROM questions 
+        WHERE quiz_id = $1
+      )
+      UPDATE questions q
+      SET order_index = r.new_order
+      FROM ranked r
+      WHERE q.id = r.id AND q.quiz_id = $1
+    `;
+    await this.pool.query(updateOrderQuery, [quizId]);
+  }
+
+  // Cập nhật trạng thái quiz (id là string)
+  async updateStatus(id: string, status: string): Promise<any> {
+    const query = `
+      UPDATE quizzes 
+      SET status = $1, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $2
+      RETURNING *
+    `;
+    
+    const result = await this.pool.query(query, [status, id]);
+    
+    if (result.rows.length === 0) {
+      return null;
+    }
+    
+    return this.findByIdWithQuestions(id);
+  }
+
+  // Lấy submissions của quiz (id là string)
+  async getQuizSubmissions(id: string): Promise<any[]> {
+    const query = `
+      SELECT 
+        s.*,
+        u.username as student_name,
+        u.email as student_email
+      FROM quiz_submissions s
+      JOIN users u ON s.user_id = u.id
+      WHERE s.quiz_id = $1
+      ORDER BY s.submitted_at DESC
+    `;
+    
+    const result = await this.pool.query(query, [id]);
+    return result.rows;
+  }
+
+  // Tìm kiếm quiz với phân trang
+  async searchQuizzes(
+    filters: QuizFilters,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ data: any[]; total: number; page: number; limit: number; totalPages: number }> {
+    let query = `
+      SELECT 
+        q.*,
+        COUNT(qu.id) as question_count,
+        c.title as course_title
+      FROM quizzes q
+      LEFT JOIN questions qu ON q.id = qu.quiz_id
+      LEFT JOIN courses c ON q.course_id = c.id
+    `;
+    
+    const values: any[] = [];
+    const conditions: string[] = [];
+    let index = 1;
+    
+    // Thêm điều kiện lọc
+    if (filters.lessonId !== undefined) {
+      conditions.push(`q.course_id = $${index}`);
+      values.push(filters.lessonId);
+      index++;
+    }
+    
+    if (filters.status !== undefined) {
+      conditions.push(`q.status = $${index}`);
+      values.push(filters.status);
+      index++;
+    }
+    
+    if (filters.title !== undefined) {
+      conditions.push(`q.title ILIKE $${index}`);
+      values.push(`%${filters.title}%`);
+      index++;
+    }
+    
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
+    
+    // Query để đếm tổng số bản ghi
+    const countQuery = query.replace(
+      'SELECT q.*, COUNT(qu.id) as question_count, c.title as course_title',
+      'SELECT COUNT(DISTINCT q.id) as total'
+    ).split('GROUP BY')[0];
+    
+    const countResult = await this.pool.query(countQuery, values);
+    const total = parseInt(countResult.rows[0].total);
+    
+    // Query để lấy dữ liệu với phân trang
+    query += ` GROUP BY q.id, c.title ORDER BY q.created_at DESC`;
+    
+    const offset = (page - 1) * limit;
+    query += ` LIMIT $${index} OFFSET $${index + 1}`;
+    values.push(limit, offset);
+    
+    const result = await this.pool.query(query, values);
+    
+    return {
+      data: result.rows,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  // Đếm số lượng quiz
+  async count(conditions?: Record<string, any>): Promise<number> {
+    let query = 'SELECT COUNT(*) as total FROM quizzes';
+    const values: any[] = [];
+    
+    if (conditions) {
+      const whereConditions: string[] = [];
+      Object.keys(conditions).forEach((key: string, index: number) => {
+        whereConditions.push(`${key} = $${index + 1}`);
+        values.push(conditions[key]);
+      });
+      
+      if (whereConditions.length > 0) {
+        query += ` WHERE ${whereConditions.join(' AND ')}`;
+      }
+    }
+    
+    const result = await this.pool.query(query, values);
+    return parseInt(result.rows[0].total);
+  }
+
+  // Helper function để parse JSON an toàn
+  private safeParseJson(jsonString: any): any {
+    if (jsonString === null || jsonString === undefined) {
+      return null;
+    }
+    
+    if (typeof jsonString !== 'string') {
+      return jsonString;
+    }
+    
+    try {
+      const trimmed = jsonString.trim();
+      if (trimmed === '' || trimmed === 'null' || trimmed === 'undefined') {
+        return null;
+      }
+      
+      return JSON.parse(trimmed);
+    } catch (error) {
+      console.warn('Failed to parse JSON:', jsonString.substring(0, 100), error);
+      return null;
+    }
+  }
+}

@@ -337,6 +337,7 @@ const CourseDetail = () => {
                 isEnrolled={isEnrolled} 
                 onEnroll={handleEnroll} 
                 enrolling={enrolling} 
+                currentLesson={currentLesson}
               />
             </div>
           </>

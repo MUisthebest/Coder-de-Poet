@@ -118,6 +118,14 @@ const instructorService = {
         throw error;
         }
   },
+  addQuizToLesson: async (lessonId, quizData) => {
+    const token = authService.getStoredToken();
+    console.log("quizz data: ", quizData)
+    const response = await apiCourse.post(`/quizzes`, quizData,{               
+        headers: { Authorization: `Bearer ${token}` }
+        });
+    return response.data;
+    },
 }
 
 export default instructorService;

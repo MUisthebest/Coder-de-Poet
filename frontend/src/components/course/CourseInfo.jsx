@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import QuizPanel from "./QuizzPanel";
 import { useAuth } from "../../contexts/AuthContext";
 
-const CourseInfo = ({ courseData, user, isEnrolled = false, onEnroll, enrolling = false }) => {
+const CourseInfo = ({ courseData, user, isEnrolled = false, onEnroll, enrolling = false, currentLesson }) => {
   const [showQuiz, setShowQuiz] = useState(false);
   const {checkingPermission, canManageCourse, checkCourseOwnership} = useAuth();
 
@@ -89,6 +89,7 @@ const CourseInfo = ({ courseData, user, isEnrolled = false, onEnroll, enrolling 
       {showQuiz && (
         <QuizPanel 
           courseId={courseData.id} 
+          videoUrl={currentLesson.content_url}
           onClose={() => setShowQuiz(false)} 
         />
       )}
