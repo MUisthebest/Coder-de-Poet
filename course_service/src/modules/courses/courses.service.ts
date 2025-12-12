@@ -23,8 +23,13 @@ export class CoursesService {
         return created;
     }
     
+    //Return course list with trending tags 
     async findAll(query: QueryCourseDto) {
-        return this.repo.list(query);
+        const [trendingTags, courses] = await Promise.all([
+            this.repo.getTrendingTags(),
+            this.repo.list(query)
+        ])
+        return { trendingTags, courses };
     }
 
     async getTopCoursesByCategory(categoryId: string, limit = 4) {

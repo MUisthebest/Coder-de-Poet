@@ -28,6 +28,7 @@ export class CoursesController {
         return this.coursesService.create(dto, req.user.id );
     }
 
+    // Return course list with trending tags
     @Get()
     findAll(@Query() query: QueryCourseDto) {
         return this.coursesService.findAll(query);

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Pool } from 'pg';
+import {Pool} from 'pg';
 import { PG_POOL } from '../../database/database.module';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
@@ -78,11 +78,11 @@ export class CoursesRepository {
     const params: any[] = [];
     let idx = 1;
 
-    if (search) {
-      whereParts.push(`(title ILIKE $${idx} OR description ILIKE $${idx})`);
-      params.push(`%${search}%`);
-      idx++;
-    }
+      if (search) {
+        whereParts.push(`(title ILIKE $${idx} OR description ILIKE $${idx})`);
+        params.push(`%${search}%`);
+        idx++;
+      }
 
     if (accessType) {
       whereParts.push(`access_type = $${idx}`);
@@ -210,6 +210,23 @@ export class CoursesRepository {
     );
     return rows[0] ?? null;
   }
+
+
+  // This function returns the list of trending tags based on tags list of each course
+  async getTrendingTags () {
+    const query = `
+        select t.element, count(*) as frequency
+        from courses c
+        cross join lateral jsonb_array_elements_text(c.tag) as t(element)
+        where jsonb_typeof(c.tag) = 'array' 
+        group by t.element
+        order by frequency desc
+        limit 3
+      `;
+    const { rows } =  await this.pool.query(query);
+    return rows ?? null;
+  }
+
 
   // Return top N courses for a given category ordered by student_count desc
   async getTopByCategory(categoryId: string, limit = 4) {

@@ -102,10 +102,6 @@ namespace auth_service.Application.Usecase.Implementation
             var refreshToken = _jwtTokenProvider.GenerateRefreshToken();
             var refreshTokenExpiry = DateTime.UtcNow.AddDays(7); // adjust as needed
 
-            // 4. Update refresh token using domain method
-            user.UpdateRefreshToken(refreshToken, refreshTokenExpiry);
-            await _userRepository.UpdateUserAsync(user);
-
                         // 5. Return result
             return new AuthResult
             {

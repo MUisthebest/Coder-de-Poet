@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+aiokafka
+faster-whisper
+requests
+srt
+pydantic
+
+

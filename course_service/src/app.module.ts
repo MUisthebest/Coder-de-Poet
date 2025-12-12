@@ -1,17 +1,3 @@
-// import { Module } from '@nestjs/common';
-// import { ConfigModule } from '@nestjs/config';
-// import { CoursesModule } from './modules/courses/courses.module';
-// import { CategoryModule } from './modules/category/category.module';
-// import { DatabaseModule } from './database/database.module';
-
-// @Module({
-//   imports: [ConfigModule.forRoot({
-//     isGlobal: true,
-//     envFilePath: `.env`,
-//   }), 
-//     CoursesModule, CategoryModule, DatabaseModule],
-// })
-// export class AppModule {}
 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -38,12 +24,12 @@ import { QuizModule } from './modules/quizz/quiz.module';
       ssl: { rejectUnauthorized: false },
     }),
     DatabaseModule,
-    CategoryModule, // dùng TypeORM
-    CoursesModule,  // dùng DatabaseModule + pg Pool
+    CategoryModule, 
+    CoursesModule,  
     LessonsModule,
     QuizModule,
     EnrollmentsModule,
-    SearchModule
+    SearchModule,
   ],
 })
 export class AppModule {}
