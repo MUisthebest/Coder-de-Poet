@@ -44,7 +44,6 @@ export class LessonsService {
   }
 
 
-
   // quiz service: 
   async createQuiz(dto: any): Promise<string> {
 
@@ -60,6 +59,7 @@ export class LessonsService {
         await this.aiKafkaClient.sendGenerateLessonQuizCommand(command);
         return dto.lesson_id;
     }
+
   async listByInstructor(courseId: string) {
     return this.repo.findByCourseAndInstructor(courseId);
   }

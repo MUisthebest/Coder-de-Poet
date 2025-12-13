@@ -36,7 +36,8 @@ const brokers =
           },
         }
       }
-    ])
+    ]),
+    CoursesModule
   ],
   controllers: [LessonsController, AiKafkaEventsController],
   providers: [LessonsService, LessonsRepository, EnrollmentsRepository, EnrolledGuard, AuthGuard, QuizStore, AiKafkaClient],
