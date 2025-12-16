@@ -32,6 +32,7 @@ function RoleBasedRedirect() {
   }
   
   // Nếu là admin → redirect đến /admin
+  //console.log("RoleBasedRedirect - isAuthenticated:", isAuthenticated, "isAdmin:", isAdmin, "user:", user);
   if (isAuthenticated && isAdmin) {
     return <Navigate to="/admin" replace />;
   }

@@ -6,6 +6,7 @@ import CoursesTable from "../../components/instructor/CoursesTable";
 import EmptyCoursesState from "../../components/instructor/EmptyCoursesState";
 import InstructorAddLesson from "./InstructorAddLesson";
 import InstructorAddCourse from "./InstructorAddCourse";
+import InstructorEditCourse from "./InstructorEditCourse";
 import CourseDetailModal from "./CourseDetailModal";
 import { FiPlus } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
@@ -28,6 +29,8 @@ const InstructorDashboard = () => {
 
   const [showAddLesson, setShowAddLesson] = useState(false);
   const [showAddCourse, setShowAddCourse] = useState(false);
+  const [showEditCourse, setShowEditCourse] = useState(false);
+  const [editingCourse, setEditingCourse] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [preSelectedCourse, setPreSelectedCourse] = useState(null);
 
@@ -39,7 +42,9 @@ const InstructorDashboard = () => {
       try {
         setLoading(true);
         const data = await instructorService.getCoursesByInstructor(instructorId.id);
-        setCourses(data.items || data || []);
+        console.log("Fetched courses:", data);
+        const courseList = data?.courses?.items || []; 
+        setCourses(courseList);
       } catch (err) {
         console.error(err);
         setError("Unable to fetch courses. Please try again.");
@@ -73,36 +78,6 @@ const InstructorDashboard = () => {
     { day: 'Fri', hours: 4.1, type: 'learning' },
     { day: 'Sat', hours: 1.5, type: 'review' },
     { day: 'Sun', hours: 2.8, type: 'practice' }
-  ];
-
-  const myCourses = [
-    {
-      id: 1,
-      title: 'Crawler with Python for Beginners',
-      category: 'Python Tutorials',
-      progress: 85,
-      students: 9530,
-      nextLesson: 'State Management',
-      timeLeft: '2h 15m'
-    },
-    {
-      id: 2,
-      title: 'Ardunio for Beginners',
-      category: 'Python',
-      progress: 60,
-      students: 8500,
-      nextLesson: 'Market Analysis',
-      timeLeft: '4h 30m'
-    },
-    {
-      id: 3,
-      title: 'Machine Learning A-Z™: Hands-On Python & R In Data Science',
-      category: 'Computer Science',
-      progress: 45,
-      students: 15000,
-      nextLesson: 'SEO Basics',
-      timeLeft: '6h 45m'
-    }
   ];
 
   const friends = [
@@ -284,17 +259,28 @@ const InstructorDashboard = () => {
               <CoursesTable
                 courses={filteredCourses}
                 onView={handleViewCourse}
-                onEdit={(c) => console.log("Edit", c.id)}
+                 onEdit={(course) => {
+                  setEditingCourse(course);
+                  setShowEditCourse(true);
+                }}
                 onAnalytics={(c) => console.log("Analytics", c.id)}
                 onDelete={handleDeleteCourse}
               />
+              
+            )}
+            {showEditCourse && (
+              <InstructorEditCourse
+                onClose={() => setShowEditCourse(false)}
+                course={editingCourse}
+                categories={categories}
+            />
             )}
           </div>
         </div>
         <div className="flex h-screen justify-center items-center sticky top-0">
           <ProfileSidebar 
             weeklyActivities={weeklyActivities}
-            myCourses={myCourses}
+            myCourses={courses}
             friends={friends}
             user={user}
             isAuthenticated={isAuthenticated}

@@ -49,7 +49,11 @@ const instructorService = {
 
     updateCourse: async (courseId, payload) => {
         try {
-            const response = await apiCourse.put(`/courses/${courseId}`, payload);
+            const token = authService.getStoredToken();
+            const response = await apiCourse.patch(`/courses/${courseId}`, payload, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
             return response.data;
         } catch (error) {
             console.error('Error updating course:', error);

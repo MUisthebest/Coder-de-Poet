@@ -9,6 +9,7 @@ class AuthService {
       const response = await api.post('/api/auth/signin', credentials);
       const { data } = response;
 
+      console.log("✅ Login response data:", data);
 
       // Lưu token
       if (data.accessToken) this.setAccessToken(data.accessToken);
