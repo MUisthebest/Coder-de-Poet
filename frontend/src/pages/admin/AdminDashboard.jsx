@@ -12,6 +12,8 @@ function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [instructors, setInstructors] = useState([]);
 
+  console.log("Instructors:", instructors);
+
   useEffect(() => {
     if (!authLoading) {
       load();
@@ -73,17 +75,23 @@ function AdminDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen h-screen overflow-y-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
         <p className="text-gray-600 mt-2">Welcome, {user?.email} (Admin)</p>
       </div>
 
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-sm font-semibold text-gray-700">Total Users</h3>
             <p className="text-2xl font-bold text-blue-600">{stats.totalUsers}</p>
+            <button
+              onClick={() => navigate('/admin/users')}
+              className="mt-3 text-sm text-blue-700 hover:underline"
+            >
+              Manage Users
+            </button>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-sm font-semibold text-gray-700">Instructors</h3>
@@ -101,18 +109,29 @@ function AdminDashboard() {
             <h3 className="text-sm font-semibold text-gray-700">Enrollments</h3>
             <p className="text-2xl font-bold text-purple-600">{stats.totalEnrollments}</p>
           </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-sm font-semibold text-gray-700">Pending Approvals</h3>
+            <p className="text-2xl font-bold text-amber-600">—</p>
+            <button
+              onClick={() => navigate('/admin/courses?status=pending')}
+              className="mt-3 text-sm text-amber-700 hover:underline"
+            >
+              Review Courses
+            </button>
+          </div>
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white rounded-lg shadow h-[70vh] flex flex-col">
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Instructors</h2>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto overflow-y-auto flex-1">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instructor ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Courses</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Students</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">First Course</th>
@@ -120,10 +139,11 @@ function AdminDashboard() {
                 <th className="px-6 py-3" />
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-200 min-h-screen h-screen overflow-y-auto">
               {instructors.map((ins) => (
                 <tr key={ins.instructorId}>
                   <td className="px-6 py-4 text-sm text-gray-900">{ins.instructorId}</td>
+                  <td className="px-6 py-4 text-sm text-gray-700">{ins.name || '—'}</td>
                   <td className="px-6 py-4 text-sm">{ins.courseCount}</td>
                   <td className="px-6 py-4 text-sm">{ins.totalStudents}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{ins.firstCourseAt ? new Date(ins.firstCourseAt).toLocaleString() : '—'}</td>

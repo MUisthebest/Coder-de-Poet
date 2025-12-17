@@ -38,8 +38,10 @@ class AdminService {
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log("Raw instructor data:", data);
       const mapped = (Array.isArray(data) ? data : []).map((r) => ({
         instructorId: r.instructor_id,
+        fullName: r.full_name || '',
         courseCount: Number(r.course_count) || 0,
         totalStudents: Number(r.total_students) || 0,
         firstCourseAt: r.first_course_at || null,
@@ -80,6 +82,70 @@ class AdminService {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+      });
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message,
+        status: error.response?.status,
+      };
+    }
+  }
+
+  async approveCourse(courseId) {
+    try {
+      const token = authService.getStoredToken();
+      const { data } = await apiCourse.post(`/admin/courses/${courseId}/approve`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return { success: true, data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message,
+        status: error.response?.status,
+      };
+    }
+  }
+
+  async rejectCourse(courseId) {
+    try {
+      const token = authService.getStoredToken();
+      const { data } = await apiCourse.post(`/admin/courses/${courseId}/reject`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return { success: true, data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message,
+        status: error.response?.status,
+      };
+    }
+  }
+
+  async listLessons(courseId) {
+    try {
+      const token = authService.getStoredToken();
+      const { data } = await apiCourse.get(`/lessons/instructor/${courseId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return { success: true, data: Array.isArray(data) ? data : [] };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message,
+        status: error.response?.status,
+      };
+    }
+  }
+
+  async deleteLesson(lessonId) {
+    try {
+      const token = authService.getStoredToken();
+      await apiCourse.delete(`/admin/lessons/${lessonId}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       return { success: true };
     } catch (error) {

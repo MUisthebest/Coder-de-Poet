@@ -8,6 +8,7 @@ import Unauthorized from './pages/auth/Unauthorized';
 import ProtectedRoute from './components/admin/ProtectedRoute';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCourses from './pages/admin/AdminCourses';
+import AdminUsers from './pages/admin/AdminUsers';
 import AdminRoute from './components/admin/AdminRoute';
 import InstructorRoute from './components/instructor/InstructorRoute';
 import { SidebarProvider } from "./contexts/SidebarContext";
@@ -104,6 +105,14 @@ function Layout() {
                 <AdminCourses />
               </AdminRoute>
             } 
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <AdminRoute>
+                <AdminUsers />
+              </AdminRoute>
+            }
           />
           
           {/* Catch all route - redirect dựa trên role */}
