@@ -5,6 +5,7 @@ import CoursesTable from "../../components/instructor/CoursesTable";
 import EmptyCoursesState from "../../components/instructor/EmptyCoursesState";
 import InstructorAddLesson from "./InstructorAddLesson";
 import InstructorAddCourse from "./InstructorAddCourse";
+import InstructorEditCourse from "./InstructorEditCourse";
 import CourseDetailModal from "./CourseDetailModal";
 import { FiPlus } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
@@ -28,6 +29,8 @@ const InstructorDashboard = () => {
 
   const [showAddLesson, setShowAddLesson] = useState(false);
   const [showAddCourse, setShowAddCourse] = useState(false);
+  const [showEditCourse, setShowEditCourse] = useState(false);
+  const [editingCourse, setEditingCourse] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
 
   // Fetch courses

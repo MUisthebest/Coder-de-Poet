@@ -46,5 +46,23 @@ namespace auth_service.Infrastructure.Repository
             return await _dbContext.Users
                 .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
         }
+
+        public async Task<List<User>> GetAllUsersAsync()
+        {
+            return await _dbContext.Users
+                .OrderBy(u => u.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<bool> DeleteUserAsync(Guid id)
+        {
+            var user = await _dbContext.Users.FindAsync(id);
+            if (user == null)
+                return false;
+
+            _dbContext.Users.Remove(user);
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
     }
 }

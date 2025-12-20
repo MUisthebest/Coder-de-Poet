@@ -8,7 +8,7 @@ import { useSidebar } from "../../contexts/SidebarContext";
 export default function Navigation_Mobile() {
 
   const { isOpen, setIsOpen } = useSidebar();
-  const { user, isAuthenticated, loading , logout} = useAuth();
+  const { user, isAuthenticated, loading, logout, isAdmin } = useAuth();
 
 
   const getNavLinkClasses = ({ isActive }) =>
@@ -227,9 +227,9 @@ export default function Navigation_Mobile() {
 
           <li>
 
-            <NavLink to="/" className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
+            <NavLink to={user?.role === "Admin" ? '/admin' : user?.role === "Instructor" ? '/instructor/dashboard' : '/'} className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
 
-              Dashboard
+              {isAdmin ? 'Dashboard' : 'Dashboard'}
 
             </NavLink>
 
@@ -237,13 +237,21 @@ export default function Navigation_Mobile() {
 
           <li>
 
-            <NavLink to="/courses" className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
+            <NavLink to={isAdmin ? '/admin/courses' : '/courses'} className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
 
-              Courses
+              {isAdmin ? 'Manage Courses' : 'Courses'}
 
             </NavLink>
 
           </li>
+
+          {isAdmin && (
+            <li>
+              <NavLink to="/admin/users" className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
+                Manage Users
+              </NavLink>
+            </li>
+          )}
 
           <li>
 

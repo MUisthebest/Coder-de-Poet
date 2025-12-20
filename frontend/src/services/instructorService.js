@@ -49,7 +49,11 @@ const instructorService = {
 
     updateCourse: async (courseId, payload) => {
         try {
-            const response = await apiCourse.put(`/courses/${courseId}`, payload);
+            const token = authService.getStoredToken();
+            const response = await apiCourse.patch(`/courses/${courseId}`, payload, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
             return response.data;
         } catch (error) {
             console.error('Error updating course:', error);
@@ -129,6 +133,26 @@ const instructorService = {
         });
     return response.data;
     },
+  
+  generateAIQuiz: async (payload) => {
+    try {
+      const token = authService.getStoredToken();
+      console.log("Generating AI quiz with payload:", payload);
+      // Gọi endpoint AI quiz generate
+      const response = await apiCourse.post(
+        '/lessons/quiz-generate',
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      console.log("AI Quiz generated:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error generating AI quiz:', error);
+      throw error;
+    }
+  },
 }
 
 export default instructorService;

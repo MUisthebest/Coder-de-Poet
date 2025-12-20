@@ -27,6 +27,7 @@ const CourseDetailModal = ({ course, onClose, onAddLesson }) => {
     },
   ]);
   const [savingQuiz, setSavingQuiz] = useState(false);
+  const [generatingAIQuiz, setGeneratingAIQuiz] = useState(false);
 
   useEffect(() => {
     const fetchLessons = async () => {
@@ -43,6 +44,7 @@ const CourseDetailModal = ({ course, onClose, onAddLesson }) => {
     };
     fetchLessons();
   }, [course]);
+
 
   // Hàm mở modal thêm quiz cho lesson cụ thể
   const openAddQuizModal = (lesson) => {
@@ -174,6 +176,53 @@ const CourseDetailModal = ({ course, onClose, onAddLesson }) => {
     }
   };
 
+  // Hàm generate quiz bằng AI
+  const generateAIQuiz = async () => {
+    if (!selectedLesson || !selectedLesson.content_url) {
+      alert("Vui lòng chọn bài học có video URL");
+      return;
+    }
+
+    try {
+      setGeneratingAIQuiz(true);
+      const payload = {
+        course_id: course.id,
+        lesson_id: selectedLesson.id,
+        lesson_name: selectedLesson.title,
+        video_url: selectedLesson.content_url,
+        source_type: selectedLesson.content_url.includes("youtube") || selectedLesson.content_url.includes("youtu.be") ? "youtube" : "cloudinary"
+      };
+
+      const aiResponse = await instructorService.generateAIQuiz(payload);
+      
+      // Parse AI response - assume format từ API của bạn
+      if (aiResponse && aiResponse.questions) {
+        // Convert AI response format to our quiz form format
+        const generatedQuestions = aiResponse.questions.map((q) => {
+          const options = q.options || [];
+          return {
+            text: q.question || q.content || "",
+            type: "multiple-choice",
+            options: options.map((opt, idx) => ({
+              text: opt,
+              isCorrect: idx === q.correct_index
+            })),
+            points: 1
+          };
+        });
+
+        setQuestions(generatedQuestions);
+        setQuizTitle(aiResponse.title || `Quiz - ${selectedLesson.title}`);
+        alert("Quiz được tạo bởi AI! Vui lòng kiểm tra và lưu.");
+      }
+    } catch (err) {
+      console.error("Error generating AI quiz:", err);
+      alert("Có lỗi khi tạo quiz AI. Vui lòng kiểm tra video URL.");
+    } finally {
+      setGeneratingAIQuiz(false);
+    }
+  };
+
   if (!course) return null;
 
   return (
@@ -258,6 +307,7 @@ const CourseDetailModal = ({ course, onClose, onAddLesson }) => {
                     >
                       <FiPlus /> Add Quiz
                     </button>
+                    
                   </div>
                 </div>
               ))}
@@ -291,7 +341,15 @@ const CourseDetailModal = ({ course, onClose, onAddLesson }) => {
               Thêm Quiz vào: <span className="text-blue-600">{selectedLesson?.title}</span>
             </h3>
 
-            <div className="mb-4">
+            <div className="mb-4 flex gap-2">
+              <button
+                onClick={generateAIQuiz}
+                disabled={generatingAIQuiz}
+                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 transition flex items-center justify-center gap-2"
+              >
+                {generatingAIQuiz ? "Đang tạo..." : "🤖 Tạo với AI"}
+              </button>
+            </div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Tiêu đề Quiz</label>
               <input
                 type="text"
@@ -488,7 +546,7 @@ const CourseDetailModal = ({ course, onClose, onAddLesson }) => {
               </button>
             </div>
           </div>
-        </div>
+      
       )}
     </>
   );
