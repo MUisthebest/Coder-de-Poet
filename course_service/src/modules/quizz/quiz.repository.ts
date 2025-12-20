@@ -9,7 +9,7 @@ interface FindOptions {
 }
 
 interface QuizFilters {
-  lessonId?: number;
+  lessonId?: string | number;
   status?: string;
   title?: string;
 }
@@ -260,14 +260,14 @@ export class QuizRepository {
   }
 
   // Tìm quiz theo course ID
-  async findByCourseId(lessonId: number): Promise<any[]> {
+  async findByCourseId(lessonId: string): Promise<any[]> {
     const query = `
       SELECT 
         q.*,
         COUNT(qu.id) as question_count
       FROM quizzes q
       LEFT JOIN questions qu ON q.id = qu.quiz_id
-      WHERE q.course_id = $1
+      WHERE q.lesson_id = $1
       GROUP BY q.id
       ORDER BY q.created_at DESC
     `;

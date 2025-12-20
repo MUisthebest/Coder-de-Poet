@@ -53,11 +53,11 @@ export class QuizController {
     @Query('title') title?: string,
   ) {
     if (courseId && !page && !limit && !status && !title) {
-      return this.quizService.findByCourseId(+courseId);
+      return this.quizService.findByCourseId(courseId);
     }
     
     const filters = {
-      lessonId: courseId ? +courseId : undefined,
+      lessonId: courseId ? courseId : undefined,
       status,
       title,
     };
@@ -67,7 +67,7 @@ export class QuizController {
 
   // Routes cụ thể phải được đặt TRƯỚC routes tổng quát để tránh conflict
   @Get('course/:courseId')
-  async findByCourse(@Param('courseId', ParseIntPipe) courseId: number) {
+  async findByCourse(@Param('courseId') courseId: string) {
     return this.quizService.findByCourseId(courseId);
   }
 
@@ -77,12 +77,12 @@ export class QuizController {
   }
 
   @Get('count/:courseId')
-  async countByCourse(@Param('courseId', ParseIntPipe) courseId: number) {
+  async countByCourse(@Param('courseId') courseId: string) {
     return this.quizService.count({ course_id: courseId });
   }
 
   @Get('exists/:id')
-  async exists(@Param('id', ParseIntPipe) id: number) {
+  async exists(@Param('id') id: string) {
     const exists = await this.quizService.exists(id);
     return { exists };
   }

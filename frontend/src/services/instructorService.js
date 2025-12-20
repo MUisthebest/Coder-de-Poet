@@ -89,7 +89,10 @@ const instructorService = {
 
     getCoursesByInstructor: async (instructorId) => {
         try {
-            const response = await apiCourse.get(`/courses?instructorId=${instructorId}`);
+            const token = authService.getStoredToken();
+            const response = await apiCourse.get(`/courses?instructorId=${instructorId}`,{
+                headers: { Authorization: `Bearer ${token}` }
+            });
             return response.data;
         } catch (error) {
             console.error("Error fetching instructor courses:", error);

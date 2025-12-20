@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
 const QuizPanel = ({ courseId, videoUrl, onClose, aiGeneratedQuiz = null }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -256,7 +257,11 @@ const QuizPanel = ({ courseId, videoUrl, onClose, aiGeneratedQuiz = null }) => {
                   passed ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
                 }`}
               >
-                {passed ? "Check" : "Cross"}
+              {passed ? (
+                <FaCheckCircle color="green" size={20} />
+              ) : (
+                <FaTimesCircle color="red" size={20} />
+              )}
               </div>
               <h3 className={`text-4xl font-bold mb-4 ${passed ? "text-green-600" : "text-red-600"}`}>
                 {passed ? "Chúc mừng! Bạn đã ĐẠT!" : "Chưa đạt yêu cầu"}
@@ -302,7 +307,7 @@ const QuizPanel = ({ courseId, videoUrl, onClose, aiGeneratedQuiz = null }) => {
                         className={`w-8 h-8 rounded-full border-2 mr-4 flex items-center justify-center font-bold
                           ${selectedAnswer === i ? "bg-[#1B3C53] text-white" : "border-gray-400"}`}
                       >
-                        {selectedAnswer === i ? "Check" : String.fromCharCode(65 + i)}
+                        {selectedAnswer === i ? <FaCheckCircle color="green" size={20} /> : String.fromCharCode(65 + i)}
                       </div>
                       <span>{opt}</span>
                     </div>

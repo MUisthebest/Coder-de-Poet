@@ -37,28 +37,33 @@ const Home = () => {
   const defaultCategoryImage = 'https://res.cloudinary.com/drjlezbo7/image/upload/v1763998803/menu_13984545_qzoaog.png';
 
   const extractCoursesFromResponse = (responseData) => {
-    if (!responseData) {
-      return [];
-    }
-    
+    if (!responseData) return [];
+
     if (Array.isArray(responseData)) {
       return responseData;
     }
-    
-    if (responseData && typeof responseData === 'object') {
-      if (Array.isArray(responseData.items)) {
-        return responseData.items;
+
+    if (typeof responseData === "object") {
+      if (Array.isArray(responseData?.courses?.items)) {
+        return responseData.courses.items;
       }
-      if (Array.isArray(responseData.courses)) {
+
+      if (Array.isArray(responseData?.courses)) {
         return responseData.courses;
       }
-      if (Array.isArray(responseData.data)) {
+
+      if (Array.isArray(responseData?.items)) {
+        return responseData.items;
+      }
+
+      if (Array.isArray(responseData?.data)) {
         return responseData.data;
       }
     }
-    
+
     return [];
   };
+
 
   // Chỉ chặn scroll trên mobile khi sidebar mở
   useEffect(() => {
@@ -199,11 +204,14 @@ const Home = () => {
         }
 
         const response = await axios.get(url);
-        
+
+        console.log(response.data);
+
         let coursesData = extractCoursesFromResponse(response.data);
-        
+
         const transformedCourses = coursesData.map(course => {
           const courseCategory = categories.find(cat => cat.id === course.category_id);
+
           
           return {
             id: course.id,
