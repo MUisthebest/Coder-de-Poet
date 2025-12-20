@@ -142,6 +142,18 @@ export class QuizService {
   }
 
   /**
+   * Tìm quiz theo lesson ID (string)
+   */
+  async findByLessonId(lessonId: string): Promise<any[]> {
+    try {
+      return await this.quizRepository.findByLessonId(lessonId);
+    } catch (error) {
+      console.error('Error finding quizzes by lesson:', error);
+      throw new BadRequestException('Failed to retrieve quizzes by lesson');
+    }
+  }
+
+  /**
    * Tìm kiếm quiz với phân trang và bộ lọc
    */
   async searchQuizzes(

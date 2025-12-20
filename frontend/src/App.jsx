@@ -18,7 +18,8 @@ import GoogleCallbackHandler from './components/auth/GoogleCallbackHandler';
 import CourseDetail from './pages/course/CourseDetail';
 import CourseList from './pages/course/CourseList';
 import InstructorDashboard from './pages/instructor/InstructorDashboard';
-import CourseDetailModal from './pages/instructor/CourseDetailModal';
+import LessonDetailPageRoute from './pages/instructor/LessonDetail';
+import CourseDetailRoute from './pages/instructor/CourseDetail';
  
 // Component để xử lý redirect dựa trên role
 function RoleBasedRedirect() {
@@ -84,6 +85,24 @@ function Layout() {
             element={ 
               <InstructorRoute>
                 <InstructorDashboard />
+              </InstructorRoute>
+            } 
+          />
+
+          <Route 
+            path="/instructor/lesson/:lessonId" 
+            element={ 
+              <InstructorRoute>
+                <LessonDetailPageRoute />
+              </InstructorRoute>
+            } 
+          />
+
+          <Route 
+            path="/instructor/courses/:courseId" 
+            element={ 
+              <InstructorRoute>
+                <CourseDetailRoute />
               </InstructorRoute>
             } 
           />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const QuizPanel = ({ courseId, videoUrl, onClose }) => {
+const QuizPanel = ({ courseId, videoUrl, onClose, aiGeneratedQuiz = null }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [score, setScore] = useState(0);
@@ -13,33 +13,52 @@ const QuizPanel = ({ courseId, videoUrl, onClose }) => {
   // Gọi backend Flask để tạo quiz từ video → quiz
   useEffect(() => {
     const generateQuiz = async () => {
-      if (!videoUrl) return;
-
       setLoading(true);
       setError("");
 
       try {
-        const res = await fetch("http://127.0.0.1:5000/generate_quiz", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: videoUrl }),
-        });
+        // Nếu đã có quiz được tạo bởi AI, sử dụng nó
+        if (aiGeneratedQuiz && aiGeneratedQuiz.questions) {
+          const formattedQuestions = formatAIQuizData(aiGeneratedQuiz);
+          
+          if (formattedQuestions.length === 0) {
+            throw new Error("AI không tạo được câu hỏi nào");
+          }
 
-        if (!res.ok) throw new Error("Không thể tạo quiz từ video");
+          setQuizData({
+            courseId,
+            title: aiGeneratedQuiz.title || "Bài kiểm tra AI",
+            totalQuestions: formattedQuestions.length,
+            timeLimit: aiGeneratedQuiz.duration || 600,
+            passingScore: 70,
+            questions: formattedQuestions,
+          });
+        } else if (videoUrl) {
+          // Nếu không có aiGeneratedQuiz, gọi Flask API
+          const res = await fetch("http://127.0.0.1:5000/generate_quiz", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: videoUrl }),
+          });
 
-        const data = await res.json();
-        const questions = parseQuizFromText(data.quiz);
+          if (!res.ok) throw new Error("Không thể tạo quiz từ video");
 
-        if (questions.length === 0) throw new Error("AI không tạo được câu hỏi nào");
+          const data = await res.json();
+          const questions = parseQuizFromText(data.quiz);
 
-        setQuizData({
-          courseId,
-          title: "Bài kiểm tra tự động từ video",
-          totalQuestions: questions.length,
-          timeLimit: 600,
-          passingScore: 70,
-          questions,
-        });
+          if (questions.length === 0) throw new Error("AI không tạo được câu hỏi nào");
+
+          setQuizData({
+            courseId,
+            title: "Bài kiểm tra tự động từ video",
+            totalQuestions: questions.length,
+            timeLimit: 600,
+            passingScore: 70,
+            questions,
+          });
+        } else {
+          throw new Error("Không có dữ liệu quiz");
+        }
       } catch (err) {
         setError(err.message || "Lỗi khi tạo quiz");
       } finally {
@@ -48,7 +67,7 @@ const QuizPanel = ({ courseId, videoUrl, onClose }) => {
     };
 
     generateQuiz();
-  }, [courseId, videoUrl]);
+  }, [courseId, videoUrl, aiGeneratedQuiz]);
 
   // Parse text từ GPT thành mảng câu hỏi chuẩn
   const parseQuizFromText = (text) => {
@@ -88,6 +107,19 @@ const QuizPanel = ({ courseId, videoUrl, onClose }) => {
     }
 
     return questions;
+  };
+
+  // Format dữ liệu quiz từ API AI
+  const formatAIQuizData = (aiQuiz) => {
+    if (!aiQuiz.questions) return [];
+
+    return aiQuiz.questions.map((q, index) => ({
+      id: index + 1,
+      question: q.question || q.content || "",
+      options: q.options || [],
+      correctAnswer: q.correct_index !== undefined ? q.correct_index : 0,
+      explanation: q.explanation || "Tạo tự động bằng AI",
+    }));
   };
 
   // Timer

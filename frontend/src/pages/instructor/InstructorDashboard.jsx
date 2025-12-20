@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import instructorService from "../../services/instructorService";
 import InstructorStats from "../../components/instructor/InstructorStats";
 import CoursesFilterBar from "../../components/instructor/CoursesFilterBar";
@@ -7,7 +8,6 @@ import EmptyCoursesState from "../../components/instructor/EmptyCoursesState";
 import InstructorAddLesson from "./InstructorAddLesson";
 import InstructorAddCourse from "./InstructorAddCourse";
 import InstructorEditCourse from "./InstructorEditCourse";
-import CourseDetailModal from "./CourseDetailModal";
 import { FiPlus } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import ProfileSidebar from '../../components/home/ProfileSideBar';
@@ -16,6 +16,7 @@ import axios from 'axios';
 
 const InstructorDashboard = () => {
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+  const navigate = useNavigate();
   const { user: instructorId, isAuthenticated, user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +32,6 @@ const InstructorDashboard = () => {
   const [showAddCourse, setShowAddCourse] = useState(false);
   const [showEditCourse, setShowEditCourse] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
-  const [selectedCourse, setSelectedCourse] = useState(null);
   const [preSelectedCourse, setPreSelectedCourse] = useState(null);
 
   useEffect(() => {
@@ -58,7 +58,8 @@ const InstructorDashboard = () => {
 
   const handleViewCourse = (course) => {
     console.log("View course", course.id);
-    setSelectedCourse(course);
+    sessionStorage.setItem("currentCourse", JSON.stringify(course));
+    navigate(`/instructor/courses/${course.id}`);
   };
 
   const handleDeleteCourse = async (course) => {
@@ -226,13 +227,6 @@ const InstructorDashboard = () => {
               categories={categories}
             />
           </div> */}
-
-          {selectedCourse && (
-            <CourseDetailModal
-              course={selectedCourse}
-              onClose={() => setSelectedCourse(null)}
-            />
-          )}
 
           {/* MAIN CONTENT */}
           <div className="bg-white rounded-lg shadow-md border border-gray-100 p-6 flex flex-1 flex-col md:max-h-[60vh]">

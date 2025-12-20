@@ -65,77 +65,15 @@ export class QuizController {
     return this.quizService.searchQuizzes(filters, page, limit);
   }
 
-  @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: string) {
-    return this.quizService.findOne(id);
-  }
-
-  @Get(':id/stats')
-  async getQuizStats(@Param('id', ParseIntPipe) id: string) {
-    return this.quizService.getQuizStats(id);
-  }
-
-  @Put(':id')
-  async update(
-    @Param('id', ParseIntPipe) id: string,
-    @Body() updateQuizDto: UpdateQuizDto,
-  ) {
-    // Validate dữ liệu
-    const validation = this.quizService.validateQuizData(updateQuizDto);
-    if (!validation.isValid) {
-      throw new BadRequestException(validation.errors);
-    }
-    
-    return this.quizService.update(id, updateQuizDto);
-  }
-
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id', ParseIntPipe) id: string) {
-    await this.quizService.remove(id);
-  }
-
-  @Post(':id/questions')
-  async addQuestions(
-    @Param('id', ParseIntPipe) quizId: string,
-    @Body() addQuestionsDto: AddQuestionsDto,
-  ) {
-    return this.quizService.addQuestionsToQuiz(quizId, addQuestionsDto.questions);
-  }
-
-  @Delete(':quizId/questions/:questionId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async removeQuestionFromQuiz(
-    @Param('quizId', ParseIntPipe) quizId: string,
-    @Param('questionId', ParseIntPipe) questionId: string,
-  ) {
-    await this.quizService.removeQuestionFromQuiz(quizId, questionId);
-  }
-
-  @Delete(':id/questions')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async clearQuizQuestions(@Param('id', ParseIntPipe) id: string) {
-    await this.quizService.remove(id);
-  }
-
-  @Patch(':id/publish')
-  async publishQuiz(@Param('id', ParseIntPipe) id: string) {
-    return this.quizService.publishQuiz(id);
-  }
-
-  @Patch(':id/unpublish')
-  async unpublishQuiz(@Param('id', ParseIntPipe) id: string) {
-    return this.quizService.unpublishQuiz(id);
-  }
-
-  @Get(':id/submissions')
-  async getQuizSubmissions(@Param('id', ParseIntPipe) id: string) {
-    return this.quizService.getQuizSubmissions(id);
-  }
-
+  // Routes cụ thể phải được đặt TRƯỚC routes tổng quát để tránh conflict
   @Get('course/:courseId')
   async findByCourse(@Param('courseId', ParseIntPipe) courseId: number) {
     return this.quizService.findByCourseId(courseId);
+  }
+
+  @Get('lesson/:lessonId')
+  async findByLesson(@Param('lessonId') lessonId: string) {
+    return this.quizService.findByLessonId(lessonId);
   }
 
   @Get('count/:courseId')
@@ -147,5 +85,74 @@ export class QuizController {
   async exists(@Param('id', ParseIntPipe) id: number) {
     const exists = await this.quizService.exists(id);
     return { exists };
+  }
+
+  // Routes tổng quát đặt ở cuối
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return this.quizService.findOne(id);
+  }
+
+  @Get(':id/stats')
+  async getQuizStats(@Param('id', ParseIntPipe) id: string) {
+    return this.quizService.getQuizStats(id);
+  }
+
+  @Get(':id/submissions')
+  async getQuizSubmissions(@Param('id') id: string) {
+    return this.quizService.getQuizSubmissions(id);
+  }
+
+  @Patch(':id/publish')
+  async publishQuiz(@Param('id') id: string) {
+    return this.quizService.publishQuiz(id);
+  }
+
+  @Patch(':id/unpublish')
+  async unpublishQuiz(@Param('id') id: string) {
+    return this.quizService.unpublishQuiz(id);
+  }
+
+  @Delete(':id/questions')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async clearQuizQuestions(@Param('id') id: string) {
+    await this.quizService.remove(id);
+  }
+
+  @Delete(':quizId/questions/:questionId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeQuestionFromQuiz(
+    @Param('quizId') quizId: string,
+    @Param('questionId') questionId: string,
+  ) {
+    await this.quizService.removeQuestionFromQuiz(quizId, questionId);
+  }
+
+  @Post(':id/questions')
+  async addQuestions(
+    @Param('id') quizId: string,
+    @Body() addQuestionsDto: AddQuestionsDto,
+  ) {
+    return this.quizService.addQuestionsToQuiz(quizId, addQuestionsDto.questions);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(@Param('id') id: string) {
+    await this.quizService.remove(id);
+  }
+
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() updateQuizDto: UpdateQuizDto,
+  ) {
+    // Validate dữ liệu
+    const validation = this.quizService.validateQuizData(updateQuizDto);
+    if (!validation.isValid) {
+      throw new BadRequestException(validation.errors);
+    }
+    
+    return this.quizService.update(id, updateQuizDto);
   }
 }
