@@ -6,7 +6,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { QuizRepository } from './quiz.repository';
-import { CreateQuizDto, QuestionWithAnswerDto } from './dto/create-quiz.dto';
+import { CreateQuizDto, QuizSubmissionDto } from './dto/create-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
 
 interface SearchFilters {
@@ -284,21 +284,17 @@ export class QuizService {
   }
 
   // Function to calculate quiz score from user answers
-  async calculateQuizScore(questionWithAnswers: QuestionWithAnswerDto[]): Promise<any> {
-    if (!Array.isArray(questionWithAnswers) || questionWithAnswers.length === 0) {
-      throw new BadRequestException('questionWithAnswers must be a non-empty array');
+  // Function to calculate quiz score from user answers
+  async calculateQuizScore(dto: QuizSubmissionDto) {
+    const { studentId, lessonId, courseId, answers } = dto;
+
+    if (!answers || typeof answers !== 'object' || Object.keys(answers).length === 0) {
+      throw new BadRequestException('answers must be a non-empty object');
     }
 
-    //Normalize Input
-    const mergeAnswers: Record<string, string> = {};
-
-    for (const item of questionWithAnswers) {
-      if (typeof item === 'object' && item !== null) {
-        for (const [questionId, answer] of Object.entries(item)) {
-          mergeAnswers[questionId] = answer;
-        }
-      }
-    }
-    return this.quizRepository.gradeQuizSubmission(mergeAnswers);
+    return this.quizRepository.gradeQuizSubmission(
+      dto
+    );
   }
+
 }

@@ -16,7 +16,7 @@ import {
   DefaultValuePipe,
 } from '@nestjs/common';
 import { QuizService } from './quiz.service';
-import { CreateQuizDto, QuestionWithAnswerDto } from './dto/create-quiz.dto';
+import { CreateQuizDto, QuizSubmissionDto } from './dto/create-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
 import { AddQuestionsDto } from './dto/add-questions.dto';
 import { AuthGuard } from '../auth/jwt-auth.guard';
@@ -154,7 +154,7 @@ export class QuizController {
     Output: { totalScore: number, totalQuestions: number, foundQuestions: number }
   */
   @Post('/grade') 
-  async gradeQuizSubmission(@Body() questionWithAnswers: QuestionWithAnswerDto[]) {
-    return this.quizService.calculateQuizScore(questionWithAnswers);
+  async gradeQuizSubmission(@Body() quizSubmissionDto: QuizSubmissionDto) {
+    return this.quizService.calculateQuizScore(quizSubmissionDto);
   }
 }
