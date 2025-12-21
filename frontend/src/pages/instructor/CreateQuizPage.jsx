@@ -1,9 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiX, FiPlus } from "react-icons/fi";
 import instructorService from "../../services/instructorService";
 
-const CreateQuizPage = ({ lesson, course, onBack, onQuizCreated }) => {
-  const [quizTitle, setQuizTitle] = useState("");
+const CreateQuizPage = ({ lesson, course, quiz, onBack, onQuizCreated, onQuizUpdated }) => {
+  const isEdit = !!quiz?.id;
+  const [quizTitle, setQuizTitle] = useState(quiz?.title || "");
+  const [description, setDescription] = useState(quiz?.description || "");
+  const [duration, setDuration] = useState(quiz?.duration || 15);
+  const [maxAttempts, setMaxAttempts] = useState(quiz?.maxAttempts || 1);
   const [questions, setQuestions] = useState([
     {
       text: "",
@@ -14,6 +18,7 @@ const CreateQuizPage = ({ lesson, course, onBack, onQuizCreated }) => {
   ]);
   const [savingQuiz, setSavingQuiz] = useState(false);
   const [generatingAIQuiz, setGeneratingAIQuiz] = useState(false);
+  const durationOptions = [5, 10, 15, 20, 30, 45, 60];
 
   const addQuestion = () => {
     setQuestions([
@@ -63,6 +68,65 @@ const CreateQuizPage = ({ lesson, course, onBack, onQuizCreated }) => {
       setQuestions(questions.filter((_, i) => i !== qIndex));
     }
   };
+
+  // Normalize existing quiz into form state when editing
+  useEffect(() => {
+    if (quiz && quiz.questions) {
+      setQuizTitle(quiz.title || "");
+      setDescription(quiz.description || "");
+      setDuration(quiz.duration || 15);
+      setMaxAttempts(quiz.maxAttempts || 1);
+      const mapped = quiz.questions.map((q) => {
+        const optionsArray = Array.isArray(q.options) ? q.options : [];
+        const rawCorrect = q.correct_answer ?? q.correctAnswer ?? "";
+        const normCorrect = String(rawCorrect).trim().toLowerCase();
+
+        const base = {
+          text: q.content || q.text || "",
+          type: q.type || "multiple-choice",
+          points: q.points || 1,
+        };
+
+        if ((base.type || "").toLowerCase() === "true-false") {
+          const isTrue = normCorrect === "true" || normCorrect === "đúng";
+          return {
+            ...base,
+            options: [
+              { text: "Đúng", isCorrect: isTrue },
+              { text: "Sai", isCorrect: !isTrue },
+            ],
+          };
+        }
+
+        if ((base.type || "").toLowerCase() === "short-answer") {
+          const ans = rawCorrect || (optionsArray[0] ?? "");
+          return {
+            ...base,
+            options: [{ text: ans, isCorrect: true }],
+          };
+        }
+
+        // multiple-choice default
+        const normalizedOpts = optionsArray
+          .map((o) => (typeof o === "string" ? o : String(o)))
+          .filter((o) => o !== undefined && o !== null);
+        let mappedOpts = normalizedOpts.map((opt) => ({
+          text: opt,
+          isCorrect: String(opt).trim().toLowerCase() === normCorrect,
+        }));
+        if (!mappedOpts.some((o) => o.isCorrect) && mappedOpts.length > 0) {
+          // fallback: mark first as correct to satisfy validation
+          mappedOpts[0].isCorrect = true;
+        }
+        if (mappedOpts.length === 0) {
+          mappedOpts = [{ text: "", isCorrect: true }];
+        }
+        return { ...base, options: mappedOpts };
+      });
+      setQuestions(mapped.length ? mapped : questions);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quiz]);
 
   const generateAIQuiz = async () => {
     if (!lesson || !lesson.content_url) {
@@ -164,13 +228,13 @@ const CreateQuizPage = ({ lesson, course, onBack, onQuizCreated }) => {
 
     const quizData = {
       title: quizTitle,
-      description: "",
-      duration: 15,
+      description,
+      duration: Number(duration) || 15,
+      maxAttempts: Number(maxAttempts) || 1,
       lessonId: lesson.id,
-      questions: questions.map((q, index) => {
+      questions: questions.map((q) => {
         const correctOptions = q.options.filter((opt) => opt.isCorrect);
         let correctAnswer = "";
-
         if (q.type === "multiple-choice") {
           correctAnswer = correctOptions[0]?.text || "";
         } else if (q.type === "true-false") {
@@ -198,21 +262,27 @@ const CreateQuizPage = ({ lesson, course, onBack, onQuizCreated }) => {
 
     try {
       setSavingQuiz(true);
-      await instructorService.addQuizToLesson(lesson.id, quizData);
-
-      alert("Quiz đã được thêm thành công!");
-      
-      if (onQuizCreated) {
-        onQuizCreated({
+      if (isEdit && quiz?.id) {
+        await instructorService.updateQuiz(quiz.id, {
+          title: quizData.title,
+          description: quizData.description,
+          duration: quizData.duration,
+          maxAttempts: quizData.maxAttempts,
           lessonId: lesson.id,
-          quizData: quizData,
         });
+        await instructorService.clearQuizQuestions(quiz.id);
+        await instructorService.addQuestionsToQuiz(quiz.id, quizData.questions);
+        alert("Quiz đã được cập nhật thành công!");
+        onQuizUpdated?.({ id: quiz.id });
+      } else {
+        await instructorService.addQuizToLesson(lesson.id, quizData);
+        alert("Quiz đã được thêm thành công!");
+        onQuizCreated?.({ lessonId: lesson.id, quizData });
       }
-      
       onBack();
     } catch (err) {
       console.error("Error adding quiz:", err);
-      alert("Có lỗi khi thêm quiz");
+      alert("Có lỗi khi lưu quiz");
     } finally {
       setSavingQuiz(false);
     }
@@ -242,17 +312,61 @@ const CreateQuizPage = ({ lesson, course, onBack, onQuizCreated }) => {
           </button>
         </div>
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Tiêu đề Quiz
-          </label>
-          <input
-            type="text"
-            value={quizTitle}
-            onChange={(e) => setQuizTitle(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Ví dụ: Kiểm tra kiến thức cuối bài"
-          />
+        <div className="mb-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tiêu đề Quiz
+            </label>
+            <input
+              type="text"
+              value={quizTitle}
+              onChange={(e) => setQuizTitle(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Ví dụ: Kiểm tra kiến thức cuối bài"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Mô tả
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Mô tả ngắn về quiz"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Thời lượng (phút)
+              </label>
+              <select
+                value={duration}
+                onChange={(e) => setDuration(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {durationOptions.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Số lần làm tối đa
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={maxAttempts}
+                onChange={(e) => setMaxAttempts(Number(e.target.value) || 1)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="space-y-6">

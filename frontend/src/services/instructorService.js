@@ -114,6 +114,19 @@ const instructorService = {
         }
     },
 
+    getLessonById: async (lessonId) => {
+        try {
+            const token = authService.getStoredToken();
+            const response = await apiCourse.get(`/lessons/${lessonId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching lesson by ID:", error);
+            throw error;
+        }
+    },
+
     updateLesson: async (lessonId, payload) => {
         try {
             const token = authService.getStoredToken();
@@ -146,6 +159,32 @@ const instructorService = {
         });
     return response.data;
     },
+
+  clearQuizQuestions: async (quizId) => {
+    try {
+      const token = authService.getStoredToken();
+      const response = await apiCourse.delete(`/quizzes/${quizId}/questions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error clearing quiz questions:', error);
+      throw error;
+    }
+  },
+
+  addQuestionsToQuiz: async (quizId, questions) => {
+    try {
+      const token = authService.getStoredToken();
+      const response = await apiCourse.post(`/quizzes/${quizId}/questions`, { questions }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error adding questions to quiz:', error);
+      throw error;
+    }
+  },
   
   generateAIQuiz: async (payload) => {
     // 🔧 MOCK MODE - Uncomment để sử dụng mock data thay vì gọi API thực
@@ -312,6 +351,19 @@ const instructorService = {
       return response.data;
     } catch (error) {
       console.error('Error deleting quiz:', error);
+      throw error;
+    }
+  },
+
+  updateQuiz: async (quizId, payload) => {
+    try {
+      const token = authService.getStoredToken();
+      const response = await apiCourse.put(`/quizzes/${quizId}`, payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error updating quiz:', error);
       throw error;
     }
   },

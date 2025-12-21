@@ -14,6 +14,7 @@ import {
 import instructorService from "../../services/instructorService";
 import { useAuth } from "../../contexts/AuthContext";
 import ProfileSidebar from "../../components/home/ProfileSideBar";
+import CreateQuizPage from "./CreateQuizPage";
 
 const LessonDetailPage = () => {
   const { lessonId } = useParams();
@@ -27,6 +28,8 @@ const LessonDetailPage = () => {
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({});
+  const [showQuizModal, setShowQuizModal] = useState(false);
+  const [quizEditing, setQuizEditing] = useState(null);
   const [myCourses, setMyCourses] = useState([]);
 
   const weeklyActivities = [
@@ -70,14 +73,29 @@ const LessonDetailPage = () => {
       const storedLesson = JSON.parse(sessionStorage.getItem("currentLesson"));
       const storedCourse = JSON.parse(sessionStorage.getItem("currentCourse"));
       if (storedLesson) {
-        setLesson(storedLesson);
-        setEditData(storedLesson);
+        // Normalize all snake_case fields to camelCase
+        const normalizedLesson = {
+          ...storedLesson,
+          contentUrl: storedLesson.content_url,
+          contentBody: storedLesson.content_body,
+          contentType: storedLesson.content_type,
+          courseId: storedLesson.course_id,
+          updatedAt: storedLesson.updated_at,
+        };
+        setLesson(normalizedLesson);
+        setEditData(normalizedLesson);
       }
       if (storedCourse) {
         setCourse(storedCourse);
       }
       const quizzesData = await instructorService.getQuizzesByLesson(lessonId);
-      setQuizzes(quizzesData || []);
+      const normalizedQuizzes = (quizzesData || []).map((q) => ({
+        ...q,
+        lessonId: q.lesson_id ?? q.lessonId,
+        maxAttempts: q.max_attempts ?? q.maxAttempts,
+        updatedAt: q.updated_at ?? q.updatedAt,
+      }));
+      setQuizzes(normalizedQuizzes);
     } catch (err) {
       console.error("Error fetching lesson data:", err);
     } finally {
@@ -100,15 +118,17 @@ const LessonDetailPage = () => {
     try {
       await instructorService.updateLesson(lesson.id, {
         title: editData.title,
-        description: editData.description,
-        content_url: editData.content_url,
+        contentBody: editData.contentBody,
+        contentUrl: editData.contentUrl,
       });
       setLesson(editData);
       setIsEditing(false);
       alert("Lesson đã được cập nhật thành công!");
     } catch (err) {
       console.error("Error updating lesson:", err);
-      alert("Có lỗi khi cập nhật lesson");
+      console.error("Response data:", err.response?.data);
+      console.error("Status code:", err.response?.status);
+      alert(`Có lỗi khi cập nhật lesson: ${err.response?.status} - ${err.response?.data?.message || err.message}`);
     }
   };
 
@@ -124,8 +144,21 @@ const LessonDetailPage = () => {
     }
   };
 
+  const openQuizEditModal = (quiz) => {
+    setQuizEditing(quiz);
+    setShowQuizModal(true);
+  };
+
+  const closeQuizModal = (shouldRefresh = false) => {
+    setShowQuizModal(false);
+    setQuizEditing(null);
+    if (shouldRefresh) {
+      fetchLessonData();
+    }
+  };
+
   const renderVideoPlayer = () => {
-    const videoUrl = editData.content_url || lesson?.content_url;
+    const videoUrl = editData.contentUrl || lesson?.contentUrl;
     if (!videoUrl) return null;
     
     // Check for YouTube URLs
@@ -187,8 +220,21 @@ const LessonDetailPage = () => {
     );
   }
 
+  console.log("Rendered LessonDetailPage with lesson:", lesson);
+
   return (
     <div className="flex w-full h-screen overflow-hidden bg-gray-50">
+      {showQuizModal && lesson && (
+        <CreateQuizPage
+          lesson={{ ...lesson, content_url: lesson.contentUrl }}
+          course={course || { id: lesson.courseId }}
+          quiz={quizEditing}
+          onBack={() => closeQuizModal(false)}
+          onQuizUpdated={() => closeQuizModal(true)}
+          onQuizCreated={() => closeQuizModal(true)}
+        />
+      )}
+
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-y-auto">
         {/* Header */}
@@ -231,7 +277,7 @@ const LessonDetailPage = () => {
               </div>
 
               {/* Video Player */}
-              {(editData.content_url || lesson.content_url) && (
+              {(editData.contentUrl || lesson.contentUrl) && (
                 <div className="bg-gray-900 rounded-lg overflow-hidden">{renderVideoPlayer()}</div>
               )}
 
@@ -239,19 +285,19 @@ const LessonDetailPage = () => {
               {isEditing && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Video URL</label>
-                  <input type="text" value={editData.content_url || ""} onChange={(e) => handleEditChange("content_url", e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://youtube.com/watch?v=... hoặc Cloudinary URL" />
+                  <input type="text" value={editData.contentUrl || ""} onChange={(e) => handleEditChange("contentUrl", e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://youtube.com/watch?v=... hoặc Cloudinary URL" />
                 </div>
               )}
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mô tả</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 {isEditing ? (
-                  <textarea value={editData.description || ""} onChange={(e) => handleEditChange("description", e.target.value)} rows={5} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <textarea value={editData.contentBody || ""} onChange={(e) => handleEditChange("contentBody", e.target.value)} rows={5} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 ) : (
                   <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                    {lesson.description ? (
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{lesson.description}</p>
+                    {lesson.contentBody ? (
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{lesson.contentBody}</p>
                     ) : (
                       <p className="text-gray-400 italic">Chưa có mô tả</p>
                     )}
@@ -283,7 +329,7 @@ const LessonDetailPage = () => {
                             <button onClick={() => setSelectedQuiz(selectedQuiz?.id === quiz.id ? null : quiz)} className="text-sm text-blue-600 hover:underline mt-2">{selectedQuiz?.id === quiz.id ? "Ẩn câu hỏi" : "Xem câu hỏi"}</button>
                           </div>
                           <div className="flex items-center gap-2 ml-4">
-                            <button onClick={() => {}} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Chỉnh sửa"><FiEdit /></button>
+                            <button onClick={() => openQuizEditModal(quiz)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Chỉnh sửa"><FiEdit /></button>
                             <button onClick={() => handleDeleteQuiz(quiz.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Xóa"><FiTrash2 /></button>
                           </div>
                         </div>

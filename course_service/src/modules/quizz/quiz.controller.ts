@@ -104,16 +104,19 @@ export class QuizController {
   }
 
   @Patch(':id/publish')
+  @UseGuards(AuthGuard)
   async publishQuiz(@Param('id') id: string) {
     return this.quizService.publishQuiz(id);
   }
 
   @Patch(':id/unpublish')
+  @UseGuards(AuthGuard)
   async unpublishQuiz(@Param('id') id: string) {
     return this.quizService.unpublishQuiz(id);
   }
 
   @Delete(':id/questions')
+  @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async clearQuizQuestions(@Param('id') id: string) {
     await this.quizService.remove(id);
@@ -129,6 +132,7 @@ export class QuizController {
   }
 
   @Post(':id/questions')
+  @UseGuards(AuthGuard)
   async addQuestions(
     @Param('id') quizId: string,
     @Body() addQuestionsDto: AddQuestionsDto,
@@ -143,6 +147,7 @@ export class QuizController {
   }
 
   @Put(':id')
+  @UseGuards(AuthGuard)
   async update(
     @Param('id') id: string,
     @Body() updateQuizDto: UpdateQuizDto,
