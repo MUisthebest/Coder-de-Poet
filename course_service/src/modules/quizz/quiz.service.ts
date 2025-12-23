@@ -10,7 +10,7 @@ import { CreateQuizDto, QuizSubmissionDto } from './dto/create-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
 
 interface SearchFilters {
-  lessonId?: number;
+  lessonId?: string | number;
   status?: string;
   title?: string;
 }
@@ -132,7 +132,7 @@ export class QuizService {
   /**
    * Tìm quiz theo lesson ID
    */
-  async findByCourseId(lessonId: number): Promise<any[]> {
+  async findByCourseId(lessonId: string): Promise<any[]> {
     try {
       return await this.quizRepository.findByCourseId(lessonId);
     } catch (error) {
@@ -168,6 +168,28 @@ export class QuizService {
   }
 
   /**
+   * Lấy các quiz và câu hỏi của chúng theo lessonId
+   */
+  async findByLessonWithQuestions(lessonId: string): Promise<any[]> {
+    try {
+      const summaries = await this.quizRepository.findByCourseId(lessonId);
+      const results: any[] = [];
+
+      for (const s of summaries) {
+        const id = (s.id !== undefined && s.id !== null) ? String(s.id) : undefined;
+        if (!id) continue;
+        const full = await this.quizRepository.findByIdWithQuestions(id);
+        if (full) results.push(full);
+      }
+
+      return results;
+    } catch (error) {
+      console.error('Error finding quizzes with questions by lesson:', error);
+      throw new BadRequestException('Failed to retrieve quizzes with questions by lesson');
+    }
+  }
+
+  /**
    * Đếm số lượng quiz theo điều kiện
    */
   async count(conditions?: Record<string, any>): Promise<number> {
@@ -182,7 +204,7 @@ export class QuizService {
   /**
    * Kiểm tra quiz có tồn tại không
    */
-  async exists(id: number): Promise<boolean> {
+  async exists(id: string): Promise<boolean> {
     try {
       const quiz = await this.quizRepository.findOne({
         where: { id },

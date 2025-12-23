@@ -26,7 +26,7 @@ namespace auth_service.Infrastructure.Security
             _issuer = _configuration["JWT:Issuer"] ?? string.Empty;
             _audience = _configuration["JWT:Audience"] ?? string.Empty;
             _secretKey = Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"] ?? string.Empty);
-            _accessTokenExpiryMinutes = int.Parse(_configuration["JWT:AccessTokenExpiryMinutes"] ?? "15");
+            _accessTokenExpiryMinutes = int.Parse(_configuration["JWT:AccessTokenExpiryMinutes"] ?? "3");
             _refreshTokenExpiryDays = int.Parse(_configuration["JWT:RefreshTokenExpiryDays"] ?? "7");
         }
 

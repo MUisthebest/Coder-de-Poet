@@ -49,7 +49,11 @@ const instructorService = {
 
     updateCourse: async (courseId, payload) => {
         try {
-            const response = await apiCourse.put(`/courses/${courseId}`, payload);
+            const token = authService.getStoredToken();
+            const response = await apiCourse.patch(`/courses/${courseId}`, payload, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
             return response.data;
         } catch (error) {
             console.error('Error updating course:', error);
@@ -85,7 +89,10 @@ const instructorService = {
 
     getCoursesByInstructor: async (instructorId) => {
         try {
-            const response = await apiCourse.get(`/courses?instructorId=${instructorId}`);
+            const token = authService.getStoredToken();
+            const response = await apiCourse.get(`/courses?instructorId=${instructorId}`,{
+                headers: { Authorization: `Bearer ${token}` }
+            });
             return response.data;
         } catch (error) {
             console.error("Error fetching instructor courses:", error);
@@ -120,12 +127,31 @@ const instructorService = {
   },
   addQuizToLesson: async (lessonId, quizData) => {
     const token = authService.getStoredToken();
-    console.log("quizz data: ", quizData)
     const response = await apiCourse.post(`/quizzes`, quizData,{               
         headers: { Authorization: `Bearer ${token}` }
         });
     return response.data;
     },
+  
+  generateAIQuiz: async (payload) => {
+    try {
+      const token = authService.getStoredToken();
+      console.log("Generating AI quiz with payload:", payload);
+      // Gọi endpoint AI quiz generate
+      const response = await apiCourse.post(
+        '/lessons/quiz-generate',
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      // Chỉ return response data, user sẽ lưu bằng addQuizToLesson
+      return response.data;
+    } catch (error) {
+      console.error('Error generating AI quiz:', error);
+      throw error;
+    }
+  },
 }
 
 export default instructorService;

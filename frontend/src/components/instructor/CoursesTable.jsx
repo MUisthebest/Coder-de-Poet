@@ -32,7 +32,7 @@ const CoursesTable = ({ courses, onView, onEdit, onAnalytics, onDelete }) => (
               onClick={() => onView(course)}
             >
               <img
-                src={getThumbnailUrl(course.thumbnail_url) || "https://via.placeholder.com/80"}
+                src={getThumbnailUrl(course.thumbnail_url)}
                 alt={course.title}
                 className="w-16 h-10 rounded-lg object-cover flex-shrink-0"
               />
@@ -41,8 +41,8 @@ const CoursesTable = ({ courses, onView, onEdit, onAnalytics, onDelete }) => (
                   {course.title}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {course.category} • Updated{" "}
-                  {new Date(course.updatedAt).toLocaleDateString()}
+                  {course.category_name || course.category || 'N/A'} • Updated{" "}
+                  {course.updated_at ? new Date(course.updated_at).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
             </td>
@@ -69,7 +69,7 @@ const CoursesTable = ({ courses, onView, onEdit, onAnalytics, onDelete }) => (
             </td>
 
             <td className="px-4 py-3 text-center">
-              {new Date(course.updated_at).toLocaleDateString()}
+              {course.updated_at ? new Date(course.updated_at).toLocaleDateString() : 'N/A'}
             </td>
 
             {/* Hành động (icon) */}

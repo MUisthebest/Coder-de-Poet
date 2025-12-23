@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import WeeklyActivity from './WeeklyActivity';
 import MyCourses from './MyCourses';
-import FriendsList from './FriendsList';
 import { useSidebar } from "../../contexts/SidebarContext";
 import { authService } from '../../services/authService';
 import { useAuth } from "../../contexts/AuthContext";
@@ -12,15 +10,13 @@ const ProfileSidebar = ({
   myCourses, 
   friends 
 }) => {
-  const [activeTab, setActiveTab] = useState('activity');
+  const [activeTab, setActiveTab] = useState('courses');
   const { isOpen, setIsOpen } = useSidebar();
   const { user, isAuthenticated, loading, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const tabs = [
-    { id: 'friends', label: 'Friends' },
-    { id: 'activity', label: 'Activity' },
     { id: 'courses', label: 'My Courses' }
   ];
 
@@ -65,6 +61,8 @@ const ProfileSidebar = ({
     );
   }
 
+  console.log('My Courses:', myCourses);
+
   // Nếu đã đăng nhập, hiển thị profile bình thường
   return (
     <div className={`rounded-2xl border-[1px] border-[#aaa] bg-[#E3E3E3] border-[1px] border-[#ccc] overflow-hidden h-[96vh] shadow-lg transition-all duration-300 ${isOpen ? 'w-[8vw]' : 'w-[20vw]'}`}>
@@ -73,7 +71,7 @@ const ProfileSidebar = ({
         <i className='bxr  bx-cog text-[2vw]'></i>  
       </div>
       {/* Profile Header */}
-      <div className="bg-[#E3E3E3] h-[32vh] p-6 text-center">
+      <div className="bg-[#E3E3E3] h-[27vh] p-6 text-center">
         <div className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden">
           {user?.avatarUrl ? (
             <img
@@ -102,38 +100,11 @@ const ProfileSidebar = ({
         >
           Logout
         </button>
-
-        {/* Tabs */}
-        <div className={`flex bg-gray-100 rounded-lg mb-5 ${isOpen ? 'hidden' : ''}`}>
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 bg-gray-100'
-              }`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Tab Content */}
-      <div className={`bg-[#E3E3E3] p-6 mt-4 h-[60vh] ${isOpen ? 'hidden' : ''}`}>
-        {activeTab === 'friends' && (
-          <FriendsList friends={friends} />
-        )}
-        
-        {activeTab === 'activity' && (
-          <WeeklyActivity activities={weeklyActivities} />
-        )}
-        
-        {activeTab === 'courses' && (
-          <MyCourses myCoursesProp={myCourses} user={user} />
-        )}
+      <div className={`bg-[#E3E3E3] p-6 mt-1 h-[62vh] ${isOpen ? 'hidden' : ''}`}>
+        <MyCourses myCoursesProp={myCourses} user={user} />
       </div>
     </div>
   );

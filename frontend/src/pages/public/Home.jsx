@@ -37,28 +37,33 @@ const Home = () => {
   const defaultCategoryImage = 'https://res.cloudinary.com/drjlezbo7/image/upload/v1763998803/menu_13984545_qzoaog.png';
 
   const extractCoursesFromResponse = (responseData) => {
-    if (!responseData) {
-      return [];
-    }
-    
+    if (!responseData) return [];
+
     if (Array.isArray(responseData)) {
       return responseData;
     }
-    
-    if (responseData && typeof responseData === 'object') {
-      if (Array.isArray(responseData.items)) {
-        return responseData.items;
+
+    if (typeof responseData === "object") {
+      if (Array.isArray(responseData?.courses?.items)) {
+        return responseData.courses.items;
       }
-      if (Array.isArray(responseData.courses)) {
+
+      if (Array.isArray(responseData?.courses)) {
         return responseData.courses;
       }
-      if (Array.isArray(responseData.data)) {
+
+      if (Array.isArray(responseData?.items)) {
+        return responseData.items;
+      }
+
+      if (Array.isArray(responseData?.data)) {
         return responseData.data;
       }
     }
-    
+
     return [];
   };
+
 
   // Chỉ chặn scroll trên mobile khi sidebar mở
   useEffect(() => {
@@ -199,11 +204,14 @@ const Home = () => {
         }
 
         const response = await axios.get(url);
-        
+
+        console.log(response.data);
+
         let coursesData = extractCoursesFromResponse(response.data);
-        
+
         const transformedCourses = coursesData.map(course => {
           const courseCategory = categories.find(cat => cat.id === course.category_id);
+
           
           return {
             id: course.id,
@@ -241,54 +249,6 @@ const Home = () => {
       fetchCourses();
     }
   }, [activeCategory, categories, API_URL]);
-
-  const weeklyActivities = [
-    { day: 'Mon', hours: 2.5, type: 'learning' },
-    { day: 'Tue', hours: 1.8, type: 'practice' },
-    { day: 'Wed', hours: 3.2, type: 'learning' },
-    { day: 'Thu', hours: 2.0, type: 'project' },
-    { day: 'Fri', hours: 4.1, type: 'learning' },
-    { day: 'Sat', hours: 1.5, type: 'review' },
-    { day: 'Sun', hours: 2.8, type: 'practice' }
-  ];
-
-  const myCourses = [
-    {
-      id: 1,
-      title: 'Crawler with Python for Beginners',
-      category: 'Python Tutorials',
-      progress: 85,
-      students: 9530,
-      nextLesson: 'State Management',
-      timeLeft: '2h 15m'
-    },
-    {
-      id: 2,
-      title: 'Ardunio for Beginners',
-      category: 'Python',
-      progress: 60,
-      students: 8500,
-      nextLesson: 'Market Analysis',
-      timeLeft: '4h 30m'
-    },
-    {
-      id: 3,
-      title: 'Machine Learning A-Z™: Hands-On Python & R In Data Science',
-      category: 'Computer Science',
-      progress: 45,
-      students: 15000,
-      nextLesson: 'SEO Basics',
-      timeLeft: '6h 45m'
-    }
-  ];
-
-  const friends = [
-    { id: 1, name: 'Alex Johnson', course: 'React Native' },
-    { id: 2, name: 'Maria Garcia', course: 'UI/UX Design' },
-    { id: 3, name: 'Tom Wilson', course: 'Data Science' },
-    { id: 4, name: 'Sarah Chen', course: 'Web Development' },
-    { id: 5, name: 'Mike Brown', course: 'Cloud Computing' }
-  ];
 
   if (isLoading) {
     return (
@@ -421,9 +381,6 @@ const Home = () => {
         {/* Frame 2: Profile Sidebar */}
         <div className="flex h-screen justify-center items-center sticky top-0">
           <ProfileSidebar 
-            weeklyActivities={weeklyActivities}
-            myCourses={myCourses}
-            friends={friends}
             user={user}
             isAuthenticated={isAuthenticated}
           />

@@ -12,6 +12,8 @@ using auth_service.Domain.Entity;
         Task<User?> GetUserByEmailAsync (string email);
         Task<User?> GetUserByIdAsync (Guid id);
         Task UpdateUserAsync (User user);
-        Task<User?> GetUserByRefreshTokenAsync (string refreshToken);    
+        Task<User?> GetUserByRefreshTokenAsync (string refreshToken);
+        Task<List<User>> GetAllUsersAsync();
+        Task<bool> DeleteUserAsync(Guid id);
     }
 }

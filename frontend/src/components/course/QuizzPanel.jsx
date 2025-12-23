@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import courseService from '../../services/courseService';
 
-const QuizPanel = ({ courseId, videoUrl, onClose }) => {
+const QuizPanel = ({ lessonId, videoUrl, onClose }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [score, setScore] = useState(0);
@@ -10,45 +12,58 @@ const QuizPanel = ({ courseId, videoUrl, onClose }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Gọi backend Flask để tạo quiz từ video → quiz
-  useEffect(() => {
-    const generateQuiz = async () => {
-      if (!videoUrl) return;
+ useEffect(() => {
+  const fetchQuiz = async () => {
+    console.log("fetchQuiz called, lessonId:", lessonId);
+    if (!lessonId) {
+      console.log("lessonId is empty, returning");
+      setError("lessonId không hợp lệ");
+      setLoading(false);
+      return;
+    }
 
-      setLoading(true);
-      setError("");
+    setLoading(true);
+    setError("");
 
-      try {
-        const res = await fetch("http://127.0.0.1:5000/generate_quiz", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: videoUrl }),
-        });
+    try {
+      console.log("KKK");
+      const quizzes = await courseService.getQuizzesByLesson(lessonId);
+      console.log("quizzes response:", quizzes);
+      
+      if (!quizzes.length) throw new Error("Bài học chưa có quiz");
 
-        if (!res.ok) throw new Error("Không thể tạo quiz từ video");
+      // Lấy quiz đầu tiên (hoặc bạn có thể cho chọn)
+      const quiz = quizzes[0];
 
-        const data = await res.json();
-        const questions = parseQuizFromText(data.quiz);
+      const questions = quiz.questions.map((q, idx) => ({
+        id: q.id,
+        question: q.content,
+        options: q.options,
+        correctAnswer: q.options.findIndex(
+          (opt) => opt === q.correct_answer
+        ),
+        explanation: "Đáp án đúng: " + q.correct_answer,
+      }));
 
-        if (questions.length === 0) throw new Error("AI không tạo được câu hỏi nào");
+      setQuizData({
+        lessonId,
+        title: quiz.title,
+        totalQuestions: questions.length,
+        timeLimit: quiz.duration * 60,
+        passingScore: 70,
+        questions,
+      });
 
-        setQuizData({
-          courseId,
-          title: "Bài kiểm tra tự động từ video",
-          totalQuestions: questions.length,
-          timeLimit: 600,
-          passingScore: 70,
-          questions,
-        });
-      } catch (err) {
-        setError(err.message || "Lỗi khi tạo quiz");
-      } finally {
-        setLoading(false);
-      }
-    };
+      setTimeLeft(quiz.duration * 60);
+    } catch (err) {
+      setError(err.message || "Lỗi khi tải quiz");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    generateQuiz();
-  }, [courseId, videoUrl]);
+  fetchQuiz();
+}, [lessonId]);
 
   // Parse text từ GPT thành mảng câu hỏi chuẩn
   const parseQuizFromText = (text) => {
@@ -185,7 +200,7 @@ const QuizPanel = ({ courseId, videoUrl, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[96vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="bg-gradient-to-r from-[#456882] to-[#1B3C53] text-white p-6">
           <div className="flex justify-between items-center mb-4">
@@ -224,7 +239,11 @@ const QuizPanel = ({ courseId, videoUrl, onClose }) => {
                   passed ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
                 }`}
               >
-                {passed ? "Check" : "Cross"}
+              {passed ? (
+                <FaCheckCircle color="green" size={20} />
+              ) : (
+                <FaTimesCircle color="red" size={20} />
+              )}
               </div>
               <h3 className={`text-4xl font-bold mb-4 ${passed ? "text-green-600" : "text-red-600"}`}>
                 {passed ? "Chúc mừng! Bạn đã ĐẠT!" : "Chưa đạt yêu cầu"}
@@ -270,7 +289,7 @@ const QuizPanel = ({ courseId, videoUrl, onClose }) => {
                         className={`w-8 h-8 rounded-full border-2 mr-4 flex items-center justify-center font-bold
                           ${selectedAnswer === i ? "bg-[#1B3C53] text-white" : "border-gray-400"}`}
                       >
-                        {selectedAnswer === i ? "Check" : String.fromCharCode(65 + i)}
+                        {selectedAnswer === i ? <FaCheckCircle color="green" size={20} /> : String.fromCharCode(65 + i)}
                       </div>
                       <span>{opt}</span>
                     </div>

@@ -27,15 +27,15 @@ namespace auth_service.Application.Usecase.Implementation
 
             // 3. Generate refresh token
             var refreshToken = _jwtTokenProvider.GenerateRefreshToken();
-            var refreshTokenExpiry = DateTime.UtcNow.AddDays(7); // adjust as needed
+            var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
 
             // 4. Create new user entity using constructor
             var user = new User(
                 email: signUpRequest.Email,
                 hashedPassword: hashedPassword,
                 fullName: signUpRequest.FullName,
-                refreshToken: "", // Empty initially
-                refreshTokenExpiry: DateTime.UtcNow, // Will be updated later
+                refreshToken: refreshToken,
+                refreshTokenExpiry: refreshTokenExpiry,
                 dob: signUpRequest.DateOfBirth,
                 avatarUrl_: signUpRequest.AvatarUrl ?? ""
             );
@@ -58,7 +58,7 @@ namespace auth_service.Application.Usecase.Implementation
                         Email = user.Email,
                         FullName = user.FullName ?? string.Empty,
                         AvatarUrl = user.AvatarUrl,
-                        Role = user.UserRole.ToString(), // hoặc map từ enum
+                        Role = user.UserRole.ToString(),
                         DateOfBirth = user.DateOfBirth,
                         CreatedAt = user.CreatedAt,
                         UpdatedAt = DateTime.UtcNow
@@ -100,13 +100,18 @@ namespace auth_service.Application.Usecase.Implementation
             // 3. Generate new tokens
             var accessToken = _jwtTokenProvider.GenerateJWTAccessToken(user);
             var refreshToken = _jwtTokenProvider.GenerateRefreshToken();
-            var refreshTokenExpiry = DateTime.UtcNow.AddDays(7); // adjust as needed
+            var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
 
-                        // 5. Return result
+            // 4. UPDATE refresh token in database
+            user.UpdateRefreshToken(refreshToken, refreshTokenExpiry);
+            await _userRepository.UpdateUserAsync(user);
+
+            // 5. Return result
             return new AuthResult
             {
                 IsSuccess = true,
                 AccessToken = accessToken,
+                RefreshToken = refreshToken,
                 User = new UserPublicInfo
                     {
                         Id = user.Id,

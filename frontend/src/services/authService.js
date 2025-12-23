@@ -9,6 +9,7 @@ class AuthService {
       const response = await api.post('/api/auth/signin', credentials);
       const { data } = response;
 
+      console.log("✅ Login response data:", data);
 
       // Lưu token
       if (data.accessToken) this.setAccessToken(data.accessToken);
@@ -103,12 +104,18 @@ async socialLogin(provider, accessToken) {
   // Refresh token: chỉ gọi API, backend tự đọc cookie
 async refreshToken() {
   try {
-    const response = await api.post('/api/auth/refresh-token'); // không gửi body
+    const response = await api.post('/api/auth/refresh-token', {});
     const { accessToken } = response.data;
+    
+    if (!accessToken) {
+      throw new Error('No access token in refresh response');
+    }
+    
     this.setAccessToken(accessToken);
-    console.log('Token refreshed successfully');
+    console.log('✅ Token refreshed successfully');
     return accessToken;
   } catch (error) {
+    console.error('❌ Token refresh failed:', error.message || error);
     this.clearAccessToken();
     throw error; // để interceptor bắt
   }
