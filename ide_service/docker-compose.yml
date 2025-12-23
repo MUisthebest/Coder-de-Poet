@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  runner_image:
+    build: ./runner
+    image: learnix-runner:latest
+
+  ide_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_URLS: "http://+:8089"
+      ConnectionStrings__Default: "postgresql://postgres.erpstsihpmfvagprbgnz:Nguyenphucan@2004@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?pgbouncer=true"
+      RUNNER_IMAGE: "learnix-runner:latest"
+      SANDBOX_TIMEOUT_MS: "2500"
+      SANDBOX_CPU: "1.0"
+      SANDBOX_MEM: "256m"
+      SANDBOX_PIDS: "128"
+      MAX_OUTPUT_BYTES: "1048576"
+      WORKER_INTERVAL_MS: "1000"
+    ports:
+      - "8089:8089"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - runner_image
