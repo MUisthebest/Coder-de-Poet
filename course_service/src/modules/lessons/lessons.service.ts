@@ -42,8 +42,6 @@ export class LessonsService {
     if (!deleted) throw new NotFoundException('Lesson not found');
     return deleted;
   }
-
-
   // quiz service: 
   async createQuiz(dto: any): Promise<string> {
 

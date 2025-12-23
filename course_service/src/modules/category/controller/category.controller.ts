@@ -14,7 +14,6 @@ import * as CategoryDto from '../models/Dto/category.dto';
 import type { ICategoryService } from '../services/course.interface';
 import { Roles } from '../../auth/roles.decorator';
 
-// Import RBAC components
 import { AuthGuard } from '../../auth/jwt-auth.guard';
 import { RoleGuard } from "../../auth/role_guard.auth";
 

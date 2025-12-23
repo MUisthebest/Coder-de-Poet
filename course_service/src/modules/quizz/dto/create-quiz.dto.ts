@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsArray, ValidateNested, IsUUID } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsArray, ValidateNested, IsUUID, IsNotEmpty, IsObject } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateQuestionDto {
@@ -41,4 +41,22 @@ export class CreateQuizDto {
   @ValidateNested({ each: true })
   @Type(() => CreateQuestionDto)
   questions: CreateQuestionDto[];
+}
+
+  export class QuizSubmissionDto {
+  @IsUUID()
+  @IsNotEmpty()
+  studentId: string;
+
+  @IsUUID()
+  @IsNotEmpty()
+  lessonId: string;
+
+  @IsUUID()
+  @IsNotEmpty()
+  courseId: string;
+
+  @IsObject()
+  @IsNotEmpty()
+  answers: Record<string, string>;
 }

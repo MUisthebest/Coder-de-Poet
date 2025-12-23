@@ -16,15 +16,12 @@ import {
   DefaultValuePipe,
 } from '@nestjs/common';
 import { QuizService } from './quiz.service';
-import { CreateQuizDto } from './dto/create-quiz.dto';
+import { CreateQuizDto, QuizSubmissionDto } from './dto/create-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
 import { AddQuestionsDto } from './dto/add-questions.dto';
 import { AuthGuard } from '../auth/jwt-auth.guard';
 import { 
     BadRequestException,
-    ForbiddenException,
-    Injectable,
-    NotFoundException
 } from '@nestjs/common';
 
 @Controller('quizzes')
@@ -84,6 +81,29 @@ export class QuizController {
   @Get('lesson/:lessonId')
   async findByLessonWithQuestions(@Param('lessonId') lessonId: string) {
     return this.quizService.findByLessonWithQuestions(lessonId);
+  }
+  
+  @Get('count/:courseId')
+  async countByCourse(@Param('courseId', ParseIntPipe) courseId: number) {
+    return this.quizService.count({ course_id: courseId });
+  }
+
+  @Get('exists/:id')
+  async exists(@Param('id', ParseIntPipe) id: number) {
+    const exists = await this.quizService.exists(id);
+    return { exists };
+  }
+
+
+  //Endpoint for grading quiz submission
+  /*
+    Slug: :id: Quiz Id
+    Body: QuestionWithAnswerDto[]
+    Output: { totalScore: number, totalQuestions: number, foundQuestions: number }
+  */
+  @Post('/grade') 
+  async gradeQuizSubmission(@Body() quizSubmissionDto: QuizSubmissionDto) {
+    return this.quizService.calculateQuizScore(quizSubmissionDto);
   }
 
   @Get(':id')
@@ -153,5 +173,6 @@ export class QuizController {
   async getQuizSubmissions(@Param('id') id: string) {
     return this.quizService.getQuizSubmissions(id);
   }
+
 
 }

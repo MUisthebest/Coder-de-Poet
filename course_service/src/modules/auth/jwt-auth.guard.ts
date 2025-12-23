@@ -23,10 +23,6 @@ export class AuthGuard implements CanActivate {
         }
         try {
             const secret = process.env["JWT_SECRET"];
-
-            console.log("[AuthGuard] Using secret:", secret ? "(loaded)" : "(NOT loaded)");
-            console.log("[AuthGuard] Incoming token:", token);
-
             const payload: any = await this.jwtService.verifyAsync(token, {
                 secret,
             });
