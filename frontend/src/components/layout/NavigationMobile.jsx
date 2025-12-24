@@ -117,7 +117,7 @@ export default function Navigation_Mobile() {
 
           <li>
 
-            <NavLink to="/calendar" className={getNavLinkClasses}>
+            <NavLink to="/chat" className={getNavLinkClasses}>
 
               Calendar
 
@@ -243,8 +243,8 @@ export default function Navigation_Mobile() {
           </li>
 
           <li>
-            <NavLink to={`${user === null ? '/' : user.role === "Admin" ? '/admin/member': user.role === "Instructor" ? '/instructor/member':'/calendar'}`} className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
-              Calendar
+            <NavLink to={`${user === null ? '/' : user.role === "Admin" ? '/admin/member': user.role === "Instructor" ? '/instructor/member':'/chat'}`} className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
+              Chat
             </NavLink>
           </li>
 

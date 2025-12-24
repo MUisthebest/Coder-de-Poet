@@ -5,10 +5,11 @@ import { getThumbnailUrl } from '../../utils/thumbnailHelper';
 
 const MyCourses = ({ courses: coursesProp = [], user }) => {
   const [courses, setCourses] = useState(coursesProp || []);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Thay đổi: Mặc định là true để hiển thị loading
   const [unenrollingCourseId, setUnenrollingCourseId] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [startIndex, setStartIndex] = useState(0);
+  const [initialLoad, setInitialLoad] = useState(true); // Thêm state để theo dõi lần load đầu tiên
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
   
   // Sử dụng ref để theo dõi lần fetch cuối cùng
@@ -39,10 +40,12 @@ const MyCourses = ({ courses: coursesProp = [], user }) => {
   useEffect(() => {
     console.log("MyCourses useEffect - coursesProp:", coursesProp?.length, "user:", user?.id);
     
-    // Nếu có coursesProp từ props, sử dụng chúng và không fetch từ API
+    // Nếu có coursesProp từ props và không phải là mảng rỗng, sử dụng chúng
     if (coursesProp && coursesProp.length > 0) {
       console.log("Using courses from props, skipping API fetch");
       setCourses(coursesProp);
+      setLoading(false);
+      setInitialLoad(false);
       return;
     }
 
@@ -50,6 +53,8 @@ const MyCourses = ({ courses: coursesProp = [], user }) => {
     if (!user || !user.id) {
       console.log("No user, clearing courses");
       setCourses([]);
+      setLoading(false);
+      setInitialLoad(false);
       return;
     }
 
@@ -61,6 +66,11 @@ const MyCourses = ({ courses: coursesProp = [], user }) => {
 
     if (!shouldFetch) {
       console.log("Skipping fetch - already fetching or recent fetch");
+      // Nếu đã có courses từ lần fetch trước, không hiển thị loading
+      if (courses.length > 0) {
+        setLoading(false);
+      }
+      setInitialLoad(false);
       return;
     }
 
@@ -94,9 +104,6 @@ const MyCourses = ({ courses: coursesProp = [], user }) => {
           console.log("API response:", data);
         }
 
-        
-
-        
         if (data?.items) data = data.items;
         if (!Array.isArray(data)) {
           if (data?.courses) data = data.courses;
@@ -124,6 +131,7 @@ const MyCourses = ({ courses: coursesProp = [], user }) => {
         setCourses([]);
       } finally {
         setLoading(false);
+        setInitialLoad(false);
         isFetchingRef.current = false;
       }
     };
@@ -134,6 +142,7 @@ const MyCourses = ({ courses: coursesProp = [], user }) => {
     // Cleanup function
     return () => {
       console.log("MyCourses cleanup");
+      // KHÔNG reset courses ở đây để giữ state khi unmount/remount
     };
   }, [coursesProp, user]); // Chỉ phụ thuộc vào coursesProp và user
 
@@ -219,7 +228,7 @@ const MyCourses = ({ courses: coursesProp = [], user }) => {
     coursesByCategory[category].averageRating = avgRating.toFixed(1);
   });
 
-  console.log("Rendering MyCourses - total courses:", courses);
+  console.log("Rendering MyCourses - total courses:", courses.length, "loading:", loading);
 
   // Lấy tối đa 4 khóa học từ vị trí startIndex
   const displayedCourses = courses.slice(startIndex, startIndex + 4);
@@ -228,12 +237,12 @@ const MyCourses = ({ courses: coursesProp = [], user }) => {
     <div>
       <h3 className="text-lg font-semibold text-gray-900 mb-4">My Courses</h3>
 
-      {loading ? (
+      {loading && initialLoad ? (
         <div className="flex justify-center items-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           <span className="ml-2 text-gray-600">Loading Course...</span>
         </div>
-      ) : displayedCourses.length === 0 ? (
+      ) : !loading && courses.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <p>Bạn chưa đăng ký khóa học nào.</p>
           <button 
