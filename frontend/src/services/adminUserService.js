@@ -28,6 +28,19 @@ class AdminUserService {
       };
     }
   }
+
+  async updateRole(userId, role) {
+    try {
+      const { data } = await api.patch(`/api/auth/admin/users/${userId}/role`, { role });
+      return { success: true, data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || error.response?.data?.errorMessage || error.message,
+        status: error.response?.status,
+      };
+    }
+  }
 }
 
 export const adminUserService = new AdminUserService();

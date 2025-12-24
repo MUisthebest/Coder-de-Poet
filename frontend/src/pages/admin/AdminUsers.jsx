@@ -8,7 +8,10 @@ function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [users, setUsers] = useState([]);
+  const [updatingRoleId, setUpdatingRoleId] = useState(null);
   const navigate = useNavigate();
+
+  const roles = ['Normal_Student', 'Premium_Student', 'Instructor'];
 
   useEffect(() => {
     if (!authLoading) {
@@ -45,6 +48,41 @@ function AdminUsers() {
       return;
     }
     await loadUsers();
+  };
+
+  const handleRoleChange = async (id, newRole) => {
+    setUpdatingRoleId(id);
+    try {
+      const res = await adminUserService.updateRole(id, newRole);
+      console.log('Role update response:', res);
+      
+      if (!res.success) {
+        const errorMsg = res.data?.errorMessage || res.error || 'Unknown error';
+        alert(`Failed to update role:\n${errorMsg}`);
+        setUpdatingRoleId(null);
+        return;
+      }
+
+      // res.data has the updated user info with new role
+      const updatedUser = res.data;
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === id
+            ? {
+                ...u,
+                role: updatedUser?.role || newRole,
+                updatedAt: updatedUser?.updatedAt || new Date().toISOString(),
+              }
+            : u
+        )
+      );
+      alert('Role updated successfully!');
+    } catch (error) {
+      console.error('Error updating role:', error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setUpdatingRoleId(null);
+    }
   };
 
   const totalUsers = useMemo(() => users.length, [users]);
@@ -108,7 +146,34 @@ function AdminUsers() {
                 <tr key={u.id}>
                   <td className="px-6 py-4 text-sm text-gray-900">{u.email}</td>
                   <td className="px-6 py-4 text-sm text-gray-700">{u.fullName || '—'}</td>
-                  <td className="px-6 py-4 text-sm">{u.role || '—'}</td>
+                  <td className="px-6 py-4 text-sm">
+                    {u.role === 'Admin' ? (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                        Admin
+                      </span>
+                    ) : (
+                      <select
+                        value={u.role || ''}
+                        onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                        className={`border rounded px-3 py-2 text-sm w-full transition-all ${
+                          updatingRoleId === u.id
+                            ? 'bg-gray-100 border-gray-300 cursor-not-allowed opacity-60'
+                            : 'border-gray-300 hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200'
+                        }`}
+                        disabled={updatingRoleId === u.id}
+                        title={updatingRoleId === u.id ? 'Updating...' : 'Click to change role'}
+                      >
+                        <option value="" disabled>
+                          Select role
+                        </option>
+                        {roles.map((r) => (
+                          <option key={r} value={r}>
+                            {r}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </td>
                   <td className="px-6 py-4 text-sm text-gray-500">{u.createdAt ? new Date(u.createdAt).toLocaleString() : '—'}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{u.updatedAt ? new Date(u.updatedAt).toLocaleString() : '—'}</td>
                   <td className="px-6 py-4 text-right">
