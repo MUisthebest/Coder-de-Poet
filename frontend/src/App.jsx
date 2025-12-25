@@ -20,7 +20,6 @@ import CourseList from './pages/course/CourseList';
 import InstructorDashboard from './pages/instructor/InstructorDashboard';
 import LessonDetailPageRoute from './pages/instructor/LessonDetail';
 import CourseDetailRoute from './pages/instructor/CourseDetail';
-import CourseDetailModal from './pages/instructor/CourseDetailModal';
 import ChatbotPage from './pages/chat/ChatbotPage';
  
 // Component để xử lý redirect dựa trên role
