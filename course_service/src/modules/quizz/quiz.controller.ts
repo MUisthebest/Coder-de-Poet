@@ -16,15 +16,12 @@ import {
   DefaultValuePipe,
 } from '@nestjs/common';
 import { QuizService } from './quiz.service';
-import { CreateQuizDto } from './dto/create-quiz.dto';
+import { CreateQuizDto, QuizSubmissionDto } from './dto/create-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
 import { AddQuestionsDto } from './dto/add-questions.dto';
 import { AuthGuard } from '../auth/jwt-auth.guard';
 import { 
     BadRequestException,
-    ForbiddenException,
-    Injectable,
-    NotFoundException
 } from '@nestjs/common';
 
 @Controller('quizzes')
@@ -147,5 +144,17 @@ export class QuizController {
   async exists(@Param('id', ParseIntPipe) id: number) {
     const exists = await this.quizService.exists(id);
     return { exists };
+  }
+
+
+  //Endpoint for grading quiz submission
+  /*
+    Slug: :id: Quiz Id
+    Body: QuestionWithAnswerDto[]
+    Output: { totalScore: number, totalQuestions: number, foundQuestions: number }
+  */
+  @Post('/grade') 
+  async gradeQuizSubmission(@Body() quizSubmissionDto: QuizSubmissionDto) {
+    return this.quizService.calculateQuizScore(quizSubmissionDto);
   }
 }

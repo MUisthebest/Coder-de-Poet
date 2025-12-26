@@ -1,0 +1,38 @@
+services:
+  ide_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ide_service-ide_api
+    environment:
+      ASPNETCORE_URLS: "http://+:8089"
+      HOST_SANDBOX_DIR: "D:/Nam_4/HK1/Advanced_Web/Project/Coder-de-Poet/ide_service/sandbox_host"
+      CONTAINER_SANDBOX_DIR: "/sandbox_host"
+      ConnectionStrings__Default: "Host=aws-1-ap-southeast-2.pooler.supabase.com;Port=6543;Database=postgres;Username=postgres.erpstsihpmfvagprbgnz;Password=Nguyenphucan@2004;Ssl Mode=Require;Trust Server Certificate=true"
+
+      # Runner
+      RUNNER_IMAGE: "learnix-runner:latest"
+      SANDBOX_TIMEOUT_MS: "2500"
+      SANDBOX_CPU: "1.0"
+      SANDBOX_CPU_COMPILED: "2.0"
+      SANDBOX_MEM_PY: "256m"
+      SANDBOX_MEM_COMPILED: "512m"
+      SANDBOX_PIDS: "128"
+      MAX_OUTPUT_BYTES: "1048576"
+
+      # Worker
+      WORKER_INTERVAL_MS: "1000"
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./sandbox_host:/sandbox_host
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  runner_image:
+    build:
+      context: ./runner
+      dockerfile: Dockerfile
+    image: learnix-runner:latest
+    profiles:
+      - manual
+    command: ["true"]

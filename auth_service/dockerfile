@@ -1,41 +1,44 @@
-# Build stage
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy project file và restore dependencies
-COPY ["auth_service.csproj", "."]
-RUN dotnet restore "auth_service.csproj"
+#Copy project file for cache restore
+COPY auth_service.csproj ./
+RUN dotnet restore ./auth_service.csproj
 
-# Copy toàn bộ source code
+
 COPY . .
 
-# Build và publish
-RUN dotnet build "auth_service.csproj" -c Release --no-restore
-RUN dotnet publish "auth_service.csproj" -c Release -o /app/publish --no-restore --no-build
+#Build + publish
+RUN dotnet publish ./auth_service.csproj \
+    -c Release \
+    -o /app/publish \
+    --no-restore \
+    /p:UseAppHost=false
 
-# Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 
-# Install curl for health checks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+#Install curl for health checks
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy từ build stage
-COPY --from=build /app/publish .
+COPY --from=build /app/publish ./
 
-# Tạo non-root user cho security
-RUN groupadd -r appuser && useradd -r -g appuser appuser
-RUN chown -R appuser:appuser /app
+RUN groupadd -r appuser --gid 10001 \
+    && useradd -r -g appuser --uid 10001 appuser \
+    && chown -R appuser:appuser /app
+
 USER appuser
 
-# Expose port
 EXPOSE 8080
-ENV ASPNETCORE_URLS=http://*:8080
-ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_URLS=http://0.0.0.0:8080\
+     ASPNETCORE_ENVIRONMENT=Production\
+     DOTNET_EnableDiagnostics=0
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
 
-# Entry point
+# Healthcheck 
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD curl -fsS http://127.0.0.1:8080/health || exit 1
+
 ENTRYPOINT ["dotnet", "auth_service.dll"]
