@@ -1,10 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Pool } from 'pg';
-import { PG_POOL } from '../../database/database.module';
+import { PG_POOL, AUTH_POOL } from '../../database/database.module';
 
 @Injectable()
 export class AdminRepository {
-  constructor(@Inject(PG_POOL) private pool: Pool) {}
+  constructor(
+    @Inject(PG_POOL) private pool: Pool,
+    @Inject(AUTH_POOL) private authPool: Pool | null,
+  ) {}
 
   async listInstructors() {
     const query = `
@@ -18,6 +21,32 @@ export class AdminRepository {
       ORDER BY last_updated_at DESC NULLS LAST;
     `;
     const { rows } = await this.pool.query(query);
+    
+    // Enrich with user info from auth database
+    if (this.authPool) {
+      const instructorIds = rows.map(r => r.instructor_id);
+      if (instructorIds.length > 0) {
+        try {
+          const userQuery = `
+            SELECT "Id" as id, "FullName" as full_name, "Email" as email
+            FROM "Users"
+            WHERE "Id" = ANY($1)
+          `;
+          const { rows: users } = await this.authPool.query(userQuery, [instructorIds]);
+          
+          // Map users to instructors
+          const userMap = new Map(users.map(u => [u.id, u]));
+          return rows.map(instructor => ({
+            ...instructor,
+            full_name: userMap.get(instructor.instructor_id)?.full_name || '',
+            email: userMap.get(instructor.instructor_id)?.email || '',
+          }));
+        } catch (error) {
+          console.error('Failed to fetch user info from auth database:', error);
+        }
+      }
+    }
+    
     return rows;
   }
 

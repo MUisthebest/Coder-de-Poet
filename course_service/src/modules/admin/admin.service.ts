@@ -3,9 +3,11 @@ import { AdminRepository } from './admin.repository';
 
 @Injectable()
 export class AdminService {
-  constructor(private readonly repo: AdminRepository) {}
+  constructor(
+    private readonly repo: AdminRepository,
+  ) {}
 
-  listInstructors() {
+  async listInstructors() {
     return this.repo.listInstructors();
   }
 
