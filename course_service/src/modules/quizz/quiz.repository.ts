@@ -11,7 +11,7 @@ interface FindOptions {
 }
 
 interface QuizFilters {
-  lessonId?: number;
+  lessonId?: string | number;
   status?: string;
   title?: string;
 }
@@ -262,20 +262,69 @@ export class QuizRepository {
   }
 
   // Tìm quiz theo course ID
-  async findByCourseId(lessonId: number): Promise<any[]> {
+  async findByCourseId(lessonId: string): Promise<any[]> {
     const query = `
       SELECT 
         q.*,
         COUNT(qu.id) as question_count
       FROM quizzes q
       LEFT JOIN questions qu ON q.id = qu.quiz_id
-      WHERE q.course_id = $1
+      WHERE q.lesson_id = $1
       GROUP BY q.id
       ORDER BY q.created_at DESC
     `;
 
     const result = await this.pool.query(query, [lessonId]);
     return result.rows;
+  }
+
+  // Tìm quiz theo lesson ID
+  async findByLessonId(lessonId: string): Promise<any[]> {
+    const query = `
+      SELECT 
+        q.*,
+        COUNT(qu.id) as question_count
+      FROM quizzes q
+      LEFT JOIN questions qu ON q.id = qu.quiz_id
+      WHERE q.lesson_id = $1
+      GROUP BY q.id
+      ORDER BY q.created_at DESC
+    `;
+    
+    const result = await this.pool.query(query, [lessonId]);
+    
+    // Lấy questions cho mỗi quiz
+    const quizzesWithQuestions = await Promise.all(
+      result.rows.map(async (quiz) => {
+        const questionsQuery = `
+          SELECT * FROM questions 
+          WHERE quiz_id = $1 
+          ORDER BY order_index ASC
+        `;
+        const questionsResult = await this.pool.query(questionsQuery, [quiz.id]);
+        
+        quiz.questions = questionsResult.rows.map((q: any) => {
+          let options = null;
+          if (q.options) {
+            try {
+              if (typeof q.options === 'string') {
+                options = JSON.parse(q.options);
+              } else {
+                options = q.options;
+              }
+            } catch (error) {
+              console.error('Error parsing options JSON:', error);
+              options = null;
+            }
+          }
+          return { ...q, options };
+        });
+        
+        return quiz;
+      })
+    );
+    
+    return quizzesWithQuestions;
   }
 
   // Cập nhật quiz (id là string)

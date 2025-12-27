@@ -8,6 +8,7 @@ import Unauthorized from './pages/auth/Unauthorized';
 import ProtectedRoute from './components/admin/ProtectedRoute';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCourses from './pages/admin/AdminCourses';
+import AdminUsers from './pages/admin/AdminUsers';
 import AdminRoute from './components/admin/AdminRoute';
 import InstructorRoute from './components/instructor/InstructorRoute';
 import { SidebarProvider } from "./contexts/SidebarContext";
@@ -17,7 +18,9 @@ import GoogleCallbackHandler from './components/auth/GoogleCallbackHandler';
 import CourseDetail from './pages/course/CourseDetail';
 import CourseList from './pages/course/CourseList';
 import InstructorDashboard from './pages/instructor/InstructorDashboard';
-import CourseDetailModal from './pages/instructor/CourseDetailModal';
+import LessonDetailPageRoute from './pages/instructor/LessonDetail';
+import CourseDetailRoute from './pages/instructor/CourseDetail';
+import ChatbotPage from './pages/chat/ChatbotPage';
  
 // Component để xử lý redirect dựa trên role
 function RoleBasedRedirect() {
@@ -32,6 +35,7 @@ function RoleBasedRedirect() {
   }
   
   // Nếu là admin → redirect đến /admin
+  //console.log("RoleBasedRedirect - isAuthenticated:", isAuthenticated, "isAdmin:", isAdmin, "user:", user);
   if (isAuthenticated && isAdmin) {
     return <Navigate to="/admin" replace />;
   }
@@ -76,12 +80,31 @@ function Layout() {
           <Route path="/courses/:id" element={<CourseDetail />} />
           <Route path="/auth/google/callback" element={<GoogleCallbackHandler />} />
           <Route path="/courses" element={<CourseList />}/>
+          <Route path="/chat" element={<ChatbotPage />}/>
 
           <Route 
             path="/instructor/dashboard" 
             element={ 
               <InstructorRoute>
                 <InstructorDashboard />
+              </InstructorRoute>
+            } 
+          />
+
+          <Route 
+            path="/instructor/courses/:courseId/lesson/:lessonId" 
+            element={ 
+              <InstructorRoute>
+                <LessonDetailPageRoute />
+              </InstructorRoute>
+            } 
+          />
+
+          <Route 
+            path="/instructor/courses/:courseId" 
+            element={ 
+              <InstructorRoute>
+                <CourseDetailRoute />
               </InstructorRoute>
             } 
           />
@@ -103,6 +126,14 @@ function Layout() {
                 <AdminCourses />
               </AdminRoute>
             } 
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <AdminRoute>
+                <AdminUsers />
+              </AdminRoute>
+            }
           />
           
           {/* Catch all route - redirect dựa trên role */}

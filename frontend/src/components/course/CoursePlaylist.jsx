@@ -1,7 +1,8 @@
 import React from "react";
 import { useSidebar } from "../../contexts/SidebarContext";
+import { FiEye } from "react-icons/fi";
 
-const CoursePlaylist = ({ lessons, currentLesson, setCurrentLesson, loading, getThumbnail }) => {
+const CoursePlaylist = ({ lessons, currentLesson, setCurrentLesson, loading, getThumbnail, isEnrolled, course, onLessonNavigate }) => {
   const { isOpen, setIsOpen } = useSidebar();
   
   if (loading) {
@@ -48,64 +49,86 @@ const CoursePlaylist = ({ lessons, currentLesson, setCurrentLesson, loading, get
       ) : (
         <div className={`space-y-2 p-1 max-h-[75vh] overflow-y-auto custom-scrollbar scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 ${isOpen ? 'space-y-1' : ''}`}>
           {lessons.map((lesson) => (
-            <button
+            <div
               key={lesson.id}
-              onClick={() => setCurrentLesson(lesson)}
-              className={`flex items-center gap-3 w-full text-left p-2 rounded-lg transition-all duration-200 border ${
-                currentLesson?.id === lesson.id
-                  ? "bg-[#456882] border-[#E3E3E3] shadow-sm"
-                  : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300"
-              } ${isOpen ? '!justify-center !p-1' : ''}`}
+              className="relative"
             >
-              {/* Thumbnail */}
-              <div className="relative">
-                <img
-                  src={getThumbnail(lesson.content_url)}
-                  alt={lesson.title}
-                  className={`object-cover rounded-md ${isOpen ? 'w-24 h-14' : 'w-28 h-16'}`}
-                />
-                {/* Duration badge - chỉ hiện khi không phải isOpen */}
-                {!isOpen && lesson.duration && (
-                  <span className="absolute bottom-1 right-1 bg-black bg-opacity-70 text-white text-xs px-1.5 py-0.5 rounded">
-                    {lesson.duration}
-                  </span>
-                )}
-                {/* Active overlay */}
-                {currentLesson?.id === lesson.id && (
-                  <div className="absolute inset-0 bg-[#E3E3E3]/10 rounded-md flex items-center justify-center">
-                    <div className="w-2 h-2 bg-[#E3E3E3]/30 rounded-full"></div>
-                  </div>
-                )}
-              </div>
+              <button
+                onClick={() => setCurrentLesson(lesson)}
+                className={`flex items-center gap-3 w-full text-left p-2 rounded-lg transition-all duration-200 border ${
+                  currentLesson?.id === lesson.id
+                    ? "bg-[#456882] border-[#E3E3E3] shadow-sm"
+                    : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                } ${isOpen ? '!justify-center !p-1' : ''}`}
+              >
+                {/* Thumbnail */}
+                <div className="relative">
+                  <img
+                    src={getThumbnail(lesson.content_url)}
+                    alt={lesson.title}
+                    className={`object-cover rounded-md ${isOpen ? 'w-24 h-14' : 'w-28 h-16'}`}
+                  />
+                  {/* Duration badge - chỉ hiện khi không phải isOpen */}
+                  {!isOpen && lesson.duration && (
+                    <span className="absolute bottom-1 right-1 bg-black bg-opacity-70 text-white text-xs px-1.5 py-0.5 rounded">
+                      {lesson.duration}
+                    </span>
+                  )}
+                  {/* Active overlay */}
+                  {currentLesson?.id === lesson.id && (
+                    <div className="absolute inset-0 bg-[#E3E3E3]/10 rounded-md flex items-center justify-center">
+                      <div className="w-2 h-2 bg-[#E3E3E3]/30 rounded-full"></div>
+                    </div>
+                  )}
+                </div>
 
-              {/* Info - ẩn hoàn toàn khi isOpen */}
-              {!isOpen && (
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    {lesson.position && (
+                {/* Info - ẩn hoàn toàn khi isOpen */}
+                {!isOpen && (
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      {lesson.position && (
+                        <span
+                          className={`text-xs font-bold px-1.5 py-0.5 rounded ${
+                            currentLesson?.id === lesson.id
+                              ? "bg-[#1B3C53] text-white"
+                              : "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {lesson.position}
+                        </span>
+                      )}
                       <span
-                        className={`text-xs font-bold px-1.5 py-0.5 rounded ${
+                        className={`text-sm font-medium truncate ${
                           currentLesson?.id === lesson.id
-                            ? "bg-[#1B3C53] text-white"
-                            : "bg-gray-100 text-gray-600"
+                            ? "text-[#fff]"
+                            : "text-gray-900"
                         }`}
                       >
-                        {lesson.position}
+                        {lesson.title}
                       </span>
-                    )}
-                    <span
-                      className={`text-sm font-medium truncate ${
-                        currentLesson?.id === lesson.id
-                          ? "text-[#fff]"
-                          : "text-gray-900"
-                      }`}
-                    >
-                      {lesson.title}
-                    </span>
+                    </div>
                   </div>
-                </div>
+                )}
+              </button>
+
+              {/* Nút Xem chi tiết - hiển thị khi hover */}
+              {onLessonNavigate && !isOpen && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onLessonNavigate(lesson);
+                  }}
+                  className={`absolute top-2 right-2 p-1.5 rounded-md transition-all opacity-0 hover:opacity-100 ${
+                    currentLesson?.id === lesson.id
+                      ? "bg-[#1B3C53] text-white hover:bg-[#0d1f2d]"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                  title="Xem chi tiết bài học"
+                >
+                  <FiEye size={16} />
+                </button>
               )}
-            </button>
+            </div>
           ))}
         </div>
       )}

@@ -36,12 +36,12 @@ export default function Navigation_PC() {
           </div>
         </div>
 
-        {/* MENU ITEMS */}
+        {/* MENU ITEMS */} 
         <ul className="flex flex-col space-y-1 text-gray-700 font-medium flex-1 gap-[calc(1vh_+_5px)]">
           <NavItem to={`${user === null ? '/' : user.role === "Admin" ? '/admin': user.role === "Instructor" ? '/instructor/dashboard':'/'}`} label={`${isAdmin ? 'Total': 'Dashboard'}`} icon="home-alt-2" isOpen={isOpen} />
           <NavItem to={`${isAdmin ? '/admin/courses': '/courses'}`} label={`${isAdmin ? 'Manage Courses': 'Courses'}`} icon="book" isOpen={isOpen} />
           <NavItem to="/book" label={`${isAdmin ? 'Manage Library': 'Library'}`} icon="book-open" isOpen={isOpen} />
-          <NavItem to="/calendar" label="Calendar" icon="calendar-alt" isOpen={isOpen} />
+          <NavItem to={`${user === null ? '/chat' : user.role === "Admin" ? '/admin/member': user.role === "Instructor" ? '/instructor/member':'/chat'}`} label="chat" icon="message-bubble-notification" isOpen={isOpen} />
         </ul>
       </div>
 

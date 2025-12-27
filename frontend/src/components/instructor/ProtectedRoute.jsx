@@ -12,11 +12,7 @@ const ProtectedRoute = ({ children = false }) => {
       </div>
     );
   }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
+  
   if (!user.role === "Instructor") {
     return <Navigate to="/unauthorized" replace />;
   }

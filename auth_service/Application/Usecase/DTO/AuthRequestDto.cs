@@ -6,6 +6,8 @@
     - (Later) Reset password
 */
 
+using System.ComponentModel.DataAnnotations;
+
 namespace auth_service.Application.Usecase.DTO
 {
     public class SignUpRequest
@@ -33,6 +35,12 @@ namespace auth_service.Application.Usecase.DTO
 
         public DateTime DateOfBirth {get; set;} = DateTime.MinValue;
         public string AvatarUrl {get; set;} = string.Empty;
+    }
+
+    public class UpdateUserRoleRequest
+    {
+        [Required]
+        public string Role { get; set; } = string.Empty;
     }
 
 }

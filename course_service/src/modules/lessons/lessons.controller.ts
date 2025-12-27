@@ -36,11 +36,13 @@ export class LessonsController {
     return this.lessonsService.findById(id);
   }
 
+  @UseGuards(AuthGuard)
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateLessonDto) {
     return this.lessonsService.update(id, dto);
   }
 
+  @UseGuards(AuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.lessonsService.remove(id);

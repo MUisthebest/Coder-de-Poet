@@ -1,54 +1,74 @@
 import React, { useState, useEffect } from "react";
+import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import courseService from '../../services/courseService';
+import { useAuth } from "../../contexts/AuthContext";
 
-const QuizPanel = ({ courseId, videoUrl, onClose }) => {
+const QuizPanel = ({ lessonId, courseId, videoUrl, onClose }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [userAnswers, setUserAnswers] = useState({});
   const [score, setScore] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(600); // 10 phút
   const [quizData, setQuizData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [backendScore, setBackendScore] = useState(null);
+  const {user} = useAuth();
 
-  // Gọi backend Flask để tạo quiz từ video → quiz
-  useEffect(() => {
-    const generateQuiz = async () => {
-      if (!videoUrl) return;
+ useEffect(() => {
+  const fetchQuiz = async () => {
+    console.log("fetchQuiz called, lessonId:", lessonId);
+    if (!lessonId) {
+      console.log("lessonId is empty, returning");
+      setError("lessonId không hợp lệ");
+      setLoading(false);
+      return;
+    }
 
-      setLoading(true);
-      setError("");
+    setLoading(true);
+    setError("");
 
-      try {
-        const res = await fetch("http://127.0.0.1:5000/generate_quiz", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: videoUrl }),
-        });
+    try {
+      console.log("KKK");
+      const quizzes = await courseService.getQuizzesByLesson(lessonId);
+      console.log("quizzes response:", quizzes);
+      
+      if (!quizzes.length) throw new Error("Bài học chưa có quiz");
 
-        if (!res.ok) throw new Error("Không thể tạo quiz từ video");
+      // Lấy quiz đầu tiên (hoặc bạn có thể cho chọn)
+      const quiz = quizzes[0];
 
-        const data = await res.json();
-        const questions = parseQuizFromText(data.quiz);
+      const questions = quiz.questions.map((q, idx) => ({
+        id: q.id,
+        question: q.content,
+        options: q.options,
+        correctAnswer: q.options.findIndex(
+          (opt) => opt === q.correct_answer
+        ),
+        explanation: "Đáp án đúng: " + q.correct_answer,
+      }));
 
-        if (questions.length === 0) throw new Error("AI không tạo được câu hỏi nào");
+      setQuizData({
+        lessonId,
+        title: quiz.title,
+        totalQuestions: questions.length,
+        timeLimit: quiz.duration * 60,
+        passingScore: 70,
+        questions,
+      });
 
-        setQuizData({
-          courseId,
-          title: "Bài kiểm tra tự động từ video",
-          totalQuestions: questions.length,
-          timeLimit: 600,
-          passingScore: 70,
-          questions,
-        });
-      } catch (err) {
-        setError(err.message || "Lỗi khi tạo quiz");
-      } finally {
-        setLoading(false);
-      }
-    };
+      setTimeLeft(quiz.duration * 60);
+    } catch (err) {
+      setError(err.message || "Lỗi khi tải quiz");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    generateQuiz();
-  }, [courseId, videoUrl]);
+  fetchQuiz();
+}, [lessonId]);
 
   // Parse text từ GPT thành mảng câu hỏi chuẩn
   const parseQuizFromText = (text) => {
@@ -111,6 +131,13 @@ const QuizPanel = ({ courseId, videoUrl, onClose }) => {
   const handleNext = () => {
     if (selectedAnswer === null) return;
 
+    // Record user's answer
+    const questionId = quizData.questions[currentQuestion].id.toString();
+    setUserAnswers(prev => ({
+      ...prev,
+      [questionId]: quizData.questions[currentQuestion].options[selectedAnswer]
+    }));
+
     if (selectedAnswer === quizData.questions[currentQuestion].correctAnswer) {
       setScore((s) => s + 1);
     }
@@ -130,14 +157,50 @@ const QuizPanel = ({ courseId, videoUrl, onClose }) => {
     }
   };
 
-  const handleSubmitQuiz = () => setQuizCompleted(true);
+  const handleSubmitQuiz = async () => {
+    // Record the last answer before submitting
+    if (selectedAnswer !== null) {
+      const questionId = quizData.questions[currentQuestion].id.toString();
+      userAnswers[questionId] = quizData.questions[currentQuestion].options[selectedAnswer];
+    }
+
+    setSubmitting(true);
+    try {
+      const studentId = user?.id;
+
+      if (!studentId) {
+        throw new Error('Student ID not found');
+      }
+
+      // Call backend grading endpoint
+      const result = await courseService.gradeQuizSubmission(
+        studentId,
+        lessonId,
+        courseId,
+        userAnswers
+      );
+
+      console.log('Grading result:', result);
+      setBackendScore(result);
+      setQuizCompleted(true);
+    } catch (err) {
+      console.error('Error submitting quiz:', err);
+      setError('Lỗi khi nộp bài: ' + (err.message || 'Unknown error'));
+      setQuizCompleted(true);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleRetry = () => {
     setCurrentQuestion(0);
     setSelectedAnswer(null);
+    setUserAnswers({});
     setScore(0);
+    setBackendScore(null);
     setQuizCompleted(false);
-    setTimeLeft(600);
+    setError("");
+    setTimeLeft(quizData.timeLimit);
   };
 
   const formatTime = (s) => {
@@ -185,11 +248,10 @@ const QuizPanel = ({ courseId, videoUrl, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[96vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="bg-gradient-to-r from-[#456882] to-[#1B3C53] text-white p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">{quizData.title}</h2>
+          <div className="flex justify-between items-center mb-1">
             <button onClick={onClose} className="text-3xl hover:opacity-70">
               ×
             </button>
@@ -216,45 +278,83 @@ const QuizPanel = ({ courseId, videoUrl, onClose }) => {
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto p-4">
           {quizCompleted ? (
             <div className="text-center py-16">
-              <div
-                className={`w-32 h-32 rounded-full mx-auto flex items-center justify-center text-6xl mb-8 ${
-                  passed ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
-                }`}
-              >
-                {passed ? "Check" : "Cross"}
-              </div>
-              <h3 className={`text-4xl font-bold mb-4 ${passed ? "text-green-600" : "text-red-600"}`}>
-                {passed ? "Chúc mừng! Bạn đã ĐẠT!" : "Chưa đạt yêu cầu"}
-              </h3>
-              <p className="text-5xl font-bold text-gray-800 mb-2">{finalScore.toFixed(0)}%</p>
-              <p className="text-xl text-gray-600 mb-10">
-                {score} / {quizData.questions.length} câu đúng
-              </p>
-              <div className="flex justify-center gap-6">
-                <button
-                  onClick={handleRetry}
-                  className="px-8 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold text-lg"
-                >
-                  Làm lại
-                </button>
-                <button
-                  onClick={onClose}
-                  className="px-8 py-4 bg-gray-200 rounded-xl hover:bg-gray-300 font-bold text-lg"
-                >
-                  Đóng
-                </button>
-              </div>
+              {submitting ? (
+                <>
+                  <div className="w-16 h-16 border-4 border-t-transparent border-blue-600 rounded-full animate-spin mx-auto mb-6"></div>
+                  <p className="text-xl font-semibold">Đang chấm điểm...</p>
+                </>
+              ) : error ? (
+                <>
+                  <div className="text-6xl mb-4 text-red-600">⚠️</div>
+                  <h3 className="text-2xl font-bold text-red-600 mb-4">Lỗi</h3>
+                  <p className="text-gray-600 mb-6">{error}</p>
+                  <div className="flex justify-center gap-6">
+                    <button
+                      onClick={handleRetry}
+                      className="px-8 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold text-lg"
+                    >
+                      Làm lại
+                    </button>
+                    <button
+                      onClick={onClose}
+                      className="px-8 py-4 bg-gray-200 rounded-xl hover:bg-gray-300 font-bold text-lg"
+                    >
+                      Đóng
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div
+                    className={`w-32 h-32 rounded-full mx-auto flex items-center justify-center text-6xl mb-8 ${
+                      backendScore?.isLessonCompleted ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
+                    }`}
+                  >
+                  {backendScore?.isLessonCompleted ? (
+                    <FaCheckCircle color="green" size={80} />
+                  ) : (
+                    <FaTimesCircle color="red" size={80} />
+                  )}
+                  </div>
+                  <h3 className={`text-4xl font-bold mb-4 ${backendScore?.isLessonCompleted ? "text-green-600" : "text-red-600"}`}>
+                    {backendScore?.isLessonCompleted ? "Chúc mừng! Bạn đã ĐẠT!" : "Chưa đạt yêu cầu"}
+                  </h3>
+                  <p className="text-5xl font-bold text-gray-800 mb-2">{backendScore?.score || finalScore.toFixed(0)}%</p>
+                  <p className="text-xl text-gray-600 mb-10">
+                    {backendScore?.correctAnswers || score} / {quizData.questions.length} câu đúng
+                  </p>
+                  {backendScore?.feedback && (
+                    <p className="text-lg text-gray-700 mb-8 p-4 bg-blue-50 rounded-lg">
+                      {backendScore.feedback}
+                    </p>
+                  )}
+                  <div className="flex justify-center gap-6">
+                    <button
+                      onClick={handleRetry}
+                      className="px-8 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold text-lg"
+                    >
+                      Làm lại
+                    </button>
+                    <button
+                      onClick={onClose}
+                      className="px-8 py-4 bg-gray-200 rounded-xl hover:bg-gray-300 font-bold text-lg"
+                    >
+                      Đóng
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <>
-              <h3 className="text-2xl font-bold text-gray-800 mb-8">
+              <h3 className="text-2xl font-bold text-gray-800 mb-5">
                 Câu {currentQuestion + 1}: {q.question}
               </h3>
 
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {q.options.map((opt, i) => (
                   <button
                     key={i}
@@ -270,7 +370,7 @@ const QuizPanel = ({ courseId, videoUrl, onClose }) => {
                         className={`w-8 h-8 rounded-full border-2 mr-4 flex items-center justify-center font-bold
                           ${selectedAnswer === i ? "bg-[#1B3C53] text-white" : "border-gray-400"}`}
                       >
-                        {selectedAnswer === i ? "Check" : String.fromCharCode(65 + i)}
+                        {selectedAnswer === i ? <FaCheckCircle color="green" size={20} /> : String.fromCharCode(65 + i)}
                       </div>
                       <span>{opt}</span>
                     </div>
@@ -278,7 +378,7 @@ const QuizPanel = ({ courseId, videoUrl, onClose }) => {
                 ))}
               </div>
 
-              <div className="flex justify-between mt-12">
+              <div className="flex justify-between mt-8">
                 <button
                   onClick={handlePrev}
                   disabled={currentQuestion === 0}
@@ -293,25 +393,19 @@ const QuizPanel = ({ courseId, videoUrl, onClose }) => {
 
                 <button
                   onClick={handleNext}
-                  disabled={selectedAnswer === null}
+                  disabled={selectedAnswer === null || submitting}
                   className={`px-8 py-4 rounded-lg font-bold text-white ${
-                    selectedAnswer === null
-                      ? "bg-gray-400"
+                    selectedAnswer === null || submitting
+                      ? "bg-gray-400 cursor-not-allowed"
                       : "bg-[#1B3C53] hover:bg-[#162f42]"
                   }`}
                 >
-                  {currentQuestion === quizData.questions.length - 1 ? "Nộp bài" : "Tiếp theo"}
+                  {submitting ? "Đang nộp..." : currentQuestion === quizData.questions.length - 1 ? "Nộp bài" : "Tiếp theo"}
                 </button>
               </div>
             </>
           )}
         </div>
-
-        {!quizCompleted && (
-          <div className="bg-gray-50 border-t p-4 text-center text-gray-600">
-            Bạn có thể quay lại sửa đáp án trước khi nộp
-          </div>
-        )}
       </div>
     </div>
   );

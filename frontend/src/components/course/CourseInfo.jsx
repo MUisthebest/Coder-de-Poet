@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import QuizPanel from "./QuizzPanel";
+import InstructorAddLesson from "../../pages/instructor/InstructorAddLesson";
 import { useAuth } from "../../contexts/AuthContext";
 
 const CourseInfo = ({ courseData, user, isEnrolled = false, onEnroll, enrolling = false, currentLesson }) => {
   const [showQuiz, setShowQuiz] = useState(false);
+  const [showAddLesson, setShowAddLesson] = useState(false);
   const {checkingPermission, canManageCourse, checkCourseOwnership} = useAuth();
 
   useEffect(() => {
@@ -14,6 +16,8 @@ const CourseInfo = ({ courseData, user, isEnrolled = false, onEnroll, enrolling 
   }, [user, courseData]);
 
   if (!courseData) return null;
+
+  console.log(currentLesson);
 
   return (
     <>
@@ -56,6 +60,7 @@ const CourseInfo = ({ courseData, user, isEnrolled = false, onEnroll, enrolling 
           {/* Chỉ hiển thị nút Upload nếu là giáo viên VÀ có quyền quản lý khóa học */}
           {user?.role === "Instructor" && canManageCourse && (
             <button 
+              onClick={() => setShowAddLesson(true)}
               className="px-4 py-4 bg-blue-600 text-[2vh] text-white rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-50"
               disabled={checkingPermission}
             >
@@ -88,9 +93,19 @@ const CourseInfo = ({ courseData, user, isEnrolled = false, onEnroll, enrolling 
       {/* Quiz Panel Modal */}
       {showQuiz && (
         <QuizPanel 
-          courseId={courseData.id} 
+          lessonId={currentLesson.id} 
+          courseId={courseData.id}
           videoUrl={currentLesson.content_url}
           onClose={() => setShowQuiz(false)} 
+        />
+      )}
+
+      {/* Add Lesson Panel Modal */}
+      {showAddLesson && (
+        <InstructorAddLesson
+          onClose={() => setShowAddLesson(false)}
+          MyCourse={[courseData]}
+          preSelectedCourse={courseData}
         />
       )}
     </>

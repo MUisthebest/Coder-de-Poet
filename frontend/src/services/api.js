@@ -36,13 +36,19 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Chỉ xử lý 401 và chưa từng retry
-    if (error.response?.status === 401 && !originalRequest._retry &&!originalRequest.url.includes('/api/auth/refresh-token')) {
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/api/auth/refresh-token')) {
+      
       if (isRefreshing) {
         // Đang refresh → chờ token mới
         return new Promise(resolve => {
           subscribeTokenRefresh(token => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            resolve(api(originalRequest));
+            if (token) {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              resolve(api(originalRequest));
+            } else {
+              window.location.href = '/login';
+              resolve(Promise.reject(error));
+            }
           });
         });
       }
@@ -54,6 +60,10 @@ api.interceptors.response.use(
         await authService.refreshToken(); // ← gọi refresh, lưu token mới
         const newToken = authService.getStoredToken();
 
+        if (!newToken) {
+          throw new Error('No token after refresh');
+        }
+
         // Thông báo cho tất cả request đang chờ
         onRefreshed(newToken);
         isRefreshing = false;
@@ -61,6 +71,7 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);
       } catch (refreshError) {
+        console.error('❌ Token refresh failed:', refreshError.message);
         isRefreshing = false;
         onRefreshed(null);
         authService.clearAccessToken();
