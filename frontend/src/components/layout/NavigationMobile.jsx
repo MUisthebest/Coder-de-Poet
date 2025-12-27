@@ -243,7 +243,7 @@ export default function Navigation_Mobile() {
           </li>
 
           <li>
-            <NavLink to={`${user === null ? '/' : user.role === "Admin" ? '/admin/member': user.role === "Instructor" ? '/instructor/member':'/chat'}`} className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
+            <NavLink to="/chat" className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
               Chat
             </NavLink>
           </li>
