@@ -81,6 +81,16 @@ namespace auth_service.Application.Usecase.Implementation
                 };
             }
 
+            // 1.5 Check if account is active
+            if (!user.GetIsActive())
+            {
+                return new AuthResult
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Your account has been disabled by an administrator."
+                };
+            }
+
             // 2. Verify password
             var isPasswordValid = _passwordHasher.VerifyBcryptHashedPassword(
                 user.GetHashedPassword(),

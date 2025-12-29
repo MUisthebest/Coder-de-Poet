@@ -24,7 +24,8 @@ namespace auth_service.Application.Usecase.Implementation
                     CreatedAt = u.CreatedAt,
                     UpdatedAt = u.UpdatedAt,
                     DateOfBirth = u.DateOfBirth,
-                    Role = u.GetFormattedRole()
+                    Role = u.GetFormattedRole(),
+                    IsActive = u.GetIsActive()
                 }).ToList();
 
                 return OperationResult<List<UserInfoResponse>>.Success(userList);
@@ -167,6 +168,68 @@ namespace auth_service.Application.Usecase.Implementation
             _logger.LogError(ex, "Error retrieving instructor {UserId}", userId);
             return OperationResult<UserInfoResponse>.Failure(
                 "GetInstructorFailed", "An error occurred while retrieving the instructor.");
+        }
+    }
+
+    public async Task<OperationResult> DisableAccountAsync(Guid userId)
+    {
+        try
+        {
+            var user = await _userRepository.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return OperationResult.Failure(
+                    "NotFound", $"User with ID {userId} not found");
+            }
+
+            if (!user.GetIsActive())
+            {
+                return OperationResult.Failure(
+                    "AlreadyDisabled", "Account is already disabled");
+            }
+
+            user.DisableAccount();
+            await _userRepository.UpdateUserAsync(user);
+
+            _logger.LogInformation("User {UserId} account disabled", userId);
+            return OperationResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error disabling account for user {UserId}", userId);
+            return OperationResult.Failure(
+                "DisableAccountFailed", "An error occurred while disabling the account");
+        }
+    }
+
+    public async Task<OperationResult> EnableAccountAsync(Guid userId)
+    {
+        try
+        {
+            var user = await _userRepository.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return OperationResult.Failure(
+                    "NotFound", $"User with ID {userId} not found");
+            }
+
+            if (user.GetIsActive())
+            {
+                return OperationResult.Failure(
+                    "AlreadyEnabled", "Account is already enabled");
+            }
+
+            user.EnableAccount();
+            await _userRepository.UpdateUserAsync(user);
+
+            _logger.LogInformation("User {UserId} account enabled", userId);
+            return OperationResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error enabling account for user {UserId}", userId);
+            return OperationResult.Failure(
+                "EnableAccountFailed", "An error occurred while enabling the account");
         }
     }
     }

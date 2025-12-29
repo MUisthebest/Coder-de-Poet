@@ -175,5 +175,10 @@ export class QuizController {
     return this.quizService.getQuizSubmissions(id);
   }
 
+  @Get('instructor/:instructorId/completion')
+  async getCourseCompletionByInstructor(@Param('instructorId') instructorId: string) {
+    return this.quizService.getCourseCompletionByInstructor(instructorId);
+  }
+
 
 }

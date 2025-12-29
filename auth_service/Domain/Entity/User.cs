@@ -40,6 +40,9 @@ namespace auth_service.Domain.Entity
         public string? PasswordResetToken { get; private set; }
         public DateTime? PasswordResetTokenExpiry { get; private set; }
 
+        // Account status
+        public bool IsActive { get; private set; } = true;
+
 
         //ORM Constructor
         protected User() {}
@@ -143,6 +146,21 @@ namespace auth_service.Domain.Entity
             PasswordResetTokenExpiry = null;
             UpdatedAt = DateTime.UtcNow;
         }
+
+        // Account enable/disable methods
+        public void DisableAccount()
+        {
+            IsActive = false;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void EnableAccount()
+        {
+            IsActive = true;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public bool GetIsActive() => IsActive;
 
         public string GetEmail() => Email;
         public string GetHashedPassword() => HashedPassword;

@@ -3,7 +3,7 @@ import QuizPanel from "./QuizzPanel";
 import InstructorAddLesson from "../../pages/instructor/InstructorAddLesson";
 import { useAuth } from "../../contexts/AuthContext";
 
-const CourseInfo = ({ courseData, instructorData, user, isEnrolled = false, onEnroll, enrolling = false, currentLesson }) => {
+const CourseInfo = ({ courseData, instructorData, user, isEnrolled = false, onEnroll, enrolling = false, currentLesson, onLessonAdded }) => {
   const [showQuiz, setShowQuiz] = useState(false);
   const [showAddLesson, setShowAddLesson] = useState(false);
   const {checkingPermission, canManageCourse, checkCourseOwnership} = useAuth();
@@ -119,6 +119,10 @@ const CourseInfo = ({ courseData, instructorData, user, isEnrolled = false, onEn
       {showAddLesson && (
         <InstructorAddLesson
           onClose={() => setShowAddLesson(false)}
+          onSuccess={() => {
+            setShowAddLesson(false);
+            if (onLessonAdded) onLessonAdded();
+          }}
           MyCourse={[courseData]}
           preSelectedCourse={courseData}
         />

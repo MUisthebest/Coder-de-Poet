@@ -68,20 +68,21 @@ const CourseDetailRoute = () => {
   }, [courseId]);
 
   // Fetch lessons
+  const fetchLessons = async () => {
+    if (!course?.id && !courseId) return;
+    try {
+      setLoading(true);
+      const id = course?.id || courseId;
+      const data = await instructorService.getLessonsByCourse(id);
+      setLessons(data);
+    } catch (err) {
+      console.error("Error fetching lessons:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchLessons = async () => {
-      if (!course?.id && !courseId) return;
-      try {
-        setLoading(true);
-        const id = course?.id || courseId;
-        const data = await instructorService.getLessonsByCourse(id);
-        setLessons(data);
-      } catch (err) {
-        console.error("Error fetching lessons:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchLessons();
   }, [course?.id, courseId]);
 
@@ -135,7 +136,7 @@ const CourseDetailRoute = () => {
           <p className="text-gray-500 mb-4">Course not found</p>
           <button
             onClick={() => navigate(-1)}
-            className="text-blue-600 hover:text-blue-800 font-medium"
+            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 mb-6 font-medium"
           >
             Back
           </button>
@@ -260,6 +261,10 @@ const CourseDetailRoute = () => {
               {showAddLesson && (
                 <InstructorAddLesson
                   onClose={() => setShowAddLesson(false)}
+                  onSuccess={() => {
+                    setShowAddLesson(false);
+                    fetchLessons();
+                  }}
                   preSelectedCourse={course}
                   MyCourse={[course]}
                 />

@@ -340,4 +340,16 @@ export class QuizService {
     );
   }
 
+  /**
+   * Get course completion statistics by instructor
+   */
+  async getCourseCompletionByInstructor(instructorId: string): Promise<any[]> {
+    try {
+      return await this.quizRepository.getCourseCompletionStatsByInstructor(instructorId);
+    } catch (error) {
+      console.error('Error getting course completion stats:', error);
+      throw new BadRequestException('Failed to retrieve course completion statistics');
+    }
+  }
+
 }

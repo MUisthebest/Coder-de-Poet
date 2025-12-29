@@ -5,6 +5,7 @@ import {
   Users,
   Star,
   DollarSign,
+  CheckCircle,
 } from "lucide-react"; // ✅ Lucide React icons
 
 const InstructorStats = ({ stats }) => {
@@ -23,10 +24,17 @@ const InstructorStats = ({ stats }) => {
       icon: Users,
       gradient: "from-emerald-500 to-teal-600",
     },
+    {
+      label: "Avg Quiz Completion",
+      value: `${stats.avgQuizCompletion ?? 0}%`,
+      sub: "Average lesson completion rate",
+      icon: CheckCircle,
+      gradient: "from-purple-500 to-purple-600",
+    },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
       {cards.map((c) => {
         const Icon = c.icon;
         return (

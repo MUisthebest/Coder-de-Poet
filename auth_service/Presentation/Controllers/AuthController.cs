@@ -324,6 +324,30 @@ namespace auth_service.Presentation.Controllers
             });
         }
 
+        [HttpDelete("admin/users/{id:guid}")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteUser([FromRoute] Guid id)
+        {
+            var result = await _userUseCase.DeleteUserAsync(id);
+
+            if (!result.IsSuccess)
+            {
+                var firstError = result.Errors.FirstOrDefault();
+                var errorMessage = firstError?.Message ?? "Delete failed";
+
+                return firstError?.Code switch
+                {
+                    "NotFound" => NotFound(new { success = false, errorMessage }),
+                    _ => BadRequest(new { success = false, errorMessage })
+                };
+            }
+
+            return Ok(new { success = true, message = "User deleted successfully" });
+        }
+
         [HttpPatch("admin/users/{id:guid}/role")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -387,6 +411,56 @@ namespace auth_service.Presentation.Controllers
             }
 
             return Ok(result);
+        }
+
+        [HttpPatch("admin/users/{id:guid}/disable")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DisableAccount([FromRoute] Guid id)
+        {
+            var result = await _userUseCase.DisableAccountAsync(id);
+
+            if (!result.IsSuccess)
+            {
+                var firstError = result.Errors.FirstOrDefault();
+                var errorMessage = firstError?.Message ?? "Failed to disable account";
+
+                return firstError?.Code switch
+                {
+                    "NotFound" => NotFound(new { success = false, errorMessage }),
+                    "AlreadyDisabled" => BadRequest(new { success = false, errorMessage }),
+                    _ => BadRequest(new { success = false, errorMessage })
+                };
+            }
+
+            return Ok(new { success = true, message = "Account disabled successfully" });
+        }
+
+        [HttpPatch("admin/users/{id:guid}/enable")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> EnableAccount([FromRoute] Guid id)
+        {
+            var result = await _userUseCase.EnableAccountAsync(id);
+
+            if (!result.IsSuccess)
+            {
+                var firstError = result.Errors.FirstOrDefault();
+                var errorMessage = firstError?.Message ?? "Failed to enable account";
+
+                return firstError?.Code switch
+                {
+                    "NotFound" => NotFound(new { success = false, errorMessage }),
+                    "AlreadyEnabled" => BadRequest(new { success = false, errorMessage }),
+                    _ => BadRequest(new { success = false, errorMessage })
+                };
+            }
+
+            return Ok(new { success = true, message = "Account enabled successfully" });
         }
 
         // POST /api/auth/forgot-password

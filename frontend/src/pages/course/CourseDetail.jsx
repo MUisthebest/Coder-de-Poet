@@ -346,6 +346,7 @@ const CourseDetail = () => {
                 onEnroll={handleEnroll} 
                 enrolling={enrolling} 
                 currentLesson={currentLesson}
+                onLessonAdded={fetchLessons}
               />
             </div>
           </>

@@ -258,6 +258,19 @@ const instructorService = {
       throw error;
     }
   },
+
+  getCourseCompletionStats: async (instructorId) => {
+    try {
+      const token = authService.getStoredToken();
+      const response = await apiCourse.get(`/quizzes/instructor/${instructorId}/completion`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching course completion stats:', error);
+      return [];
+    }
+  },
 }
 
 export default instructorService;

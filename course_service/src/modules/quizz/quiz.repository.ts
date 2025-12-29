@@ -670,6 +670,57 @@ export class QuizRepository {
     .trim()
     .toLowerCase();
 
+  // Get course completion statistics by instructor
+  async getCourseCompletionStatsByInstructor(instructorId: string): Promise<any[]> {
+    const query = `
+      WITH course_lessons AS (
+        SELECT 
+          c.id AS course_id,
+          c.title AS course_title,
+          COUNT(DISTINCT l.id) AS total_lessons,
+          COUNT(DISTINCT e.student_id) AS total_students
+        FROM courses c
+        LEFT JOIN lessons l ON l.course_id = c.id
+        LEFT JOIN enrollments e ON e.course_id = c.id AND e.status IN ('active', 'passed', 'completed')
+        WHERE c.instructor_id = $1::uuid
+        GROUP BY c.id, c.title
+      ),
+      completed_lessons AS (
+        SELECT 
+          lc.course_id,
+          lc.student_id,
+          COUNT(*) FILTER (WHERE lc.is_completed = TRUE) AS completed_count
+        FROM lesson_completion lc
+        WHERE lc.course_id IN (SELECT course_id FROM course_lessons)
+        GROUP BY lc.course_id, lc.student_id
+      )
+      SELECT 
+        cl.course_id,
+        cl.course_title,
+        cl.total_lessons,
+        cl.total_students,
+        COALESCE(
+          ROUND(
+            AVG(
+              CASE 
+                WHEN cl.total_lessons > 0 
+                THEN (cpl.completed_count * 100.0 / cl.total_lessons)
+                ELSE 0
+              END
+            ), 2
+          ), 0
+        ) AS avg_completion_percent,
+        COUNT(DISTINCT cpl.student_id) AS active_students
+      FROM course_lessons cl
+      LEFT JOIN completed_lessons cpl ON cpl.course_id = cl.course_id
+      GROUP BY cl.course_id, cl.course_title, cl.total_lessons, cl.total_students
+      ORDER BY cl.course_title;
+    `;
+
+    const result = await this.pool.query(query, [instructorId]);
+    return result.rows;
+  }
+
   async gradeQuizSubmission(
     quizSubmissionDto: QuizSubmissionDto,
   ) {
