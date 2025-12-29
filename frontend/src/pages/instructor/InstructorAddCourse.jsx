@@ -1,10 +1,10 @@
 import instructorService from "../../services/instructorService";
 import React, { useState, useEffect } from 'react';
-import { X, Upload, Calendar, Tag, Globe, Lock, Unlock } from 'lucide-react';
+import { X, Calendar, Tag, Globe, Lock, Unlock } from 'lucide-react';
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const InstructorAddCourse = ({ onClose, categories = [] }) => {
+const InstructorAddCourse = ({ onClose, onSuccess, categories = [] }) => {
   const { user: instructorId} = useAuth();
 
   // State chính - chỉ chứa các trường trong DTO
@@ -15,7 +15,6 @@ const InstructorAddCourse = ({ onClose, categories = [] }) => {
     categoryId: '',
     accessType: 'free',
     status: 'draft',
-    thumbnailUrl: '',
     tag: {}, // Để trống object hoặc null
   });
 
@@ -26,7 +25,6 @@ const InstructorAddCourse = ({ onClose, categories = [] }) => {
   });
 
   const [loading, setLoading] = useState(false);
-  const [thumbnailPreview, setThumbnailPreview] = useState(null);
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
   const location = useLocation();
@@ -72,50 +70,7 @@ const InstructorAddCourse = ({ onClose, categories = [] }) => {
     }
   };
 
-  const handleThumbnailChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Kiểm tra kích thước file (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors(prev => ({
-          ...prev,
-          thumbnailUrl: 'Image size should be less than 5MB'
-        }));
-        return;
-      }
 
-      // Kiểm tra loại file
-      if (!file.type.startsWith('image/')) {
-        setErrors(prev => ({
-          ...prev,
-          thumbnailUrl: 'Please upload an image file'
-        }));
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setThumbnailPreview(reader.result);
-        setFormData(prev => ({
-          ...prev,
-          thumbnailUrl: reader.result // Base64 string
-        }));
-        setErrors(prev => ({
-          ...prev,
-          thumbnailUrl: null
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleRemoveThumbnail = () => {
-    setThumbnailPreview(null);
-    setFormData(prev => ({
-      ...prev,
-      thumbnailUrl: ''
-    }));
-  };
 
   // Xử lý tags input
   const handleTagsChange = (e) => {
@@ -163,28 +118,8 @@ const InstructorAddCourse = ({ onClose, categories = [] }) => {
       newErrors.accessType = 'Please select access type';
     }
 
-    // Validate URL nếu có thumbnail
-    if (formData.thumbnailUrl && !isValidUrl(formData.thumbnailUrl)) {
-      newErrors.thumbnailUrl = 'Please enter a valid URL or upload an image';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  const isValidUrl = (string) => {
-    try {
-      // Kiểm tra base64 string
-      if (string.startsWith('data:image')) {
-        return true;
-      }
-      
-      // Kiểm tra URL thông thường
-      const url = new URL(string);
-      return url.protocol === 'http:' || url.protocol === 'https:';
-    } catch (_) {
-      return false;
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -199,6 +134,7 @@ const InstructorAddCourse = ({ onClose, categories = [] }) => {
     try {
       // Chuẩn bị payload đúng với DTO
       // Không gửi instructorId - sẽ được thêm từ backend qua req.user.id
+      // thumbnailUrl sẽ được tự động lấy từ video của lesson đầu tiên
       const payload = {
         title: formData.title,
         slug: formData.slug,
@@ -206,9 +142,7 @@ const InstructorAddCourse = ({ onClose, categories = [] }) => {
         categoryId: formData.categoryId,
         accessType: formData.accessType,
         status: formData.status,
-        thumbnailUrl: formData.thumbnailUrl || undefined, // Gửi undefined nếu rỗng
         tag: Object.keys(formData.tag).length > 0 ? formData.tag : undefined,
-        // Không gửi updatedAt - sẽ tự động cập nhật
       };
 
       console.log('Sending payload:', payload);
@@ -219,8 +153,12 @@ const InstructorAddCourse = ({ onClose, categories = [] }) => {
       // Thông báo thành công
       alert('Course created successfully!');
       
-      // Đóng modal
-      onClose();
+      // Gọi callback để refetch courses và đóng modal
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose();
+      }
       
       navigate('/instructor/dashboard', {replace: true});
 
@@ -255,7 +193,7 @@ const InstructorAddCourse = ({ onClose, categories = [] }) => {
     <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fadeIn">
       <div className="bg-white w-full max-w-3xl max-h-[90vh] overflow-y-auto modal-scroll">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center shadow-sm">
+        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center shadow-sm z-10">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Create New Course</h2>
             <p className="text-gray-500 text-sm mt-1">Fill in the required information</p>
@@ -461,70 +399,6 @@ const InstructorAddCourse = ({ onClose, categories = [] }) => {
               </div>
             </div>
 
-            {/* Thumbnail */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800">Thumbnail (Optional)</h3>
-              
-              <div className="space-y-3">
-                {thumbnailPreview ? (
-                  <div className="relative">
-                    <img
-                      src={thumbnailPreview}
-                      alt="Thumbnail preview"
-                      className="w-full h-48 object-cover rounded-lg border"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleRemoveThumbnail}
-                      className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
-                      disabled={loading}
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition">
-                      <Upload className="mx-auto text-gray-400 mb-3" size={32} />
-                      <p className="text-sm text-gray-600 mb-2">
-                        Drag & drop or click to upload thumbnail
-                      </p>
-                      <p className="text-xs text-gray-500 mb-4">
-                        Recommended: 1280x720px, max 5MB
-                      </p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleThumbnailChange}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        disabled={loading}
-                      />
-                    </div>
-                    
-                    {/* Hoặc nhập URL */}
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Or enter thumbnail URL:
-                      </label>
-                      <input
-                        type="url"
-                        name="thumbnailUrl"
-                        value={formData.thumbnailUrl}
-                        onChange={handleChange}
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
-                          errors.thumbnailUrl ? 'border-red-500' : 'border-gray-300'
-                        }`}
-                        placeholder="https://example.com/thumbnail.jpg"
-                        disabled={loading || thumbnailPreview}
-                      />
-                      {errors.thumbnailUrl && (
-                        <p className="text-sm text-red-600">{errors.thumbnailUrl}</p>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
           </div>
 
           {/* Footer Actions */}

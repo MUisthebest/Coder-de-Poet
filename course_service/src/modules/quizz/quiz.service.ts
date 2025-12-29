@@ -10,7 +10,7 @@ import { CreateQuizDto, QuizSubmissionDto } from './dto/create-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
 
 interface SearchFilters {
-  lessonId?: number;
+  lessonId?: string | number;
   status?: string;
   title?: string;
 }
@@ -132,12 +132,33 @@ export class QuizService {
   /**
    * Tìm quiz theo lesson ID
    */
-  async findByCourseId(lessonId: number): Promise<any[]> {
+  async findByCourseId(lessonId: string): Promise<any[]> {
     try {
       return await this.quizRepository.findByCourseId(lessonId);
     } catch (error) {
       console.error('Error finding quizzes by lesson:', error);
       throw new BadRequestException('Failed to retrieve quizzes by lesson');
+    }
+  }
+
+  /**
+   * Tìm quiz theo lesson ID (string)
+   */
+  async findByLessonId(lessonId: string): Promise<any[]> {
+    try {
+      return await this.quizRepository.findByLessonId(lessonId);
+    } catch (error) {
+      console.error('Error finding quizzes by lesson:', error);
+      throw new BadRequestException('Failed to retrieve quizzes by lesson');
+    }
+  }
+
+  async reviewQuizByLessonId(lessonId: string): Promise<any[]> {
+    try {
+      return await this.quizRepository.reviewQuizByLessonId(lessonId);  
+    } catch (error) {
+      console.error('Error reviewing quizzes by lesson:', error);
+      throw new BadRequestException('Failed to review quizzes by lesson');
     }
   }
 
@@ -168,6 +189,28 @@ export class QuizService {
   }
 
   /**
+   * Lấy các quiz và câu hỏi của chúng theo lessonId
+   */
+  async findByLessonWithQuestions(lessonId: string): Promise<any[]> {
+    try {
+      const summaries = await this.quizRepository.findByCourseId(lessonId);
+      const results: any[] = [];
+
+      for (const s of summaries) {
+        const id = (s.id !== undefined && s.id !== null) ? String(s.id) : undefined;
+        if (!id) continue;
+        const full = await this.quizRepository.findByIdWithQuestions(id);
+        if (full) results.push(full);
+      }
+
+      return results;
+    } catch (error) {
+      console.error('Error finding quizzes with questions by lesson:', error);
+      throw new BadRequestException('Failed to retrieve quizzes with questions by lesson');
+    }
+  }
+
+  /**
    * Đếm số lượng quiz theo điều kiện
    */
   async count(conditions?: Record<string, any>): Promise<number> {
@@ -182,7 +225,7 @@ export class QuizService {
   /**
    * Kiểm tra quiz có tồn tại không
    */
-  async exists(id: number): Promise<boolean> {
+  async exists(id: string): Promise<boolean> {
     try {
       const quiz = await this.quizRepository.findOne({
         where: { id },
@@ -295,6 +338,18 @@ export class QuizService {
     return this.quizRepository.gradeQuizSubmission(
       dto
     );
+  }
+
+  /**
+   * Get course completion statistics by instructor
+   */
+  async getCourseCompletionByInstructor(instructorId: string): Promise<any[]> {
+    try {
+      return await this.quizRepository.getCourseCompletionStatsByInstructor(instructorId);
+    } catch (error) {
+      console.error('Error getting course completion stats:', error);
+      throw new BadRequestException('Failed to retrieve course completion statistics');
+    }
   }
 
 }

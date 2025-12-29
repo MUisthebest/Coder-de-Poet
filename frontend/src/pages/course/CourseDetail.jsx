@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { authService } from "../../services/authService";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSidebar } from "../../contexts/SidebarContext";
+import courseService from "../../services/courseService";
+import { authService } from "../../services/authService";
 
 // Import các component đã code
 import CourseInfo from "../../components/course/CourseInfo";
@@ -50,6 +51,7 @@ const CourseDetail = () => {
   const [courseLoading, setCourseLoading] = useState(true);
   const [relatedCourses, setRelatedCourses] = useState([]);
   const [relatedLoading, setRelatedLoading] = useState(false);
+  const [instructorData, setInstructorData] = useState(null);
 
   // Lấy token từ authService
   const getAccessToken = () => authService.getStoredToken();
@@ -77,6 +79,11 @@ const CourseDetail = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCourseData(response.data);
+      authService.getInstructorById(response.data.instructor_id).then(data => {
+        setInstructorData(data);
+      }).catch(err => {
+        console.error("Error fetching instructor data:", err);
+      });
       setError(null); // Clear any previous error
     } catch (err) {
       console.error("❌ Error fetching course data:", err);
@@ -333,11 +340,13 @@ const CourseDetail = () => {
             <div className="mt-1">
               <CourseInfo 
                 courseData={courseData} 
+                instructorData={instructorData}
                 user={user} 
                 isEnrolled={isEnrolled} 
                 onEnroll={handleEnroll} 
                 enrolling={enrolling} 
                 currentLesson={currentLesson}
+                onLessonAdded={fetchLessons}
               />
             </div>
           </>

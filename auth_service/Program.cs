@@ -2,6 +2,7 @@ using System.Text;
 using auth_service.Application.Security;
 using auth_service.Application.Usecase.Implementation;
 using auth_service.Application.Usecase.Interface;
+using auth_service.Application.Service;
 using auth_service.Domain.Repository;
 using auth_service.Infrastructure.Database;
 using auth_service.Infrastructure.Repository;
@@ -126,6 +127,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserUseCase, UserUseCase>();
 builder.Services.AddScoped<IBcryptPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddScoped<IJWTTokenProvidder, JWTTokenProvidder>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // JWT Configuration
 builder.Services

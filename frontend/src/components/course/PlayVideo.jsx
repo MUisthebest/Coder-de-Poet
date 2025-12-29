@@ -46,7 +46,7 @@ const PlayVideo = ({ currentLesson, lessons = [], courseId, getEmbedUrl, isEnrol
                 )}
 
                 {/* VIDEO PLAYER */}
-                <div className="w-[60vw] md:h-[65vh] aspect-video bg-black rounded-xl overflow-hidden shadow-lg">
+                <div className="w-[100vw] md:h-[65vh] md:w-[60vw] aspect-video bg-black rounded-xl overflow-hidden shadow-lg">
                   {currentLesson.content_url ? (
                     <iframe
                       src={getEmbedUrl(currentLesson.content_url)}

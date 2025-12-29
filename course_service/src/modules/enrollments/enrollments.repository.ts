@@ -36,7 +36,7 @@ export class EnrollmentsRepository {
   async getCoursesForUser(userId: string) {
     // Join enrollments with courses to get course details for a user
     const query = `
-      SELECT c.* FROM enrollments e
+      SELECT c.*, e.completion_percentage FROM enrollments e
       JOIN courses c ON e.course_id = c.id
       WHERE e.student_id = $1 AND (e.status = 'joined' OR e.status = 'completed')
     `;

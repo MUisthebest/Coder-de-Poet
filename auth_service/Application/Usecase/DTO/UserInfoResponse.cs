@@ -5,7 +5,9 @@ public class UserInfoResponse
     public string FullName { get; set; } = string.Empty;
     public DateTime? DateOfBirth { get; set; }
     public string? AvatarUrl { get; set; }
+    public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public bool IsActive { get; set; } = true;
 
     public string Role { get; set; } = "Normal_Student";
 }

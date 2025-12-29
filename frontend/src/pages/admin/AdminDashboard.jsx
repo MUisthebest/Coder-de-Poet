@@ -1,62 +1,68 @@
 // components/AdminDashboard.js
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
-import { useAuth } from '../../contexts/AuthContext'; // Import AuthContext
+import { useAuth } from '../../contexts/AuthContext';
 
 function AdminDashboard() {
-  const [dashboardData, setDashboardData] = useState(null);
+  const navigate = useNavigate();
+  const { isAdmin, user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
-  // Sử dụng AuthContext
-  const { isAdmin, user, loading: authLoading } = useAuth();
+  const [stats, setStats] = useState(null);
+  const [popularCourses, setPopularCourses] = useState([]);
 
   useEffect(() => {
     if (!authLoading) {
-      checkAccessAndLoadData();
+      load();
     }
   }, [authLoading]);
 
-  const checkAccessAndLoadData = async () => {
-    // Kiểm tra role từ AuthContext thay vì adminService
+  const load = async () => {
     if (!isAdmin) {
-      setError('Bạn không có quyền truy cập trang Admin Dashboard');
+      setError('You do not have permission to access the Admin Dashboard');
       setLoading(false);
       return;
     }
 
-    await loadDashboardData();
-  };
-
-  const loadDashboardData = async () => {
     try {
       setLoading(true);
-      setError('');
+      const [statsRes, coursesRes] = await Promise.all([
+        adminService.getStats(),
+        adminService.getAllCourses(),
+      ]);
       
-      const result = await adminService.getAdminDashboard();
+      setStats(statsRes.data);
+
+      console.log('Fetched courses data:', coursesRes);
       
-      if (result.success) {
-        setDashboardData(result.data);
+      // Sort courses by student_count and take top 5
+      if (coursesRes.success && Array.isArray(coursesRes.data)) {
+        console.log('Raw courses data:', coursesRes.data);
+        const sortedCourses = coursesRes.data
+          .sort((a, b) => (b.student_count || 0) - (a.student_count || 0))
+          .slice(0, 5)
+          .map(c => ({
+            id: c.id,
+            title: c.title || 'Untitled Course',
+            instructor: c.instructor_id || 'Unknown',
+            category: c.category_name || c.category_id || '—',
+            students: c.student_count || 0,
+            createdAt: c.updated_at || c.created_at || new Date().toISOString(),
+          }));
+        console.log('Sorted courses:', sortedCourses);
+        setPopularCourses(sortedCourses);
       } else {
-        setError(result.error || 'Failed to load dashboard data');
+        console.log('Courses response:', coursesRes);
       }
-    } catch (err) {
-      setError(err.message);
+    } catch (e) {
+      setError(e.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Hiển thị loading từ AuthContext
-  if (authLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-lg">Checking authentication...</div>
-      </div>
-    );
-  }
-
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="text-lg">Loading admin dashboard...</div>
@@ -64,17 +70,17 @@ function AdminDashboard() {
     );
   }
 
-  if (error) {
+  if (isAdmin === false) {
     return (
       <div className="max-w-4xl mx-auto mt-8">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
           <h2 className="text-red-800 text-xl font-bold mb-2">Access Denied</h2>
           <p className="text-red-600">{error}</p>
-          <button 
+          <button
             onClick={() => window.location.href = '/'}
             className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
           >
-            Quay về trang chủ
+            Back to Home
           </button>
         </div>
       </div>
@@ -82,61 +88,105 @@ function AdminDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          {dashboardData?.message || 'Admin Dashboard'}
-        </h1>
-        <p className="text-gray-600 mt-2">
-          Welcome, {dashboardData?.user || user?.email} ({dashboardData?.role || 'Admin'})
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
+      <div className="min-h-screen mx-auto bg-gray-50 py-10 px-5 sm:px-10 max-w-8xl md:flex flex-col w-full">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-600 mt-1">Welcome back, <span className="font-semibold">{user?.email}</span></p>
+        </div>
 
-      {/* Stats Grid */}
-      {dashboardData?.dashboardData && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-700">Total Users</h3>
-            <p className="text-3xl font-bold text-blue-600">
-              {dashboardData.dashboardData.totalUsers.toLocaleString()}
-            </p>
+        {/* Stats Cards */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+              <p className="text-gray-600 text-sm font-medium">Total Users</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalUsers}</p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-orange-500">
+              <p className="text-gray-600 text-sm font-medium">Courses</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalCourses}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation Buttons */}
+        {stats && (
+          <div className="flex gap-4 mb-4 justify-end">
+            <button
+              onClick={() => navigate('/admin/users')}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium transition-colors"
+            >
+              Manage Users
+            </button>
+            <button
+              onClick={() => navigate('/admin/courses')}
+              className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 font-medium transition-colors"
+            >
+              View Courses
+            </button>
+          </div>
+        )}
+
+        {/* Popular Courses Table */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-bold text-gray-900">Popular Courses</h2>
           </div>
           
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-700">Active Courses</h3>
-            <p className="text-3xl font-bold text-green-600">
-              {dashboardData.dashboardData.activeCourses}
-            </p>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-700">Revenue</h3>
-            <p className="text-3xl font-bold text-purple-600">
-              ${dashboardData.dashboardData.revenue.toLocaleString()}
-            </p>
+          <div className="overflow-y-scroll" style={{ maxHeight: '300px' }}>
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 bg-gray-50">Course Title</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 bg-gray-50">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 bg-gray-50">Students</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 bg-gray-50">Updated</th>
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 bg-gray-50">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {popularCourses.length > 0 ? (
+                  popularCourses.map((course) => (
+                    <tr key={course.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <p className="font-medium text-gray-900">{course.title}</p>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {course.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                        <span className="inline-flex items-center px-2.5 py-0.5 text-xm font-medium text-green-800">
+                          {course.students.toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {new Date(course.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => navigate(`/admin/courses`)}
+                          className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-8 text-center text-gray-500 text-sm">
+                      No courses found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-      )}
-
-      {/* Recent Activities */}
-      {dashboardData?.dashboardData?.recentActivities && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Activities</h2>
-          <div className="space-y-3">
-            {dashboardData.dashboardData.recentActivities.map((activity, index) => (
-              <div key={index} className="flex justify-between items-center border-b pb-2">
-                <span className="text-gray-700">{activity.action}</span>
-                <span className="text-sm text-gray-500">{activity.time}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Last Updated */}
-      <div className="mt-4 text-sm text-gray-500">
-        Last updated: {new Date(dashboardData?.timestamp).toLocaleString()}
       </div>
     </div>
   );

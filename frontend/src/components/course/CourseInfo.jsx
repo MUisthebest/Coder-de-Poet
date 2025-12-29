@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import QuizPanel from "./QuizzPanel";
+import InstructorAddLesson from "../../pages/instructor/InstructorAddLesson";
 import { useAuth } from "../../contexts/AuthContext";
 
-const CourseInfo = ({ courseData, user, isEnrolled = false, onEnroll, enrolling = false, currentLesson }) => {
+const CourseInfo = ({ courseData, instructorData, user, isEnrolled = false, onEnroll, enrolling = false, currentLesson, onLessonAdded }) => {
   const [showQuiz, setShowQuiz] = useState(false);
+  const [showAddLesson, setShowAddLesson] = useState(false);
   const {checkingPermission, canManageCourse, checkCourseOwnership} = useAuth();
 
   useEffect(() => {
@@ -14,6 +16,13 @@ const CourseInfo = ({ courseData, user, isEnrolled = false, onEnroll, enrolling 
   }, [user, courseData]);
 
   if (!courseData) return null;
+
+  // Lấy thông tin instructor với fallback an toàn
+  const instructorAvatar = instructorData?.data?.data?.avatarUrl || "https://d2opxh93rbxzdn.cloudfront.net/original/2X/4/40cfa8ca1f24ac29cfebcb1460b5cafb213b6105.png";
+  const instructorName = instructorData?.data?.data?.fullName || "Instructor";
+  const instructorEmail = instructorData?.data?.data?.email || "No email provided";
+
+  console.log(currentLesson);
 
   return (
     <>
@@ -27,17 +36,25 @@ const CourseInfo = ({ courseData, user, isEnrolled = false, onEnroll, enrolling 
 
           {/* Info badges */}
           <div className="flex flex-wrap items-center gap-3 mb-4">
-            <span className="bg-blue-100 text-[#1B3C53] px-3 py-1 rounded-full text-sm font-medium">
-              {courseData.category?.name || "Uncategorized"}
+            <span className="bg-blue-100 text-[#1B3C53] rounded-full text-sm font-medium w-12 h-12 flex items-center justify-center">
+              <img 
+                src={instructorAvatar || 'https://d2opxh93rbxzdn.cloudfront.net/original/2X/4/40cfa8ca1f24ac29cfebcb1460b5cafb213b6105.png'} 
+                alt="category" 
+                className="rounded-full w-10 h-10 object-cover"
+                onError={(e) => {
+                  e.target.onerror = null; 
+                  e.target.src = "/default-avatar.png";
+                }}
+              />
             </span>
             <span className="text-gray-600 text-sm">
-              👨‍🏫 {courseData.instructor_name || "Instructor"}
+              👨‍🏫 {instructorName}
             </span>
             <span className="text-gray-600 text-sm">
               👥 {courseData.student_count || 0} học viên
             </span>
             <span className="text-gray-600 text-sm">
-              ⭐ {courseData.rating || "4.5"}/5.0
+              📧 {instructorEmail}
             </span>
             {courseData.access_type === "premium" ? (
               <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm font-medium">
@@ -56,6 +73,7 @@ const CourseInfo = ({ courseData, user, isEnrolled = false, onEnroll, enrolling 
           {/* Chỉ hiển thị nút Upload nếu là giáo viên VÀ có quyền quản lý khóa học */}
           {user?.role === "Instructor" && canManageCourse && (
             <button 
+              onClick={() => setShowAddLesson(true)}
               className="px-4 py-4 bg-blue-600 text-[2vh] text-white rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-50"
               disabled={checkingPermission}
             >
@@ -74,23 +92,39 @@ const CourseInfo = ({ courseData, user, isEnrolled = false, onEnroll, enrolling 
                 {enrolling ? 'Đang đăng ký...' : (courseData?.access_type === 'premium' ? `💎 Đăng ký Premium - ${courseData.price || '$49.99'}` : '🎓 Đăng ký miễn phí')}
               </button>
             ) : (
-              <button 
-                onClick={() => setShowQuiz(true)}
-                className="px-4 py-4 text-[2vh] bg-[#1B3C53] text-white font-bold rounded-lg shadow hover:bg-green-700 transition"
-              >
-                📝 Quizz
-              </button>
+              currentLesson?.id && (
+                <button 
+                  onClick={() => setShowQuiz(true)}
+                  className="px-4 py-4 text-[2vh] bg-[#1B3C53] text-white font-bold rounded-lg shadow hover:bg-green-700 transition"
+                >
+                  📝 Quizz
+                </button>
+              )
             )
           )}
         </div>
       </div>
 
-      {/* Quiz Panel Modal */}
-      {showQuiz && (
+      {/* Quiz Panel Modal - Chỉ hiển thị nếu có currentLesson */}
+      {showQuiz && currentLesson?.id && (
         <QuizPanel 
-          courseId={courseData.id} 
+          lessonId={currentLesson.id} 
+          courseId={courseData.id}
           videoUrl={currentLesson.content_url}
           onClose={() => setShowQuiz(false)} 
+        />
+      )}
+
+      {/* Add Lesson Panel Modal */}
+      {showAddLesson && (
+        <InstructorAddLesson
+          onClose={() => setShowAddLesson(false)}
+          onSuccess={() => {
+            setShowAddLesson(false);
+            if (onLessonAdded) onLessonAdded();
+          }}
+          MyCourse={[courseData]}
+          preSelectedCourse={courseData}
         />
       )}
     </>

@@ -1,9 +1,13 @@
-// src/components/AdminRoute.jsx
-import ProtectedRoute from './ProtectedRoute';
+// src/components/instructor/InstructorRoute.jsx
+import ProtectedRoute from '../admin/ProtectedRoute';
+import { InstructorProvider } from '../../contexts/InstructorContext';
+
 const InstructorRoute = ({ children }) => {
   return (
-    <ProtectedRoute requireAdmin={true}>
-      {children}
+    <ProtectedRoute>
+      <InstructorProvider>
+        {children}
+      </InstructorProvider>
     </ProtectedRoute>
   );
 };

@@ -29,10 +29,16 @@ namespace auth_service.Application.Usecase.Interface
         Task<OperationResult> RevokeRefreshTokenAsync(string refreshToken);
         Task<OperationResult> RevokeAllRefreshTokensAsync(Guid userId);
 
-        // //Reset Password 
-        // public Task<bool> SendResetPasswordEmailAsync (string email);
-        // public Task<bool> ResetPasswordAsync (string resetToken, string newPassword);
-
+        // Admin methods
+        Task<OperationResult<List<UserInfoResponse>>> GetAllUsersAsync();
+        Task<OperationResult> DeleteUserAsync(Guid userId);
+        Task<OperationResult<UserInfoResponse>> UpdateUserRoleAsync(Guid userId, string role);
+        Task<OperationResult<UserInfoResponse>> GetInstructorByIdAsync(Guid userId);
+        Task<OperationResult> DisableAccountAsync(Guid userId);
+        Task<OperationResult> EnableAccountAsync(Guid userId);
+        // Password Reset
+        Task<OperationResult> ForgotPasswordAsync(string email);
+        Task<OperationResult> ResetPasswordAsync(string token, string newPassword);
     }
     
 }

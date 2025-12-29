@@ -18,8 +18,8 @@ export default function CategorySlider({ categories, activeCategory, setActiveCa
     }
   };
 
-  // Thêm event listener cho scroll
   useEffect(() => {
+  const interval = setInterval(() => {
     const container = scrollContainerRef.current;
     if (container) {
       container.addEventListener('scroll', checkScroll);
@@ -30,7 +30,10 @@ export default function CategorySlider({ categories, activeCategory, setActiveCa
         container.removeEventListener('scroll', checkScroll);
       };
     }
-  }, [categories]);
+  }, 3000);
+
+  return () => clearInterval(interval);
+}, [categories]);
 
   // Scroll functions
   const scrollLeft = () => {

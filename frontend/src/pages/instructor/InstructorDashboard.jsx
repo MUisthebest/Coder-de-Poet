@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import instructorService from "../../services/instructorService";
 import InstructorStats from "../../components/instructor/InstructorStats";
 import CoursesFilterBar from "../../components/instructor/CoursesFilterBar";
@@ -6,7 +7,7 @@ import CoursesTable from "../../components/instructor/CoursesTable";
 import EmptyCoursesState from "../../components/instructor/EmptyCoursesState";
 import InstructorAddLesson from "./InstructorAddLesson";
 import InstructorAddCourse from "./InstructorAddCourse";
-import CourseDetailModal from "./CourseDetailModal";
+import InstructorEditCourse from "./InstructorEditCourse";
 import { FiPlus } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import ProfileSidebar from '../../components/home/ProfileSideBar';
@@ -15,6 +16,7 @@ import axios from 'axios';
 
 const InstructorDashboard = () => {
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+  const navigate = useNavigate();
   const { user: instructorId, isAuthenticated, user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,8 +30,11 @@ const InstructorDashboard = () => {
 
   const [showAddLesson, setShowAddLesson] = useState(false);
   const [showAddCourse, setShowAddCourse] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [showEditCourse, setShowEditCourse] = useState(false);
+  const [editingCourse, setEditingCourse] = useState(null);
   const [preSelectedCourse, setPreSelectedCourse] = useState(null);
+
+  const [completionStats, setCompletionStats] = useState([]);
 
   useEffect(() => {
     console.log("Fetching courses for instructor:", instructorId.id);
@@ -39,7 +44,26 @@ const InstructorDashboard = () => {
       try {
         setLoading(true);
         const data = await instructorService.getCoursesByInstructor(instructorId.id);
-        setCourses(data.items || data || []);
+        console.log("Fetched courses:", data);
+        const courseList = data?.courses?.items || []; 
+        
+        // Fetch completion stats
+        const completionData = await instructorService.getCourseCompletionStats(instructorId.id);
+        console.log("Fetched completion stats:", completionData);
+        setCompletionStats(completionData);
+        
+        // Merge completion stats with courses
+        const coursesWithStats = courseList.map(course => {
+          const stat = completionData.find(s => s.course_id === course.id);
+          return {
+            ...course,
+            avgCompletionPercent: Number(stat?.avg_completion_percent) || 0,
+            totalStudents: Number(stat?.total_students) || 0,
+            activeStudents: Number(stat?.active_students) || 0
+          };
+        });
+        
+        setCourses(coursesWithStats);
       } catch (err) {
         console.error(err);
         setError("Unable to fetch courses. Please try again.");
@@ -48,12 +72,13 @@ const InstructorDashboard = () => {
       }
     };
     fetchCourses();
-  }, []);
+  }, [instructorId.id]);
 
 
   const handleViewCourse = (course) => {
     console.log("View course", course.id);
-    setSelectedCourse(course);
+    sessionStorage.setItem("currentCourse", JSON.stringify(course));
+    navigate(`/instructor/courses/${course.id}`);
   };
 
   const handleDeleteCourse = async (course) => {
@@ -75,36 +100,6 @@ const InstructorDashboard = () => {
     { day: 'Sun', hours: 2.8, type: 'practice' }
   ];
 
-  const myCourses = [
-    {
-      id: 1,
-      title: 'Crawler with Python for Beginners',
-      category: 'Python Tutorials',
-      progress: 85,
-      students: 9530,
-      nextLesson: 'State Management',
-      timeLeft: '2h 15m'
-    },
-    {
-      id: 2,
-      title: 'Ardunio for Beginners',
-      category: 'Python',
-      progress: 60,
-      students: 8500,
-      nextLesson: 'Market Analysis',
-      timeLeft: '4h 30m'
-    },
-    {
-      id: 3,
-      title: 'Machine Learning A-Z™: Hands-On Python & R In Data Science',
-      category: 'Computer Science',
-      progress: 45,
-      students: 15000,
-      nextLesson: 'SEO Basics',
-      timeLeft: '6h 45m'
-    }
-  ];
-
   const friends = [
     { id: 1, name: 'Alex Johnson', course: 'React Native' },
     { id: 2, name: 'Maria Garcia', course: 'UI/UX Design' },
@@ -115,10 +110,13 @@ const InstructorDashboard = () => {
 
   const stats = useMemo(() => {
     const totalCourses = courses.length;
+    
+    // Calculate total students from completion stats (total_students from enrollments)
     const totalStudents = courses.reduce(
-      (sum, c) => sum + (c.studentsCount || 0),
+      (sum, c) => sum + (Number(c.totalStudents) || Number(c.studentsCount) || 0),
       0
     );
+    
     const ratedCourses = courses.filter((c) => c.rating);
     const avgRating =
       ratedCourses.length > 0
@@ -132,12 +130,18 @@ const InstructorDashboard = () => {
       0
     );
 
+    // Calculate average quiz completion percentage across all courses
+    const avgQuizCompletion = courses.length > 0
+      ? (courses.reduce((sum, c) => sum + (c.avgCompletionPercent || 0), 0) / courses.length).toFixed(1)
+      : "0.0";
+
     return {
       totalCourses,
       totalStudents,
       avgRating,
       totalReviews,
       thisMonthRevenue: 24500000,
+      avgQuizCompletion,
     };
   }, [courses]);
 
@@ -252,13 +256,6 @@ const InstructorDashboard = () => {
             />
           </div> */}
 
-          {selectedCourse && (
-            <CourseDetailModal
-              course={selectedCourse}
-              onClose={() => setSelectedCourse(null)}
-            />
-          )}
-
           {/* MAIN CONTENT */}
           <div className="bg-white rounded-lg shadow-md border border-gray-100 p-6 flex flex-1 flex-col md:max-h-[60vh]">
             <div className="flex justify-between items-center mb-4">
@@ -284,17 +281,28 @@ const InstructorDashboard = () => {
               <CoursesTable
                 courses={filteredCourses}
                 onView={handleViewCourse}
-                onEdit={(c) => console.log("Edit", c.id)}
+                 onEdit={(course) => {
+                  setEditingCourse(course);
+                  setShowEditCourse(true);
+                }}
                 onAnalytics={(c) => console.log("Analytics", c.id)}
                 onDelete={handleDeleteCourse}
               />
+              
+            )}
+            {showEditCourse && (
+              <InstructorEditCourse
+                onClose={() => setShowEditCourse(false)}
+                course={editingCourse}
+                categories={categories}
+            />
             )}
           </div>
         </div>
         <div className="flex h-screen justify-center items-center sticky top-0">
           <ProfileSidebar 
             weeklyActivities={weeklyActivities}
-            myCourses={myCourses}
+            myCourses={courses}
             friends={friends}
             user={user}
             isAuthenticated={isAuthenticated}

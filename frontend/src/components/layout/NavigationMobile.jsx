@@ -8,7 +8,7 @@ import { useSidebar } from "../../contexts/SidebarContext";
 export default function Navigation_Mobile() {
 
   const { isOpen, setIsOpen } = useSidebar();
-  const { user, isAuthenticated, loading , logout} = useAuth();
+  const { user, isAuthenticated, loading, logout, isAdmin } = useAuth();
 
 
   const getNavLinkClasses = ({ isActive }) =>
@@ -117,7 +117,7 @@ export default function Navigation_Mobile() {
 
           <li>
 
-            <NavLink to="/calendar" className={getNavLinkClasses}>
+            <NavLink to="/chat" className={getNavLinkClasses}>
 
               Calendar
 
@@ -224,57 +224,35 @@ export default function Navigation_Mobile() {
         */}
 
         <ul className="flex flex-col space-y-2 pt-24 px-4">
-
           <li>
-
-            <NavLink to="/" className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
-
-              Dashboard
-
+            <NavLink to={`${user === null ? '/' : user.role === "Admin" ? '/admin': user.role === "Instructor" ? '/instructor/dashboard':'/'}`} className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
+              {`${isAdmin ? 'Total': 'Dashboard'}`}
             </NavLink>
-
           </li>
 
           <li>
-
-            <NavLink to="/courses" className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
-
-              Courses
-
+            <NavLink to={`${isAdmin ? '/admin/courses': '/courses'}`} className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
+              {`${isAdmin ? 'Manage Courses': 'Courses'}`}
             </NavLink>
-
           </li>
 
           <li>
-
             <NavLink to="/book" className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
-
-              Library
-
+              {`${isAdmin ? 'Manage Library': 'Library'}`}
             </NavLink>
-
           </li>
 
           <li>
-
-            <NavLink to="/calendar" className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
-
-              Calendar
-
+            <NavLink to="/chat" className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
+              Chat
             </NavLink>
-
           </li>
 
           <li>
-
             <NavLink to="/setting" className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
-
               Settings
-
             </NavLink>
-
           </li>
-
         </ul>
 
       </div>
