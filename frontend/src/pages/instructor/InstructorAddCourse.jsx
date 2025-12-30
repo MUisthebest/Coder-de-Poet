@@ -4,7 +4,7 @@ import { X, Calendar, Tag, Globe, Lock, Unlock } from 'lucide-react';
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const InstructorAddCourse = ({ onClose, onSuccess, categories = [] }) => {
+const InstructorAddCourse = ({ onClose, categories = [] }) => {
   const { user: instructorId} = useAuth();
 
   // State chính - chỉ chứa các trường trong DTO
@@ -153,12 +153,8 @@ const InstructorAddCourse = ({ onClose, onSuccess, categories = [] }) => {
       // Thông báo thành công
       alert('Course created successfully!');
       
-      // Gọi callback để refetch courses và đóng modal
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        onClose();
-      }
+      // Đóng modal
+      onClose();
       
       navigate('/instructor/dashboard', {replace: true});
 

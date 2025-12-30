@@ -41,32 +41,6 @@ class AdminUserService {
       };
     }
   }
-
-  async disableAccount(userId) {
-    try {
-      const { data } = await api.patch(`/api/auth/admin/users/${userId}/disable`);
-      return { success: true, data };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || error.response?.data?.errorMessage || error.message,
-        status: error.response?.status,
-      };
-    }
-  }
-
-  async enableAccount(userId) {
-    try {
-      const { data } = await api.patch(`/api/auth/admin/users/${userId}/enable`);
-      return { success: true, data };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || error.response?.data?.errorMessage || error.message,
-        status: error.response?.status,
-      };
-    }
-  }
 }
 
 export const adminUserService = new AdminUserService();

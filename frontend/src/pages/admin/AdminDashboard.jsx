@@ -10,7 +10,9 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [stats, setStats] = useState(null);
-  const [popularCourses, setPopularCourses] = useState([]);
+  const [instructors, setInstructors] = useState([]);
+
+  console.log("Instructors:", instructors);
 
   useEffect(() => {
     if (!authLoading) {
@@ -20,41 +22,24 @@ function AdminDashboard() {
 
   const load = async () => {
     if (!isAdmin) {
-      setError('You do not have permission to access the Admin Dashboard');
+      setError('Bạn không có quyền truy cập trang Admin Dashboard');
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
-      const [statsRes, coursesRes] = await Promise.all([
+      //setError('');
+      const [statsRes, instructorsRes] = await Promise.all([
         adminService.getStats(),
-        adminService.getAllCourses(),
+        adminService.getInstructors(),
       ]);
-      
-      setStats(statsRes.data);
 
-      console.log('Fetched courses data:', coursesRes);
-      
-      // Sort courses by student_count and take top 5
-      if (coursesRes.success && Array.isArray(coursesRes.data)) {
-        console.log('Raw courses data:', coursesRes.data);
-        const sortedCourses = coursesRes.data
-          .sort((a, b) => (b.student_count || 0) - (a.student_count || 0))
-          .slice(0, 5)
-          .map(c => ({
-            id: c.id,
-            title: c.title || 'Untitled Course',
-            instructor: c.instructor_id || 'Unknown',
-            category: c.category_name || c.category_id || '—',
-            students: c.student_count || 0,
-            createdAt: c.updated_at || c.created_at || new Date().toISOString(),
-          }));
-        console.log('Sorted courses:', sortedCourses);
-        setPopularCourses(sortedCourses);
-      } else {
-        console.log('Courses response:', coursesRes);
-      }
+      //if (!statsRes.success) throw new Error(statsRes.error || 'Failed to load stats');
+      if (!instructorsRes.success) throw new Error(instructorsRes.error || 'Failed to load instructors');
+
+      setStats(statsRes.data);
+      setInstructors(instructorsRes.data);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -70,6 +55,8 @@ function AdminDashboard() {
     );
   }
 
+
+  console.log(error);
   if (isAdmin === false) {
     return (
       <div className="max-w-4xl mx-auto mt-8">
@@ -80,7 +67,7 @@ function AdminDashboard() {
             onClick={() => window.location.href = '/'}
             className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
           >
-            Back to Home
+            Quay về trang chủ
           </button>
         </div>
       </div>
@@ -88,106 +75,95 @@ function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
-      <div className="min-h-screen mx-auto bg-gray-50 py-10 px-5 sm:px-10 max-w-8xl md:flex flex-col w-full">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-1">Welcome back, <span className="font-semibold">{user?.email}</span></p>
-        </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen h-screen overflow-y-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+        <p className="text-gray-600 mt-2">Welcome, {user?.email} (Admin)</p>
+      </div>
 
-        {/* Stats Cards */}
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
-              <p className="text-gray-600 text-sm font-medium">Total Users</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalUsers}</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-orange-500">
-              <p className="text-gray-600 text-sm font-medium">Courses</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalCourses}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Navigation Buttons */}
-        {stats && (
-          <div className="flex gap-4 mb-4 justify-end">
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-sm font-semibold text-gray-700">Total Users</h3>
+            <p className="text-2xl font-bold text-blue-600">{stats.totalUsers}</p>
             <button
               onClick={() => navigate('/admin/users')}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium transition-colors"
+              className="mt-3 text-sm text-blue-700 hover:underline"
             >
               Manage Users
             </button>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-sm font-semibold text-gray-700">Instructors</h3>
+            <p className="text-2xl font-bold text-indigo-600">{stats.instructorsCount}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-sm font-semibold text-gray-700">Students</h3>
+            <p className="text-2xl font-bold text-emerald-600">{stats.studentsCount}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-sm font-semibold text-gray-700">Courses</h3>
+            <p className="text-2xl font-bold text-orange-600">{stats.totalCourses}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-sm font-semibold text-gray-700">Enrollments</h3>
+            <p className="text-2xl font-bold text-purple-600">{stats.totalEnrollments}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-sm font-semibold text-gray-700">Pending Approvals</h3>
+            <p className="text-2xl font-bold text-amber-600">—</p>
             <button
-              onClick={() => navigate('/admin/courses')}
-              className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 font-medium transition-colors"
+              onClick={() => navigate('/admin/courses?status=pending')}
+              className="mt-3 text-sm text-amber-700 hover:underline"
             >
-              View Courses
+              Review Courses
             </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Popular Courses Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-bold text-gray-900">Popular Courses</h2>
-          </div>
-          
-          <div className="overflow-y-scroll" style={{ maxHeight: '300px' }}>
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 bg-gray-50">Course Title</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 bg-gray-50">Category</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 bg-gray-50">Students</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 bg-gray-50">Updated</th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 bg-gray-50">Action</th>
+      <div className="bg-white rounded-lg shadow h-[70vh] flex flex-col">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Instructors</h2>
+        </div>
+        <div className="overflow-x-auto overflow-y-auto flex-1">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50 sticky top-0 z-10">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instructor ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Courses</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Students</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">First Course</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+                <th className="px-6 py-3" />
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200 min-h-screen h-screen overflow-y-auto">
+              {instructors.map((ins) => (
+                <tr key={ins.instructorId}>
+                  <td className="px-6 py-4 text-sm text-gray-900">{ins.instructorId}</td>
+                  <td className="px-6 py-4 text-sm text-gray-700">{ins.name || '—'}</td>
+                  <td className="px-6 py-4 text-sm">{ins.courseCount}</td>
+                  <td className="px-6 py-4 text-sm">{ins.totalStudents}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{ins.firstCourseAt ? new Date(ins.firstCourseAt).toLocaleString() : '—'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{ins.lastUpdatedAt ? new Date(ins.lastUpdatedAt).toLocaleString() : '—'}</td>
+                  <td className="px-6 py-4 text-right">
+                    <button
+                      onClick={() => navigate(`/admin/courses?instructorId=${encodeURIComponent(ins.instructorId)}`)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2 rounded"
+                    >
+                      View Courses
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {popularCourses.length > 0 ? (
-                  popularCourses.map((course) => (
-                    <tr key={course.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <p className="font-medium text-gray-900">{course.title}</p>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {course.category}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        <span className="inline-flex items-center px-2.5 py-0.5 text-xm font-medium text-green-800">
-                          {course.students.toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {new Date(course.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => navigate(`/admin/courses`)}
-                          className="text-blue-600 hover:text-blue-700 font-medium text-sm"
-                        >
-                          View Details
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="5" className="px-6 py-8 text-center text-gray-500 text-sm">
-                      No courses found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
+
+      <div className="mt-4 text-sm text-gray-500">Last updated: {stats ? new Date(stats.timestamp).toLocaleString() : ''}</div>
     </div>
   );
 }

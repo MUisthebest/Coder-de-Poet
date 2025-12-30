@@ -35,7 +35,7 @@ const CourseItem = ({ course }) => {
 
   return (
 <NavLink to={`/courses/${course.id}`}
-  className="flex flex-col bg-white h-[400px] border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden group">
+  className="flex flex-col bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden group">
   
   <div className="relative">
     <img

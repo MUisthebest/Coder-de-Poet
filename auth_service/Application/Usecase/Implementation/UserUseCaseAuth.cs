@@ -81,16 +81,6 @@ namespace auth_service.Application.Usecase.Implementation
                 };
             }
 
-            // 1.5 Check if account is active
-            if (!user.GetIsActive())
-            {
-                return new AuthResult
-                {
-                    IsSuccess = false,
-                    ErrorMessage = "Your account has been disabled by an administrator."
-                };
-            }
-
             // 2. Verify password
             var isPasswordValid = _passwordHasher.VerifyBcryptHashedPassword(
                 user.GetHashedPassword(),
@@ -111,17 +101,12 @@ namespace auth_service.Application.Usecase.Implementation
             var accessToken = _jwtTokenProvider.GenerateJWTAccessToken(user);
             var refreshToken = _jwtTokenProvider.GenerateRefreshToken();
             var refreshTokenExpiry = DateTime.UtcNow.AddDays(7); // adjust as needed
-            // 4. Update user's refresh token in DB
-            user.UpdateRefreshToken(refreshToken, refreshTokenExpiry);
 
-            await _userRepository.UpdateUserAsync(user);
-
-            // 5. Return result
+                        // 5. Return result
             return new AuthResult
             {
                 IsSuccess = true,
                 AccessToken = accessToken,
-                RefreshToken = refreshToken,
                 User = new UserPublicInfo
                     {
                         Id = user.Id,

@@ -17,7 +17,7 @@ const SignUp = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || '/login';
+  const from = location.state?.from?.pathname || '/';
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -55,7 +55,7 @@ const SignUp = () => {
 
       console.log('Sending signup data:', signupData);
       const result = await authService.signup(signupData);
-      navigate('/login', { replace: true });
+      navigate(from, { replace: true });
     } catch (err) {
       console.error('Signup error:', err);
       const msg = err.response?.data?.message || err.message || 'Sign up failed. Please try again.';
@@ -186,13 +186,6 @@ const SignUp = () => {
               className="underline hover:text-black font-medium"
             >
               Sign In
-            </button>
-            <br />
-            <button
-              onClick={() => navigate('/forgot-password')}
-              className="underline hover:text-gray-700 font-medium text-xs mt-2"
-            >
-              Forgot Password?
             </button>
           </p>
         </div>

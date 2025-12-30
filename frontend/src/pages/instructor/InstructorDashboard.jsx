@@ -34,8 +34,6 @@ const InstructorDashboard = () => {
   const [editingCourse, setEditingCourse] = useState(null);
   const [preSelectedCourse, setPreSelectedCourse] = useState(null);
 
-  const [completionStats, setCompletionStats] = useState([]);
-
   useEffect(() => {
     console.log("Fetching courses for instructor:", instructorId.id);
     if (!instructorId.id) return;
@@ -46,24 +44,7 @@ const InstructorDashboard = () => {
         const data = await instructorService.getCoursesByInstructor(instructorId.id);
         console.log("Fetched courses:", data);
         const courseList = data?.courses?.items || []; 
-        
-        // Fetch completion stats
-        const completionData = await instructorService.getCourseCompletionStats(instructorId.id);
-        console.log("Fetched completion stats:", completionData);
-        setCompletionStats(completionData);
-        
-        // Merge completion stats with courses
-        const coursesWithStats = courseList.map(course => {
-          const stat = completionData.find(s => s.course_id === course.id);
-          return {
-            ...course,
-            avgCompletionPercent: Number(stat?.avg_completion_percent) || 0,
-            totalStudents: Number(stat?.total_students) || 0,
-            activeStudents: Number(stat?.active_students) || 0
-          };
-        });
-        
-        setCourses(coursesWithStats);
+        setCourses(courseList);
       } catch (err) {
         console.error(err);
         setError("Unable to fetch courses. Please try again.");
@@ -110,13 +91,10 @@ const InstructorDashboard = () => {
 
   const stats = useMemo(() => {
     const totalCourses = courses.length;
-    
-    // Calculate total students from completion stats (total_students from enrollments)
     const totalStudents = courses.reduce(
-      (sum, c) => sum + (Number(c.totalStudents) || Number(c.studentsCount) || 0),
+      (sum, c) => sum + (c.studentsCount || 0),
       0
     );
-    
     const ratedCourses = courses.filter((c) => c.rating);
     const avgRating =
       ratedCourses.length > 0
@@ -130,18 +108,12 @@ const InstructorDashboard = () => {
       0
     );
 
-    // Calculate average quiz completion percentage across all courses
-    const avgQuizCompletion = courses.length > 0
-      ? (courses.reduce((sum, c) => sum + (c.avgCompletionPercent || 0), 0) / courses.length).toFixed(1)
-      : "0.0";
-
     return {
       totalCourses,
       totalStudents,
       avgRating,
       totalReviews,
       thisMonthRevenue: 24500000,
-      avgQuizCompletion,
     };
   }, [courses]);
 

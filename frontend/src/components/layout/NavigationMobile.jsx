@@ -107,9 +107,9 @@ export default function Navigation_Mobile() {
 
           <li>
 
-            <NavLink to="/ide" className={getNavLinkClasses}>
+            <NavLink to="/book" className={getNavLinkClasses}>
 
-              Coding IDE
+              Library
 
             </NavLink>
 
@@ -243,7 +243,7 @@ export default function Navigation_Mobile() {
           </li>
 
           <li>
-            <NavLink to="/chat" className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
+            <NavLink to={`${user === null ? '/' : user.role === "Admin" ? '/admin/member': user.role === "Instructor" ? '/instructor/member':'/chat'}`} className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
               Chat
             </NavLink>
           </li>

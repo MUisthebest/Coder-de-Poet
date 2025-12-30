@@ -152,49 +152,6 @@ const instructorService = {
       throw error;
     }
   },
-  getQuizzesByLesson: async (lessonId) => {
-    try {
-      const token = authService.getStoredToken();
-      const response = await apiCourse.get(`/quizzes/lesson/${lessonId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching quizzes by lesson:', error);
-      throw error;
-    }
-    },
-
-    getQuizzesByLessonForReview: async (lessonId) => {
-        try {
-        const token = authService.getStoredToken();
-            const response = await apiCourse.get(`/quizzes/lesson/${lessonId}/review`, {
-            headers: { Authorization: `Bearer ${token}` }
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Error fetching quizzes for review by lesson:', error);
-            throw error;
-        }
-    },
-
-    gradeSubmission: async (studentId, lessonId, courseId, answers) => {
-        try {
-            const token = authService.getStoredToken();
-            const response = await apiCourse.post(`/quizzes/grade`, {
-                studentId,
-                lessonId,
-                courseId,
-                answers
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Error grading quiz submission:', error);
-            throw error;
-        }   
-    },
 }
 
 export default instructorService;

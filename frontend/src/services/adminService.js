@@ -110,7 +110,6 @@ class AdminService {
     }
   }
 
-
   // Reject == move to draft
   async rejectCourse(courseId) {
     try {
@@ -152,27 +151,6 @@ class AdminService {
       });
       return { success: true };
     } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || error.message,
-        status: error.response?.status,
-      };
-    }
-  }
-
-  async getAllCourses() {
-    try {
-      const token = authService.getStoredToken();
-      const { data } = await apiCourse.get('/courses', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log('getAllCourses API response:', data);
-      // Handle different response structures
-      const courses = data.courses.items || [];
-      console.log('Extracted courses:', courses);
-      return { success: true, data: Array.isArray(courses) ? courses : [] };
-    } catch (error) {
-      console.error('getAllCourses error:', error);
       return {
         success: false,
         error: error.response?.data?.message || error.message,

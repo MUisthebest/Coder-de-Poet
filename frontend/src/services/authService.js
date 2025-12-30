@@ -121,19 +121,6 @@ async refreshToken() {
   }
 }
 
-  async forgotPassword(email) {
-    const response = await api.post('/api/auth/forgot-password', { email });
-    return response.data;
-  }
-
-  async resetPassword(token, password) {
-    const response = await api.post('/api/auth/reset-password', {
-      token,
-      password
-    });
-    return response.data;
-  }
-
   async logout() {
     try {
       await api.post('/api/auth/logout');
@@ -158,19 +145,6 @@ async refreshToken() {
   clearAccessToken() {
     this._accessToken = null;
     sessionStorage.removeItem('accessToken');
-  }
-
-  async getInstructorById(userId) {
-      try {
-        const { data } = await api.get(`/api/auth/admin/instructors/${userId}`);
-        return { success: true, data };
-      } catch (error) {
-        return {
-          success: false,
-          error: error.response?.data?.message || error.response?.data?.errorMessage || error.message,
-          status: error.response?.status,
-        };
-      }
   }
 }
 

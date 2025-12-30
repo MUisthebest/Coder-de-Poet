@@ -8,10 +8,6 @@ namespace auth_service.Domain.Common
         public bool IsSuccess => Errors == null || Errors.Count == 0;
         public bool IsFailed => !IsSuccess;
 
-        public string Message => IsSuccess ? "Operation completed successfully." : string.Join("; ", Errors.Select(e => e.Message));
-
-
-
         public T? Data { get; protected set; }
         public IReadOnlyList<ErrorDetail> Errors { get; protected set; } = new List<ErrorDetail>();
 

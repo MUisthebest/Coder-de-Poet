@@ -14,12 +14,6 @@ function AdminCourses() {
   const [lessonsLoading, setLessonsLoading] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [query, setQuery] = useState(searchParams.get('q') || '');
-  const [uiStatus, setUiStatus] = useState((searchParams.get('status') || 'all').toLowerCase());
-  const [category, setCategory] = useState(searchParams.get('category') || '');
-  const [courseType, setCourseType] = useState(searchParams.get('type') || 'all');
-  const [pendingOnly, setPendingOnly] = useState((searchParams.get('pendingOnly') || '0') === '1');
-  const [includeDeleted, setIncludeDeleted] = useState((searchParams.get('includeDeleted') || '0') === '1');
 
   const instructorId = searchParams.get('instructorId') || '';
   const statusParam = (searchParams.get('status') || 'all').toLowerCase();
@@ -31,12 +25,8 @@ function AdminCourses() {
   }, [authLoading]);
 
   useEffect(() => {
-    if (!authLoading) {
-      if (instructorId && instructorId !== 'all') {
-        loadCourses(instructorId);
-      } else if (instructorId === 'all') {
-        loadAllCourses();
-      }
+    if (!authLoading && instructorId) {
+      loadCourses(instructorId);
     }
   }, [authLoading, instructorId]);
 
@@ -53,9 +43,9 @@ function AdminCourses() {
       if (!res.success) throw new Error(res.error || 'Failed to load instructors');
       setInstructors(res.data);
 
-      // Default to 'all' if none selected
-      if (!instructorId) {
-        setSearchParams({ instructorId: 'all' });
+      // Default to first instructor if none selected
+      if (!instructorId && res.data.length > 0) {
+        setSearchParams({ instructorId: res.data[0].instructorId });
       }
     } catch (e) {
       setError(e.message);
@@ -77,131 +67,29 @@ function AdminCourses() {
     }
   };
 
-  const loadAllCourses = async () => {
-    try {
-      setLoading(true);
-      const res = await adminService.getAllCourses();
-      if (!res.success) throw new Error(res.error || 'Failed to load courses');
-      setCourses(res.data || []);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const filteredCourses = useMemo(() => {
     if (!Array.isArray(courses)) return [];
-    let list = [...courses];
-
-    // Deleted filter
-    if (!includeDeleted) {
-      list = list.filter((c) => {
-        const isDel = c.is_deleted === true || c.deleted_at;
-        return !isDel;
-      });
-    }
-
-    // Status filter
-    list = list.filter((c) => {
+    if (statusParam === 'all') return courses;
+    return courses.filter((c) => {
       const status = (c.status || c.approval_status || '').toLowerCase();
-      if (uiStatus === 'all') return true;
-      if (uiStatus === 'draft') return status === 'draft' || status === 'pending';
-      if (uiStatus === 'published') return status === 'published' || status === 'approved';
-      if (uiStatus === 'rejected') return status === 'rejected';
+      if (statusParam === 'draft') return status === 'draft' || status === 'pending';
+      if (statusParam === 'published') return status === 'published';
+      if (statusParam === 'rejected') return status === 'rejected';
       return true;
     });
-
-    // Pending only toggle
-    if (pendingOnly) {
-      list = list.filter((c) => {
-        const status = (c.status || c.approval_status || '').toLowerCase();
-        return status === 'pending' || status === 'draft';
-      });
-    }
-
-    // Text search filter (title, slug, description)
-    const q = query.trim().toLowerCase();
-    if (q) {
-      list = list.filter((c) => {
-        const title = (c.title || '').toLowerCase();
-        const slug = (c.slug || '').toLowerCase();
-        const desc = (c.description || '').toLowerCase();
-        return title.includes(q) || slug.includes(q) || desc.includes(q);
-      });
-    }
-
-    // Category filter
-    if (category) {
-      list = list.filter((c) => {
-        const cid = c.category_id || '';
-        return cid === category;
-      });
-    }
-
-    // Course type filter (free/paid)
-    if (courseType !== 'all') {
-      list = list.filter((c) => {
-        const price = Number(c.price ?? c.price_amount ?? 0);
-        if (courseType === 'free') return price === 0;
-        if (courseType === 'paid') return price > 0;
-        return true;
-      });
-    }
-    return list;
-  }, [courses, uiStatus, query, category, courseType, pendingOnly, includeDeleted]);
+  }, [courses, statusParam]);
 
   const selectedInstructor = useMemo(() => {
-    if (instructorId === 'all') return { fullName: 'All Instructors', instructorId: 'all' };
     return instructors.find((i) => i.instructorId === instructorId);
   }, [instructors, instructorId]);
 
   const handleSelectInstructor = (e) => {
     const id = e.target.value;
-    const params = {
-      instructorId: id,
-      status: uiStatus || 'all',
-      q: query || '',
-      category: category || '',
-      type: courseType || 'all',
-      pendingOnly: pendingOnly ? '1' : '0',
-      includeDeleted: includeDeleted ? '1' : '0',
-    };
+    const params = {};
+    params.instructorId = id;
+    if (statusParam) params.status = statusParam;
     setSearchParams(params);
   };
-
-  const handleApplyFilters = () => {
-    const params = {
-      instructorId,
-      status: uiStatus || 'all',
-      q: query || '',
-      category: category || '',
-      type: courseType || 'all',
-      pendingOnly: pendingOnly ? '1' : '0',
-      includeDeleted: includeDeleted ? '1' : '0',
-    };
-    setSearchParams(params);
-  };
-
-  const handleResetFilters = () => {
-    setQuery('');
-    setUiStatus('all');
-    setCategory('');
-    setCourseType('all');
-    setPendingOnly(false);
-    setIncludeDeleted(false);
-    setSearchParams({ instructorId, status: 'all' });
-  };
-
-  const categoryOptions = useMemo(() => {
-    const m = new Map();
-    (courses || []).forEach((c) => {
-      const id = c.category_id;
-      const name = c.category_name || id;
-      if (id) m.set(id, name);
-    });
-    return Array.from(m.entries()).map(([id, name]) => ({ id, name }));
-  }, [courses]);
 
   const handleDelete = async (courseId) => {
     const confirmed = window.confirm('Are you sure you want to delete this course? This action cannot be undone.');
@@ -281,121 +169,51 @@ function AdminCourses() {
     );
   }
 
-  console.log(instructors, courses, filteredCourses);
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Course Management</h1>
-        <p className="text-gray-600 mt-2">Advanced filters for administrators</p>
-      </div>
-
-      {/* Advanced Filter Bar */}
-      <div className="mb-6 rounded-lg p-4 bg-gray-100 border border-gray-300">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Keyword */}
-          <div>
-            <div className="text-xs uppercase mb-1 text-gray-600">Search Keyword</div>
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by title, slug or description"
-              className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-sm placeholder-gray-400"
-            />
-          </div>
-          {/* Status */}
-          <div>
-            <div className="text-xs uppercase mb-1 text-gray-600">Status</div>
-            <select
-              value={uiStatus}
-              onChange={(e) => setUiStatus(e.target.value)}
-              className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-sm"
-            >
-              {['all','draft','published','rejected'].map((s) => (
-                <option key={s} value={s}>{s === 'all' ? 'All Status' : s}</option>
-              ))}
-            </select>
-          </div>
-          {/* Category */}
-          <div>
-            <div className="text-xs uppercase mb-1 text-gray-600">Category</div>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-sm"
-            >
-              <option value="">All Categories</option>
-              {categoryOptions.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-          {/* Instructor */}
-          <div>
-            <div className="text-xs uppercase mb-1 text-gray-600">Instructor</div>
-            <select
-              value={instructorId}
-              onChange={handleSelectInstructor}
-              className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-sm"
-            >
-              <option value="all">All Instructors</option>
-              {instructors.map((i) => (
-                <option key={i.instructorId} value={i.instructorId}>
-                  {i.fullName || i.instructorId} ({i.courseCount} courses)
-                </option>
-              ))}
-            </select>
-          </div>
-          {/* Course Type */}
-          <div>
-            <div className="text-xs uppercase mb-1 text-gray-600">Course Type</div>
-            <select
-              value={courseType}
-              onChange={(e) => setCourseType(e.target.value)}
-              className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-sm"
-            >
-              <option value="all">All</option>
-              <option value="free">Free</option>
-              <option value="paid">Premium</option>
-            </select>
-          </div>
-          {/* Toggles */}
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={pendingOnly}
-                onChange={(e) => setPendingOnly(e.target.checked)}
-              />
-              <span>Show pending courses only</span>
-            </label>
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={includeDeleted}
-                onChange={(e) => setIncludeDeleted(e.target.checked)}
-              />
-              <span>Include deleted courses</span>
-            </label>
-          </div>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Course Management</h1>
+          <p className="text-gray-600 mt-2">Manage courses by instructor</p>
         </div>
-        <div className="mt-4 flex gap-2">
-          <button onClick={handleApplyFilters} className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-2 rounded">Search</button>
-          <button onClick={handleResetFilters} className="bg-gray-700 hover:bg-gray-600 text-white text-sm px-4 py-2 rounded">Reset</button>
+        <div>
+          <label className="mr-2 text-sm text-gray-600">Instructor:</label>
+          <select
+            value={instructorId}
+            onChange={handleSelectInstructor}
+            className="border rounded px-3 py-2 text-sm"
+          >
+            {instructors.map((i) => (
+              <option key={i.instructorId} value={i.instructorId}>
+                {i.instructorId} ({i.courseCount} courses)
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
+      {/* Status Filters */}
+      <div className="mb-4 flex gap-2 text-sm">
+        {['all','draft','published','rejected'].map((s) => (
+          <button
+            key={s}
+            onClick={() => setSearchParams({ instructorId, status: s })}
+            className={`${statusParam===s ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} px-3 py-1 rounded`}
+          >
+            {s.charAt(0).toUpperCase()+s.slice(1)}
+          </button>
+        ))}
+      </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-2 border-b border-gray-200 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
           <h2 className="text-lg font-semibold">
-            {selectedInstructor ? `Courses by ${selectedInstructor.fullName || selectedInstructor.instructorId}` : 'Courses'}
+            {selectedInstructor ? `Courses of ${selectedInstructor.instructorId}` : 'Courses'}
           </h2>
-          <div className="text-sm text-gray-500">Total: {filteredCourses.length} / {courses.length}</div>
+          <div className="text-sm text-gray-500">Total: {courses.length}</div>
         </div>
 
-        <div className="max-h-[40vh] overflow-y-auto divide-y divide-gray-200">
+        <div className="max-h-[65vh] overflow-y-auto divide-y divide-gray-200">
           {filteredCourses.map((course) => {
             const status = (course.status || course.approval_status || '').toLowerCase();
             const isPublished = status === 'published' || status === 'approved';
@@ -418,11 +236,7 @@ function AdminCourses() {
                       {typeof course.student_count === 'number' && (
                         <span>Students: {course.student_count}</span>
                       )}
-                      {(course.category_name || course.category_id) && (
-                        <span>
-                          Category: {course.category_name || course.category_id}
-                        </span>
-                      )}
+                      {course.category_id && <span>Category ID: {course.category_id}</span>}
                     </div>
                   </div>
                   <div className="text-right">

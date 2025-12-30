@@ -18,7 +18,7 @@ export class CoursesService {
             throw new BadRequestException('Course with this slug already exists');
         }
 
-        dto.status = dto.status ?? 'unpublished';
+        dto.status = dto.status ?? 'draft';
         const created = await this.repo.create({dto, instructorId});
         return created;
     }
@@ -147,7 +147,6 @@ export class CoursesService {
     async findByInstructor(id: string) {
         return await this.repo.findByInstructorId(id);
     }
-    
     async findOneWithOwnershipCheck(id: string, instructorId?: string) {
     const course = await this.findOne(id);
     

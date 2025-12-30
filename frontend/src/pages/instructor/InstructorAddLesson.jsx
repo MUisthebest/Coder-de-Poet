@@ -14,7 +14,7 @@ const quillModules = {
   ],
 };
 
-const InstructorAddLesson = ({ onClose, onSuccess, MyCourse, preSelectedCourse }) => {
+const InstructorAddLesson = ({ onClose, MyCourse, preSelectedCourse }) => {
   const [courses, setCourses] = useState([]);
   const [courseId, setCourseId] = useState("");
   const [title, setTitle] = useState("");
@@ -24,8 +24,6 @@ const InstructorAddLesson = ({ onClose, onSuccess, MyCourse, preSelectedCourse }
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState("");
-  const [showAddLesson, setShowAddLesson] = useState(false);
-  
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -82,30 +80,16 @@ const InstructorAddLesson = ({ onClose, onSuccess, MyCourse, preSelectedCourse }
       courseId,
       title,
       contentType: videoUrl ? "video" : "text",
+      contentUrl: videoUrl || "",
+      contentBody,
       position: 1,
     };
-
-    // Only add contentUrl if it's a valid URL
-    if (videoUrl && videoUrl.trim()) {
-      payload.contentUrl = videoUrl;
-    }
-
-    // Only add contentBody if it exists and has content
-    if (contentBody && contentBody.trim()) {
-      payload.contentBody = contentBody;
-    }
 
     try {
       setSaving(true);
       await instructorService.createLesson(payload);
       setSuccess("Lesson created successfully!");
-      setTimeout(() => {
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          onClose();
-        }
-      }, 800);
+      setTimeout(() => onClose(), 800);
     } catch (err) {
       console.error(err);
       setError("Failed to save lesson.");

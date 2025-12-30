@@ -3,7 +3,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Pool } from 'pg';
 
 export const PG_POOL = 'PG_POOL';
-export const AUTH_POOL = 'AUTH_POOL';
 
 @Module({
   imports: [ConfigModule],
@@ -31,27 +30,7 @@ export const AUTH_POOL = 'AUTH_POOL';
         return pool;
       },
     },
-    {
-      provide: AUTH_POOL,
-      inject: [ConfigService],
-      useFactory: async (config: ConfigService) => {
-        const authDbUrl = config.get<string>('AUTH_DATABASE_URL');
-        
-        if (!authDbUrl) {
-          console.warn('AUTH_DATABASE_URL not set, instructor names will not be available');
-          return null;
-        }
-
-        const pool = new Pool({
-          connectionString: authDbUrl,
-          ssl: { rejectUnauthorized: false },
-        });
-
-        console.log('Connected to Auth DB');
-        return pool;
-      },
-    },
   ],
-  exports: [PG_POOL, AUTH_POOL],
+  exports: [PG_POOL],
 })
 export class DatabaseModule {}
