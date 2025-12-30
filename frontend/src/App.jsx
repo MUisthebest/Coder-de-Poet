@@ -17,6 +17,9 @@ import GoogleCallbackHandler from './components/auth/GoogleCallbackHandler';
 import CourseDetail from './pages/course/CourseDetail';
 import CourseList from './pages/course/CourseList';
 import InstructorDashboard from './pages/instructor/InstructorDashboard';
+import ProblemList from './pages/ide/ide';
+import ProblemDetailPage from './pages/ide/problems';
+
 import CourseDetailModal from './pages/instructor/CourseDetailModal';
  
 // Component để xử lý redirect dựa trên role
@@ -76,6 +79,10 @@ function Layout() {
           <Route path="/courses/:id" element={<CourseDetail />} />
           <Route path="/auth/google/callback" element={<GoogleCallbackHandler />} />
           <Route path="/courses" element={<CourseList />}/>
+          <Route path = "/ide" element={<ProblemList />}/>
+          <Route path = "/ide/problems/:problemId" element={<ProblemDetailPage />}/>
+
+          
 
           <Route 
             path="/instructor/dashboard" 

@@ -12,19 +12,31 @@ if [[ -z "$LANG" || -z "$SRC" ]]; then
   exit 1
 fi
 
+# Debug: show what's in /work
+echo "Debug: Contents of /work directory:" >&2
+ls -lah /work/ >&2
+echo "Debug: Looking for file: $SRC" >&2
+echo "Debug: Full path will be: /work/$SRC" >&2
+
 COMPILER_ERR="/tmp/compiler.err"
 PROG="/tmp/prog"
 JAVA_OUT="/tmp/java_out"
+SRC_PATH="/work/$SRC"
 
 compile_cpp() {
-  g++ -O2 -std=c++17 -pipe "/work/$SRC" -o "$PROG" 1>/dev/null 2>"$COMPILER_ERR"
+  g++ -O2 -std=c++17 -pipe "$SRC_PATH" -o "$PROG" 1>/dev/null 2>"$COMPILER_ERR"
   chmod +x "$PROG"
 }
 
 compile_java() {
+  if [[ ! -f "$SRC_PATH" ]]; then
+    echo "Error: Java source file not found at $SRC_PATH" >&2
+    ls -la /work/ >&2
+    exit 10
+  fi
   rm -rf "$JAVA_OUT"
   mkdir -p "$JAVA_OUT"
-  javac -d "$JAVA_OUT" "/work/$SRC" 1>/dev/null 2>"$COMPILER_ERR"
+  javac -d "$JAVA_OUT" "$SRC_PATH" 1>/dev/null 2>"$COMPILER_ERR"
 }
 
 case "$LANG" in
