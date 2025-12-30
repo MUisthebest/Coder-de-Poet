@@ -6,6 +6,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
 builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<IdeDbContext>(options =>
@@ -19,15 +20,16 @@ builder.Services.AddDbContext<IdeDbContext>(options =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("Frontend", policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
         policy
             .WithOrigins(
                 "http://localhost:3000",
-                "http://127.0.0.1:3000"
+                "https://your-frontend-domain.com"
             )
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -45,10 +47,12 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseCors("Frontend");
+app.UseCors("AllowFrontend");
+
 
 app.UseHttpsRedirection();
 
+// IMPORTANT
 app.MapControllers();
 
 app.Run();

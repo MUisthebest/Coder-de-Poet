@@ -10,7 +10,7 @@ services:
       HOST_SANDBOX_DIR: "/sandbox_host"
       CONTAINER_SANDBOX_DIR: "/sandbox_host"
 
-      ConnectionStrings__Default: "Host=aws-1-ap-southeast-2.pooler.supabase.com;Port=6543;Database=postgres;Username=postgres.erpstsihpmfvagprbgnz;Password=***;Ssl Mode=Require;Trust Server Certificate=true; Pooling=false"
+      ConnectionStrings__Default: "Host=aws-1-ap-southeast-2.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.erpstsihpmfvagprbgnz;Password=Nguyenphucan@123;Ssl Mode=Require;Trust Server Certificate=true; Pooling=false"
 
       RUNNER_IMAGE: "learnix-runner:latest"
       SANDBOX_TIMEOUT_MS: "2500"
