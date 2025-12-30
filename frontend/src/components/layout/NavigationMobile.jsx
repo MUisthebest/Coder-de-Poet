@@ -237,7 +237,7 @@ export default function Navigation_Mobile() {
           </li>
 
           <li>
-            <NavLink to="/book" className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
+            <NavLink to="/ide" className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
               {`${isAdmin ? 'Manage Library': 'Library'}`}
             </NavLink>
           </li>

@@ -48,7 +48,7 @@ export default function Navigation_PC() {
             <>
               <NavItem to={`${user === null ? '/' : user.role === "Instructor" ? '/instructor/dashboard' : '/'}`} label="Dashboard" icon="home-alt-2" isOpen={isOpen} />
               <NavItem to="/courses" label="Courses" icon="book" isOpen={isOpen} />
-              <NavItem to="/book" label="Library" icon="book-open" isOpen={isOpen} />
+              <NavItem to="/ide" label="Library" icon="book-open" isOpen={isOpen} />
               <NavItem to={`${user === null ? '/chat' : user.role === "Instructor" ? '/instructor/member' : '/chat'}`} label="chat" icon="message-bubble-notification" isOpen={isOpen} />
             </>
           )}

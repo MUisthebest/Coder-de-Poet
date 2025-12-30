@@ -2,6 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Pool } from 'pg';
 import { PG_POOL, AUTH_POOL } from '../../database/database.module';
 
+interface AuthUser {
+  id: string;
+  full_name: string;
+  email: string;
+}
+
 @Injectable()
 export class AdminRepository {
   constructor(
@@ -32,10 +38,15 @@ export class AdminRepository {
             FROM "Users"
             WHERE "Id" = ANY($1)
           `;
-          const { rows: users } = await this.authPool.query(userQuery, [instructorIds]);
+          const { rows: users } = await this.authPool.query<AuthUser>(
+            userQuery,
+            [instructorIds]
+          );
           
           // Map users to instructors
-          const userMap = new Map(users.map(u => [u.id, u]));
+          const userMap = new Map<string, AuthUser>(
+            users.map(u => [u.id, u])
+          );
           return rows.map(instructor => ({
             ...instructor,
             full_name: userMap.get(instructor.instructor_id)?.full_name || '',

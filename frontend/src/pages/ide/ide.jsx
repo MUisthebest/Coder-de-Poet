@@ -1,5 +1,5 @@
 /*
-  ProblemList page (LeetCode-style) - Tailwind + ASCII-safe
+  ProblemList page (LeetCode-style) - Light Mode
   - Fetch: fetchProblems()
   - Search: title/slug
   - Sort: title/slug/id
@@ -26,30 +26,29 @@ function compare(a, b, key, dir) {
 
 function SkeletonRow({ i }) {
     return (
-        <tr key={i} className="border-b border-white/5">
+        <tr key={i} className="border-b border-gray-200">
             <td className="py-3 px-4">
-                <div className="h-6 w-14 rounded-full bg-white/10 animate-pulse" />
+                <div className="h-6 w-14 rounded-full bg-gray-200 animate-pulse" />
             </td>
             <td className="py-3 px-4">
-                <div className="h-4 w-10 rounded bg-white/10 animate-pulse" />
+                <div className="h-4 w-10 rounded bg-gray-200 animate-pulse" />
             </td>
             <td className="py-3 px-4">
-                <div className="h-4 w-64 rounded bg-white/10 animate-pulse" />
+                <div className="h-4 w-64 rounded bg-gray-200 animate-pulse" />
             </td>
             <td className="py-3 px-4">
-                <div className="h-4 w-40 rounded bg-white/10 animate-pulse" />
+                <div className="h-4 w-40 rounded bg-gray-200 animate-pulse" />
             </td>
             <td className="py-3 px-4">
-                <div className="h-4 w-72 rounded bg-white/10 animate-pulse" />
+                <div className="h-4 w-72 rounded bg-gray-200 animate-pulse" />
             </td>
         </tr>
     );
 }
 
 function SortCaret({ active, dir }) {
-    // ASCII-safe caret
-    if (!active) return <span className="ml-2 text-white/40">^v</span>;
-    return <span className="ml-2 text-white/80">{dir === "asc" ? "^" : "v"}</span>;
+    if (!active) return <span className="ml-2 text-gray-400">^v</span>;
+    return <span className="ml-2 text-gray-800">{dir === "asc" ? "^" : "v"}</span>;
 }
 
 export default function ProblemList() {
@@ -58,8 +57,8 @@ export default function ProblemList() {
     const [err, setErr] = useState("");
 
     const [query, setQuery] = useState("");
-    const [sortKey, setSortKey] = useState("title"); // title | slug | id
-    const [sortDir, setSortDir] = useState("asc");   // asc | desc
+    const [sortKey, setSortKey] = useState("title");
+    const [sortDir, setSortDir] = useState("asc");
     const [page, setPage] = useState(1);
 
     useEffect(() => {
@@ -120,25 +119,25 @@ export default function ProblemList() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100">
+        <div className="min-h-screen bg-gray-50 text-gray-900">
             <div className="mx-auto max-w-6xl px-4 py-8">
                 {/* Header */}
                 <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-blue-700 to-sky-400 font-extrabold">
+                        <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-400 font-extrabold text-white">
                             L
                         </div>
                         <div>
-                            <div className="text-lg font-bold">Problemset</div>
-                            <div className="text-sm text-slate-400">LeetCode-style list from your API</div>
+                            <div className="text-lg font-bold text-gray-900">Problemset</div>
+                            <div className="text-sm text-gray-600">LeetCode-style list from your API</div>
                         </div>
                     </div>
 
                     <div className="w-full sm:w-[380px]">
-                        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-                            <span className="text-slate-400">Search</span>
+                        <div className="flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 shadow-sm focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200">
+                            <span className="text-gray-500">Search</span>
                             <input
-                                className="w-full bg-transparent text-sm outline-none placeholder:text-slate-500"
+                                className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
                                 placeholder="Search by title or slug..."
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
@@ -148,16 +147,16 @@ export default function ProblemList() {
                 </div>
 
                 {/* Card */}
-                <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/40 shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
+                <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg">
                     {/* Card header */}
-                    <div className="flex flex-col gap-3 border-b border-white/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="text-sm text-slate-400">
+                    <div className="flex flex-col gap-3 border-b border-gray-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="text-sm text-gray-600">
                             {loading ? "Loading..." : `${total} problems`}
                         </div>
 
                         <div className="flex items-center gap-2">
                             <button
-                                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm disabled:opacity-40"
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white"
                                 onClick={() => setPage(1)}
                                 disabled={safePage === 1 || loading}
                                 title="First page"
@@ -165,7 +164,7 @@ export default function ProblemList() {
                                 {"<<"}
                             </button>
                             <button
-                                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm disabled:opacity-40"
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white"
                                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                                 disabled={safePage === 1 || loading}
                                 title="Previous page"
@@ -173,12 +172,12 @@ export default function ProblemList() {
                                 {"<"}
                             </button>
 
-                            <span className="text-sm text-slate-400">
-                                Page <b className="text-slate-200">{safePage}</b> / {totalPages}
+                            <span className="text-sm text-gray-600">
+                                Page <b className="text-gray-900">{safePage}</b> / {totalPages}
                             </span>
 
                             <button
-                                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm disabled:opacity-40"
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white"
                                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                                 disabled={safePage === totalPages || loading}
                                 title="Next page"
@@ -186,7 +185,7 @@ export default function ProblemList() {
                                 {">"}
                             </button>
                             <button
-                                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm disabled:opacity-40"
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white"
                                 onClick={() => setPage(totalPages)}
                                 disabled={safePage === totalPages || loading}
                                 title="Last page"
@@ -199,39 +198,39 @@ export default function ProblemList() {
                     {/* Error */}
                     {err ? (
                         <div className="px-4 py-4">
-                            <div className="font-semibold text-red-200">Couldn’t load problems</div>
-                            <div className="mt-1 text-sm text-red-300">
+                            <div className="font-semibold text-red-600">Couldn't load problems</div>
+                            <div className="mt-1 text-sm text-red-500">
                                 {err}
-                                <div className="mt-2 text-slate-400">
+                                <div className="mt-2 text-gray-600">
                                     If your backend is on a different port, make sure CORS allows{" "}
-                                    <code className="rounded bg-white/10 px-1 py-0.5">http://localhost:3000</code>.
+                                    <code className="rounded bg-gray-100 px-1 py-0.5">http://localhost:3000</code>.
                                 </div>
                             </div>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="min-w-[900px] w-full">
-                                <thead className="sticky top-0 bg-slate-900/70 backdrop-blur">
-                                    <tr className="border-b border-white/10 text-left text-xs font-semibold tracking-wide text-slate-400">
+                                <thead className="sticky top-0 bg-gray-50">
+                                    <tr className="border-b border-gray-200 text-left text-xs font-semibold tracking-wide text-gray-700">
                                         <th className="px-4 py-3 w-[90px]">Status</th>
                                         <th className="px-4 py-3 w-[60px]">#</th>
 
                                         <th
-                                            className="px-4 py-3 cursor-pointer select-none hover:text-slate-200"
+                                            className="px-4 py-3 cursor-pointer select-none hover:text-gray-900"
                                             onClick={() => toggleSort("title")}
                                         >
                                             Title <SortCaret active={sortKey === "title"} dir={sortDir} />
                                         </th>
 
                                         <th
-                                            className="px-4 py-3 w-[240px] cursor-pointer select-none hover:text-slate-200"
+                                            className="px-4 py-3 w-[240px] cursor-pointer select-none hover:text-gray-900"
                                             onClick={() => toggleSort("slug")}
                                         >
                                             Slug <SortCaret active={sortKey === "slug"} dir={sortDir} />
                                         </th>
 
                                         <th
-                                            className="px-4 py-3 w-[420px] cursor-pointer select-none hover:text-slate-200"
+                                            className="px-4 py-3 w-[420px] cursor-pointer select-none hover:text-gray-900"
                                             onClick={() => toggleSort("id")}
                                         >
                                             ID <SortCaret active={sortKey === "id"} dir={sortDir} />
@@ -243,20 +242,20 @@ export default function ProblemList() {
                                     {loading
                                         ? Array.from({ length: PAGE_SIZE }, (_, i) => <SkeletonRow key={i} i={i} />)
                                         : pageItems.map((p, idx) => (
-                                            <tr key={p.id} className="border-b border-white/5 hover:bg-white/5">
+                                            <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50">
                                                 <td className="px-4 py-3">
-                                                    <span className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-400">
+                                                    <span className="inline-flex items-center justify-center rounded-full border border-gray-300 bg-gray-100 px-3 py-1 text-xs text-gray-600">
                                                         -
                                                     </span>
                                                 </td>
 
-                                                <td className="px-4 py-3 text-slate-400">
+                                                <td className="px-4 py-3 text-gray-500">
                                                     {(safePage - 1) * PAGE_SIZE + idx + 1}
                                                 </td>
 
                                                 <td className="px-4 py-3">
                                                     <Link
-                                                        className="font-medium text-slate-100 hover:text-blue-300 hover:underline underline-offset-4"
+                                                        className="font-medium text-gray-900 hover:text-blue-600 hover:underline underline-offset-4"
                                                         to={`/ide/problems/${p.id}`}
                                                     >
                                                         {p.title}
@@ -264,12 +263,12 @@ export default function ProblemList() {
                                                 </td>
 
                                                 <td className="px-4 py-3">
-                                                    <code className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200">
+                                                    <code className="rounded-full border border-gray-300 bg-gray-100 px-3 py-1 text-xs text-gray-800">
                                                         {p.slug}
                                                     </code>
                                                 </td>
 
-                                                <td className="px-4 py-3 font-mono text-sm text-slate-300">
+                                                <td className="px-4 py-3 font-mono text-sm text-gray-700">
                                                     {p.id}
                                                 </td>
                                             </tr>
@@ -277,7 +276,7 @@ export default function ProblemList() {
 
                                     {!loading && pageItems.length === 0 && (
                                         <tr>
-                                            <td colSpan={5} className="px-4 py-10 text-center text-slate-400">
+                                            <td colSpan={5} className="px-4 py-10 text-center text-gray-500">
                                                 No problems match "{query}".
                                             </td>
                                         </tr>
@@ -287,9 +286,9 @@ export default function ProblemList() {
                         </div>
                     )}
 
-                    <div className="border-t border-white/10 px-4 py-3 text-sm text-slate-400">
+                    <div className="border-t border-gray-200 px-4 py-3 text-sm text-gray-600">
                         Tip: Click column headers to sort. Click a title to open{" "}
-                        <code className="rounded bg-white/10 px-1 py-0.5">/problems/:id</code>.
+                        <code className="rounded bg-gray-100 px-1 py-0.5">/problems/:id</code>.
                     </div>
                 </div>
             </div>
