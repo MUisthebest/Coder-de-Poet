@@ -1,7 +1,6 @@
 using System.Text.Json;
 
-namespace IdeService.Services
-{
+namespace IdeService.Services;
     public class JudgeService(DockerRunner runner)
     {
         public static string MainFileFor(string lang) => lang switch
@@ -26,7 +25,7 @@ namespace IdeService.Services
             string lang, string source, string input)
         {
             var (code, stdout, stderr, t, mem) =
-                await runner.RunAsync(lang, source, MainFileFor(lang), input);
+                await runner.RunBatchAsync(lang, source, MainFileFor(lang), input);
 
             var status = MapExitCode(code);
             return (status, stdout, stderr, t, mem);
@@ -34,7 +33,7 @@ namespace IdeService.Services
         public async Task<(int exitCode, string stdout, string stderr, long timeMs, long memKb)> RunBatchAsync(
             string lang, string source, string casesJson)
         {
-            return await runner.RunAsync(lang, source, MainFileFor(lang), casesJson);
+            return await runner.RunBatchAsync(lang, source, MainFileFor(lang), casesJson);
         }
 
         public static bool CheckOutput(string expected, string got)
@@ -54,4 +53,3 @@ namespace IdeService.Services
             };
         }
     }
-}

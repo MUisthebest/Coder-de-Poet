@@ -107,9 +107,9 @@ export default function Navigation_Mobile() {
 
           <li>
 
-            <NavLink to="/book" className={getNavLinkClasses}>
+            <NavLink to="/ide" className={getNavLinkClasses}>
 
-              Library
+              Coding IDE
 
             </NavLink>
 
