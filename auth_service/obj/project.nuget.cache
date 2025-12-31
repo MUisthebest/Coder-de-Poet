@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "ONSF2s83UuQ=",
+  "dgSpecHash": "4HEgj9QRqfs=",
   "success": true,
-  "projectFilePath": "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\auth_service.csproj",
+  "projectFilePath": "D:\\Nam_4\\HK1\\Advanced_Web\\Project\\Coder-de-Poet\\auth_service\\auth_service.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\ASUS\\.nuget\\packages\\bcrypt\\1.0.0\\bcrypt.1.0.0.nupkg.sha512",
     "C:\\Users\\ASUS\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
@@ -77,9 +77,9 @@
       "code": "NU1701",
       "level": "Warning",
       "message": "Package 'BCrypt 1.0.0' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net9.0'. This package may not be fully compatible with your project.",
-      "projectPath": "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\auth_service.csproj",
+      "projectPath": "D:\\Nam_4\\HK1\\Advanced_Web\\Project\\Coder-de-Poet\\auth_service\\auth_service.csproj",
       "warningLevel": 1,
-      "filePath": "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\auth_service.csproj",
+      "filePath": "D:\\Nam_4\\HK1\\Advanced_Web\\Project\\Coder-de-Poet\\auth_service\\auth_service.csproj",
       "libraryId": "BCrypt",
       "targetGraphs": [
         "net9.0"
