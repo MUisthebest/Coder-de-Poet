@@ -5,7 +5,8 @@
 
 import os 
 import requests
-from faster_whisper import WhisperModel
+import torch
+from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 from .models import GenerateLessonQuizCommand
 import logging
 
@@ -13,7 +14,25 @@ DOWNLOAD_PATH = "downloads"
 os.makedirs(DOWNLOAD_PATH, exist_ok=True)
 
 #Load model once at startup
-model = WhisperModel("base", device="cpu", compute_type="int8")
+model = "distil-whisper-large-v3"
+device = "cuda" if torch.cuda.is_available() else "cpu"
+dtype = torch.float16 if device == "cuda" else torch.float32
+
+model = AutoModelForSpeechSeq2Seq.from_pretrained(
+    model,
+    torch_dtype=dtype,
+    low_cpu_mem_usage=True,
+    use_safetensors=True,
+)
+
+processor = AutoProcessor.from_pretrained(model_name=model)
+pipe = pipeline(
+    "automatic-speech-recognition",
+    model = model,
+    tokenizer = processor.tokenizer,
+    feature_extractor = processor.feature_extractor,
+    device = 0 if device == "cuda" else -1,
+)
 
 def download_video(video_url: str, filename_hint: str | None = None) -> str:
     if filename_hint:
@@ -42,6 +61,15 @@ def delete_video(file_path: str) -> None:
 
 
 def transcribe_video(video_path: str, language: str = "en") -> str:
-    segments, info = model.transcribe(video_path, language=language)
-    full_text = " ".join(seg.text for seg in segments)
-    return full_text
+    result = pipe(
+        video_path,
+        chunk_length_s=30,
+        stride_length_s=5,
+        batch_size=16,
+        generate_kwargs={
+            "language": language,
+            "task": "transcribe",
+            "beam_size": 1,  
+        },
+    )
+    return result["text"]

@@ -1,18 +1,26 @@
 version: "3.8"
 
 services:
+  # =========================
+  # Kafka on-demand (profile)
+  # =========================
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
+    profiles: ["kafka"]
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
+      KAFKA_HEAP_OPTS: "-Xms256M -Xmx256M"
+    mem_limit: 512m
     healthcheck:
       test: ["CMD", "bash", "-lc", "echo ruok | nc localhost 2181 | grep imok"]
       interval: 10s
       timeout: 3s
-      retries: 10
+      retries: 15
+    restart: unless-stopped
 
   kafka:
     image: confluentinc/cp-kafka:7.6.0
+    profiles: ["kafka"]
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -21,27 +29,35 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
       KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://103.75.183.161:9093
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+      KAFKA_HEAP_OPTS: "-Xms512M -Xmx512M"
+    mem_limit: 1536m
     healthcheck:
       test: ["CMD", "bash", "-lc", "kafka-broker-api-versions --bootstrap-server localhost:9092 >/dev/null"]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 15
+    restart: unless-stopped
 
+  # =========================
+  # Course service (always on)
+  # =========================
   course_service:
     image: learnix/course_service:latest
     environment:
-      KAFKA_BROKER: kafka:9092
-      DB_HOST: postgres
-    depends_on:
-      kafka:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
+      KAFKA_BROKERS: kafka:9092
+      DATABASE_URL: ${DATABASE_URL}
+      COMPOSE_CWD: /deploy
     ports:
       - "5002:3000"
     restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/learnix:/deploy
+    working_dir: /deploy

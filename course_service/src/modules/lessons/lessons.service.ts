@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { LessonsRepository } from './lessons.repository';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
-import { AiKafkaClient } from './Message/kafka.client';
+import { AiKafkaManager } from './Message/ai-kafka.manager';
 import {GenerateLessonQuizCommand, LessonQuizGeneratedEvent} from './dto/quiz.dto';
 import {QuizStore} from './store/quiz.store';
 /**
@@ -12,7 +12,7 @@ import {QuizStore} from './store/quiz.store';
 @Injectable()
 export class LessonsService {
   private readonly logger = new Logger(LessonsService.name);
-  constructor(private readonly aiKafkaClient: AiKafkaClient, private readonly quizStore: QuizStore ,private readonly repo: LessonsRepository) {}
+  constructor(private readonly aiKafkaManager: AiKafkaManager, private readonly quizStore: QuizStore ,private readonly repo: LessonsRepository) {}
 
   async create(dto: CreateLessonDto) {
     // basic validation
@@ -54,7 +54,7 @@ export class LessonsService {
             source_type: dto.source_type
         };
 
-        await this.aiKafkaClient.sendGenerateLessonQuizCommand(command);
+        await this.aiKafkaManager.sendGenerateLessonQuizCommand(command);
         return dto.lesson_id;
     }
 
