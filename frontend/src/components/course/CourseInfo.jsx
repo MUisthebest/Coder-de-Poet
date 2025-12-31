@@ -26,7 +26,7 @@ const CourseInfo = ({ courseData, instructorData, user, isEnrolled = false, onEn
 
   return (
     <>
-      <div className="flex w-full flex-col md:flex-row h-fit md:h-[15vh] py-3 px-5 bg-gradient-to-r from-[#E3E3E3] to-[#eee] rounded-xl justify-between transition-all duration-100">
+      <div className="flex w-full flex-col md:flex-row h-fit md:h-[15vh] py-1 px-3 bg-gradient-to-r from-[#E3E3E3] to-[#eee] rounded-xl justify-between transition-all duration-100">
         {/* Left: Course info */}
         <div className="flex flex-col justify-start">
           {/* Title */}
@@ -62,7 +62,7 @@ const CourseInfo = ({ courseData, instructorData, user, isEnrolled = false, onEn
               </span>
             ) : (
               <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                Miễn phí
+                Free
               </span>
             )}
           </div>
@@ -95,7 +95,7 @@ const CourseInfo = ({ courseData, instructorData, user, isEnrolled = false, onEn
               currentLesson?.id && (
                 <button 
                   onClick={() => setShowQuiz(true)}
-                  className="px-4 py-4 text-[2vh] bg-[#1B3C53] text-white font-bold rounded-lg shadow hover:bg-green-700 transition"
+                  className="px-4 py-2 text-[2vh] bg-[#1B3C53] text-white font-bold rounded-lg shadow hover:bg-green-700 transition"
                 >
                   📝 Quizz
                 </button>
