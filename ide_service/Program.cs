@@ -6,6 +6,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
 builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<IdeDbContext>(options =>
@@ -15,20 +16,6 @@ builder.Services.AddDbContext<IdeDbContext>(options =>
              ?? throw new InvalidOperationException("Missing ConnectionStrings:Default");
 
     options.UseNpgsql(cs);
-});
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("Frontend", policy =>
-    {
-        policy
-            .WithOrigins(
-                "http://localhost:3000",
-                "http://127.0.0.1:3000"
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
 });
 
 // DI for judge pipeline
@@ -45,10 +32,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseCors("Frontend");
-
 app.UseHttpsRedirection();
 
+// IMPORTANT
 app.MapControllers();
 
 app.Run();
