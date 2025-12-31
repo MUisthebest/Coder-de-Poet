@@ -1,8 +1,7 @@
 using IdeService.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace IdeService.Services
-{
+namespace IdeService.Services;
 
     public class SubmissionWorker(IServiceScopeFactory scopeFactory, IConfiguration cfg) : BackgroundService
     {
@@ -91,4 +90,4 @@ namespace IdeService.Services
             await db.SaveChangesAsync(ct);
         }
     }
-}
+

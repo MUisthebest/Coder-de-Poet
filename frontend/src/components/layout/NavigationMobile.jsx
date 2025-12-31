@@ -107,9 +107,9 @@ export default function Navigation_Mobile() {
 
           <li>
 
-            <NavLink to="/book" className={getNavLinkClasses}>
+            <NavLink to="/ide" className={getNavLinkClasses}>
 
-              Library
+              Coding IDE
 
             </NavLink>
 
@@ -237,13 +237,13 @@ export default function Navigation_Mobile() {
           </li>
 
           <li>
-            <NavLink to="/book" className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
+            <NavLink to="/ide" className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
               {`${isAdmin ? 'Manage Library': 'Library'}`}
             </NavLink>
           </li>
 
           <li>
-            <NavLink to={`${user === null ? '/' : user.role === "Admin" ? '/admin/member': user.role === "Instructor" ? '/instructor/member':'/chat'}`} className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
+            <NavLink to="/chat" className={getMobileNavLinkClasses} onClick={handleMobileLinkClick}>
               Chat
             </NavLink>
           </li>

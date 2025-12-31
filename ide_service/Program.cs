@@ -18,6 +18,21 @@ builder.Services.AddDbContext<IdeDbContext>(options =>
     options.UseNpgsql(cs);
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+            .WithOrigins(
+                "http://localhost:3000",
+                "https://your-frontend-domain.com"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
 // DI for judge pipeline
 builder.Services.AddSingleton<DockerRunner>();
 builder.Services.AddSingleton<JudgeService>();
@@ -31,6 +46,9 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseCors("AllowFrontend");
+
 
 app.UseHttpsRedirection();
 

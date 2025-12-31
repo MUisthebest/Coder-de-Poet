@@ -7,56 +7,83 @@ namespace IdeService.Services
         private string Image => cfg["Runner:Image"] ?? cfg["RUNNER_IMAGE"] ?? "learnix-runner:latest";
         private int TimeoutMs => int.TryParse(cfg["Runner:TimeoutMs"] ?? cfg["SANDBOX_TIMEOUT_MS"], out var t) ? t : 2500;
 
-        private string CpuDefault => cfg["Runner:Cpu"] ?? cfg["SANDBOX_CPU"] ?? "1.0";
-        private string MemDefault => cfg["Runner:Memory"] ?? cfg["SANDBOX_MEM"] ?? "256m";
-
-        private string CpuPython => cfg["Runner:CpuPython"] ?? cfg["SANDBOX_CPU_PY"] ?? CpuDefault;
-        private string MemPython => cfg["Runner:MemPython"] ?? cfg["SANDBOX_MEM_PY"] ?? MemDefault;
-
-        private string CpuCompiled => cfg["Runner:CpuCompiled"] ?? cfg["SANDBOX_CPU_COMPILED"] ?? "2.0";
-        private string MemCompiled => cfg["Runner:MemCompiled"] ?? cfg["SANDBOX_MEM_COMPILED"] ?? "512m";
-
+        private string Cpu => cfg["Runner:Cpu"] ?? cfg["SANDBOX_CPU"] ?? "1.0";
+        private string Mem => cfg["Runner:Memory"] ?? cfg["SANDBOX_MEM"] ?? "256m";
         private string Pids => cfg["Runner:Pids"] ?? cfg["SANDBOX_PIDS"] ?? "128";
         private int MaxOut => int.TryParse(cfg["Runner:MaxOutputBytes"] ?? cfg["MAX_OUTPUT_BYTES"], out var m) ? m : 1_048_576;
 
-        private (string cpu, string mem) GetLimits(string language) => language switch
+        private string? HostSandboxDir => cfg["HOST_SANDBOX_DIR"];            // host path Docker daemon can see
+        private string? ContainerSandboxDir => cfg["CONTAINER_SANDBOX_DIR"];  // same folder mounted inside ide_api container
+
+        private static string ToDockerPath(string path) => Path.GetFullPath(path).Replace("\\", "/");
+
+        private static string NormalizeSource(string s)
         {
-            "python" => (CpuPython, MemPython),
-            "java" or "cpp" => (CpuCompiled, MemCompiled),
-            _ => (CpuDefault, MemDefault)
-        };
+            if (string.IsNullOrEmpty(s)) return s;
 
-        public async Task<(int exitCode, string stdout, string stderr, long timeMs, long memKb)> RunAsync(
-            string language, string sourceCode, string mainFileName, string casesJson /* <- đổi tên cho đúng */, string? _unused = null)
+            // If it contains literal backslash-n, unescape it
+            if (s.Contains("\\n") || s.Contains("\\r") || s.Contains("\\t") || s.Contains("\\\""))
+            {
+                s = s.Replace("\\r\\n", "\n")
+                     .Replace("\\n", "\n")
+                     .Replace("\\r", "\n")
+                     .Replace("\\t", "\t")
+                     .Replace("\\\"", "\"");
+            }
+
+            // Normalize line endings (optional but safe)
+            return s.Replace("\r\n", "\n");
+        }
+
+        public async Task<(int exitCode, string stdout, string stderr, long timeMs, long memKb)> RunBatchAsync(
+            string language, string sourceCode, string mainFileName, string casesJson)
         {
-            var hostBaseDir = (cfg["HOST_SANDBOX_DIR"] ?? throw new Exception("HOST_SANDBOX_DIR not configured"))
-                .TrimEnd('/', '\\').Replace("\\", "/");
-
-            var containerBase = (cfg["CONTAINER_SANDBOX_DIR"] ?? "/sandbox_host").TrimEnd('/');
-
             var runId = "ide-run-" + Guid.NewGuid().ToString("N");
-            var runDirInContainer = $"{containerBase}/{runId}";
-            var runDirOnHost = $"{hostBaseDir}/{runId}";
 
-            Directory.CreateDirectory(runDirInContainer);
+            string runDirWrite;
+            string runDirMount;
+
+            if (!string.IsNullOrWhiteSpace(HostSandboxDir))
+            {
+                var hostBase = HostSandboxDir!.TrimEnd('/', '\\');
+                var containerBase = (ContainerSandboxDir ?? hostBase).TrimEnd('/', '\\');
+
+                runDirWrite = Path.Combine(containerBase, runId);
+                runDirMount = (hostBase + "/" + runId).Replace("\\", "/");
+            }
+            else
+            {
+                runDirWrite = Path.Combine(Path.GetTempPath(), runId);
+                runDirMount = ToDockerPath(runDirWrite);
+            }
+
+            Directory.CreateDirectory(runDirWrite);
 
             try
             {
-                await File.WriteAllTextAsync(Path.Combine(runDirInContainer, mainFileName), sourceCode);
+                var sourcePath = Path.Combine(runDirWrite, mainFileName);
+                var casesPath = Path.Combine(runDirWrite, "cases.json");
 
-                await File.WriteAllTextAsync(Path.Combine(runDirInContainer, "cases.json"), casesJson);
+                await File.WriteAllTextAsync(sourcePath, NormalizeSource(sourceCode));
+                await File.WriteAllTextAsync(casesPath, casesJson);
+
+                if (!File.Exists(sourcePath))
+                    throw new Exception($"Source not created: {sourcePath}");
+                if (!File.Exists(casesPath))
+                    throw new Exception($"cases.json not created: {casesPath}");
 
                 var timeoutSec = Math.Max(1, (int)Math.Ceiling(TimeoutMs / 1000.0));
-                var (cpu, mem) = GetLimits(language);
 
                 var args =
                     "run --rm " +
                     "--network=none " +
-                    $"--cpus {cpu} --memory {mem} --pids-limit {Pids} " +
+                    $"--cpus {Cpu} --memory {Mem} --pids-limit {Pids} " +
                     "--read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m " +
-                    $"-v \"{runDirOnHost}:/work:rw\" " +
+                    $"-v \"{runDirMount}:/work:rw\" " +
                     $"-e LANG={language} -e SRC={mainFileName} -e TIMEOUT_SEC={timeoutSec} -e CASES_JSON=/work/cases.json " +
                     $"{Image}";
+
+                Console.Error.WriteLine("[docker] " + args);
 
                 var psi = new ProcessStartInfo("docker", args)
                 {
@@ -66,8 +93,6 @@ namespace IdeService.Services
                 };
 
                 var sw = Stopwatch.StartNew();
-                Console.Error.WriteLine("[docker] " + args);
-
                 using var p = Process.Start(psi)!;
 
                 var cts = new CancellationTokenSource(TimeoutMs + 500);
@@ -96,7 +121,7 @@ namespace IdeService.Services
             }
             finally
             {
-                try { Directory.Delete(runDirInContainer, recursive: true); } catch { }
+                try { Directory.Delete(runDirWrite, recursive: true); } catch { }
             }
         }
     }

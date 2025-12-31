@@ -153,6 +153,15 @@ export class QuizService {
     }
   }
 
+  async reviewQuizByLessonId(lessonId: string): Promise<any[]> {
+    try {
+      return await this.quizRepository.reviewQuizByLessonId(lessonId);  
+    } catch (error) {
+      console.error('Error reviewing quizzes by lesson:', error);
+      throw new BadRequestException('Failed to review quizzes by lesson');
+    }
+  }
+
   /**
    * Tìm kiếm quiz với phân trang và bộ lọc
    */
@@ -329,6 +338,18 @@ export class QuizService {
     return this.quizRepository.gradeQuizSubmission(
       dto
     );
+  }
+
+  /**
+   * Get course completion statistics by instructor
+   */
+  async getCourseCompletionByInstructor(instructorId: string): Promise<any[]> {
+    try {
+      return await this.quizRepository.getCourseCompletionStatsByInstructor(instructorId);
+    } catch (error) {
+      console.error('Error getting course completion stats:', error);
+      throw new BadRequestException('Failed to retrieve course completion statistics');
+    }
   }
 
 }

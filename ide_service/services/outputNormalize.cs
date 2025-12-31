@@ -1,5 +1,4 @@
-namespace IdeService.Services
-{
+namespace IdeService.Services;
     public static class OutputNormalize
     {
         public static string Normalize(string s)
@@ -24,4 +23,3 @@ namespace IdeService.Services
             return 0;
         }
     }
-}

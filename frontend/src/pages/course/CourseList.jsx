@@ -259,18 +259,6 @@ const CourseList = () => {
                 </svg>
             </button>
             </div>
-            
-            {(searchTerm || selectedCategory) && (
-              <button
-                onClick={clearFilters}
-                className={`px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg border border-gray-300 transition-all duration-200 flex items-center gap-2 group ${isExpanded ? '': 'hidden'}`}
-              >
-                <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                Xóa bộ lọc
-              </button>
-            )}
           </div>
 
           <div className={`flex flex-col md:flex-row justify-between items-stretch md:items-center gap-6 ${isExpanded ? '': 'hidden'}`}>

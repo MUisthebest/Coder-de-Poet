@@ -39,7 +39,7 @@ export class CoursesRepository {
       dto.description ?? null,
       dto.tag ? JSON.stringify(dto.tag) : null, 
       dto.accessType,
-      dto.status ?? 'draft',
+      dto.status ?? 'unpublished',
       dto.thumbnailUrl ?? null,
     ];
 
@@ -49,7 +49,10 @@ export class CoursesRepository {
 
   async findBySlug(slug: string) {
     const { rows } = await this.pool.query(
-      `SELECT * FROM courses WHERE slug = $1 LIMIT 1`,
+      `SELECT c.*, cat.name as category_name
+       FROM courses c
+       LEFT JOIN categories cat ON c.category_id = cat.id
+       WHERE c.slug = $1 LIMIT 1`,
       [slug],
     );
     return rows[0] ?? null;
@@ -57,7 +60,10 @@ export class CoursesRepository {
 
   async findById(id: string) {
     const { rows } = await this.pool.query(
-      `SELECT * FROM courses WHERE id = $1 LIMIT 1`,
+      `SELECT c.*, cat.name as category_name
+       FROM courses c
+       LEFT JOIN categories cat ON c.category_id = cat.id
+       WHERE c.id = $1 LIMIT 1`,
       [id],
     );
     return rows[0] ?? null;
@@ -111,10 +117,13 @@ export class CoursesRepository {
     const whereClause = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
 
     const itemsQuery = `
-      SELECT *
-      FROM courses
+      SELECT 
+        c.*,
+        cat.name as category_name
+      FROM courses c
+      LEFT JOIN categories cat ON c.category_id = cat.id
       ${whereClause}
-      ORDER BY updated_at DESC NULLS LAST, title ASC
+      ORDER BY c.updated_at DESC NULLS LAST, c.title ASC
       OFFSET $${idx}
       LIMIT $${idx + 1};
     `;
@@ -124,7 +133,7 @@ export class CoursesRepository {
     const countParams = params.slice(0, idx - 1);
     const countQuery = `
       SELECT COUNT(*)::int AS total
-      FROM courses
+      FROM courses c
       ${whereClause};
     `;
 
@@ -190,11 +199,35 @@ export class CoursesRepository {
   }
 
   async delete(id: string) {
-    const { rows } = await this.pool.query(
-      `DELETE FROM courses WHERE id = $1 RETURNING *`,
-      [id],
-    );
-    return rows[0] ?? null;
+    const client = await this.pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      // 1️⃣ Xoá lessons con
+      await client.query(
+        `DELETE FROM lessons WHERE course_id = $1`,
+        [id],
+      );
+
+      // (tuỳ bạn) nếu có quiz, lesson_completion, quiz_submissions
+      // thì nên xoá tiếp ở đây
+
+      // 2️⃣ Xoá course cha
+      const { rows } = await client.query(
+        `DELETE FROM courses WHERE id = $1 RETURNING *`,
+        [id],
+      );
+
+      await client.query('COMMIT');
+
+      return rows[0] ?? null;
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 
   async setStatus(id: string, status: string) {
@@ -321,6 +354,14 @@ export class CoursesRepository {
     
     return rows;
   }
+  async findInstructorById(instructorId: string) {
+    const { rows } = await this.pool.query(
+      `SELECT id, name, bio, profile_picture_url, created_at FROM instructors WHERE id = $1 LIMIT 1`,
+      [instructorId],
+    );
+    return rows[0] ?? null;
+  }
+  
   async checkInstructorOwnership(courseId: string, instructorId: string): Promise<boolean> {
     const { rows } = await this.pool.query(
       `SELECT EXISTS(

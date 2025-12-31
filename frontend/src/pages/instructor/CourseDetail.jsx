@@ -14,6 +14,7 @@ import instructorService from "../../services/instructorService";
 import CreateQuizPage from "./CreateQuizPage";
 import { useAuth } from "../../contexts/AuthContext";
 import ProfileSidebar from '../../components/home/ProfileSideBar';
+import InstructorAddLesson from "./InstructorAddLesson";
 
 const CourseDetailRoute = () => {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ const CourseDetailRoute = () => {
   const [loading, setLoading] = useState(true);
   const [courseLoading, setCourseLoading] = useState(true);
   const [myCourses, setMyCourses] = useState([]);
+  const [showAddLesson, setShowAddLesson] = useState(false);
 
   const weeklyActivities = [
     { day: 'Mon', hours: 2.5, type: 'learning' },
@@ -66,20 +68,21 @@ const CourseDetailRoute = () => {
   }, [courseId]);
 
   // Fetch lessons
+  const fetchLessons = async () => {
+    if (!course?.id && !courseId) return;
+    try {
+      setLoading(true);
+      const id = course?.id || courseId;
+      const data = await instructorService.getLessonsByCourse(id);
+      setLessons(data);
+    } catch (err) {
+      console.error("Error fetching lessons:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchLessons = async () => {
-      if (!course?.id && !courseId) return;
-      try {
-        setLoading(true);
-        const id = course?.id || courseId;
-        const data = await instructorService.getLessonsByCourse(id);
-        setLessons(data);
-      } catch (err) {
-        console.error("Error fetching lessons:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchLessons();
   }, [course?.id, courseId]);
 
@@ -133,7 +136,7 @@ const CourseDetailRoute = () => {
           <p className="text-gray-500 mb-4">Course not found</p>
           <button
             onClick={() => navigate(-1)}
-            className="text-blue-600 hover:text-blue-800 font-medium"
+            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 mb-6 font-medium"
           >
             Back
           </button>
@@ -172,7 +175,7 @@ const CourseDetailRoute = () => {
                     <p className="text-sm text-gray-500 truncate">{course.category} • {course.status}</p>
                   </div>
                   </div>
-                  <button className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition whitespace-nowrap">
+                  <button className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition whitespace-nowrap" onClick={() => setShowAddLesson(true)}>
                   Add Lesson
                   </button>
                 </div>
@@ -252,6 +255,18 @@ const CourseDetailRoute = () => {
                   course={course}
                   onBack={() => { setShowQuizModal(false); setSelectedLesson(null); }}
                   onQuizCreated={handleQuizCreated}
+                />
+              )}
+
+              {showAddLesson && (
+                <InstructorAddLesson
+                  onClose={() => setShowAddLesson(false)}
+                  onSuccess={() => {
+                    setShowAddLesson(false);
+                    fetchLessons();
+                  }}
+                  preSelectedCourse={course}
+                  MyCourse={[course]}
                 />
               )}
 

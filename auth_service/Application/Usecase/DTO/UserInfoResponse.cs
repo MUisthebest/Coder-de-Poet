@@ -7,6 +7,7 @@ public class UserInfoResponse
     public string? AvatarUrl { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public bool IsActive { get; set; } = true;
 
     public string Role { get; set; } = "Normal_Student";
 }

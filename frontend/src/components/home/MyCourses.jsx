@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { authService } from '../../services/authService';
 import { getThumbnailUrl } from '../../utils/thumbnailHelper';
+import { NavLink } from 'react-router-dom';
 
 const MyCourses = ({ courses: coursesProp = [], user }) => {
   const [courses, setCourses] = useState(coursesProp || []);
@@ -284,7 +285,8 @@ const MyCourses = ({ courses: coursesProp = [], user }) => {
               }
             `}</style>
             {displayedCourses.map((course) => (
-              <div 
+              <NavLink 
+                to={`/courses/${course.id}`}
                 key={course.id} 
                 className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all duration-300 flex-shrink-0 w-full snap-center relative"
               >
@@ -384,7 +386,7 @@ const MyCourses = ({ courses: coursesProp = [], user }) => {
                     </div>
                   )}
                 </div>
-              </div>
+              </NavLink>
             ))}
           </div>
 
