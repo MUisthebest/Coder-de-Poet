@@ -4,6 +4,8 @@ import NavigationMobile from "./components/layout/NavigationMobile";
 import Home from "./pages/public/Home";
 import SignIn from "./pages/auth/Signin";
 import SignUp from './pages/auth/Signup';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 import Unauthorized from './pages/auth/Unauthorized';
 import ProtectedRoute from './components/admin/ProtectedRoute';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -76,12 +78,15 @@ function Layout() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/courses/:id" element={<CourseDetail />} />
           <Route path="/auth/google/callback" element={<GoogleCallbackHandler />} />
           <Route path="/courses" element={<CourseList />}/>
           <Route path="/chat" element={<ChatbotPage />}/>
-
+          <Route path="/ide" element={<ProblemList />}/>
+          <Route path="/ide/problems/:problemId" element={<ProblemDetailPage />}/>
           <Route 
             path="/instructor/dashboard" 
             element={ 

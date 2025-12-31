@@ -16,11 +16,19 @@ interface QuizFilters {
   title?: string;
 }
 
+
+
 @Injectable()
 export class QuizRepository {
   constructor(
     @Inject('PG_POOL') private readonly pool: Pool,
   ) { }
+
+  private stripCorrectAnswer(question: any) {
+  const { correct_answer, ...safeQuestion } = question;
+  return safeQuestion;
+}
+
 
   // Tạo quiz mới với questions
   async createQuizWithQuestions(createQuizDto: CreateQuizDto): Promise<any> {
@@ -252,10 +260,10 @@ export class QuizRepository {
         }
       }
 
-      return {
+      return this.stripCorrectAnswer({
         ...q,
-        options: options,
-      };
+        options,
+      });
     });
 
     return quiz;
@@ -317,9 +325,59 @@ export class QuizRepository {
               options = null;
             }
           }
-          return { ...q, options };
-        });
+      return this.stripCorrectAnswer({
+        ...q,
+        options,
+      });        
+    });
         
+        return quiz;
+      })
+    );
+    
+    return quizzesWithQuestions;
+  }
+
+  async reviewQuizByLessonId(lessonId: string): Promise<any[]> {
+   const query = `
+      SELECT 
+        q.*,
+        COUNT(qu.id) as question_count
+      FROM quizzes q
+      LEFT JOIN questions qu ON q.id = qu.quiz_id
+      WHERE q.lesson_id = $1
+      GROUP BY q.id
+      ORDER BY q.created_at DESC
+    `;
+    
+    const result = await this.pool.query(query, [lessonId]);
+    
+    // Lấy questions cho mỗi quiz
+    const quizzesWithQuestions = await Promise.all(
+      result.rows.map(async (quiz) => {
+        const questionsQuery = `
+          SELECT * FROM questions 
+          WHERE quiz_id = $1 
+          ORDER BY order_index ASC
+        `;
+        const questionsResult = await this.pool.query(questionsQuery, [quiz.id]);
+        
+        quiz.questions = questionsResult.rows.map((q: any) => {
+          let options = null;
+          if (q.options) {
+            try {
+              if (typeof q.options === 'string') {
+                options = JSON.parse(q.options);
+              } else {
+                options = q.options;
+              }
+            } catch (error) {
+              console.error('Error parsing options JSON:', error);
+              options = null;
+            }
+          }
+      return {...q, options};  
+    });  
         return quiz;
       })
     );
@@ -611,6 +669,57 @@ export class QuizRepository {
     String(v ?? '')
     .trim()
     .toLowerCase();
+
+  // Get course completion statistics by instructor
+  async getCourseCompletionStatsByInstructor(instructorId: string): Promise<any[]> {
+    const query = `
+      WITH course_lessons AS (
+        SELECT 
+          c.id AS course_id,
+          c.title AS course_title,
+          COUNT(DISTINCT l.id) AS total_lessons,
+          COUNT(DISTINCT e.student_id) AS total_students
+        FROM courses c
+        LEFT JOIN lessons l ON l.course_id = c.id
+        LEFT JOIN enrollments e ON e.course_id = c.id AND e.status IN ('active', 'passed', 'completed')
+        WHERE c.instructor_id = $1::uuid
+        GROUP BY c.id, c.title
+      ),
+      completed_lessons AS (
+        SELECT 
+          lc.course_id,
+          lc.student_id,
+          COUNT(*) FILTER (WHERE lc.is_completed = TRUE) AS completed_count
+        FROM lesson_completion lc
+        WHERE lc.course_id IN (SELECT course_id FROM course_lessons)
+        GROUP BY lc.course_id, lc.student_id
+      )
+      SELECT 
+        cl.course_id,
+        cl.course_title,
+        cl.total_lessons,
+        cl.total_students,
+        COALESCE(
+          ROUND(
+            AVG(
+              CASE 
+                WHEN cl.total_lessons > 0 
+                THEN (cpl.completed_count * 100.0 / cl.total_lessons)
+                ELSE 0
+              END
+            ), 2
+          ), 0
+        ) AS avg_completion_percent,
+        COUNT(DISTINCT cpl.student_id) AS active_students
+      FROM course_lessons cl
+      LEFT JOIN completed_lessons cpl ON cpl.course_id = cl.course_id
+      GROUP BY cl.course_id, cl.course_title, cl.total_lessons, cl.total_students
+      ORDER BY cl.course_title;
+    `;
+
+    const result = await this.pool.query(query, [instructorId]);
+    return result.rows;
+  }
 
   async gradeQuizSubmission(
     quizSubmissionDto: QuizSubmissionDto,

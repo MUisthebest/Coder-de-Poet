@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # =========================
   # Kafka on-demand (profile)
@@ -42,6 +40,7 @@ services:
       test: ["CMD", "bash", "-lc", "kafka-broker-api-versions --bootstrap-server localhost:9092 >/dev/null"]
       interval: 10s
       timeout: 5s
+<<<<<<< HEAD
       retries: 15
     restart: unless-stopped
 
@@ -61,3 +60,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /opt/learnix:/deploy
     working_dir: /deploy
+=======
+      retries: 10
+>>>>>>> deploy

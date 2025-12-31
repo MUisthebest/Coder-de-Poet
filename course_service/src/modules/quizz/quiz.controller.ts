@@ -67,6 +67,12 @@ export class QuizController {
     return this.quizService.findByLessonId(lessonId);
   }
 
+  // review quiz by lesson id
+  @Get('lesson/:lessonId/review')
+  async reviewByLesson(@Param('lessonId') lessonId: string) {
+    return this.quizService.reviewQuizByLessonId(lessonId);
+  }
+
     @Get('course/:courseId')
   async findByCourse(@Param('courseId') courseId: string) {
     return this.quizService.findByCourseId(courseId);
@@ -167,6 +173,11 @@ export class QuizController {
   @Get(':id/submissions')
   async getQuizSubmissions(@Param('id') id: string) {
     return this.quizService.getQuizSubmissions(id);
+  }
+
+  @Get('instructor/:instructorId/completion')
+  async getCourseCompletionByInstructor(@Param('instructorId') instructorId: string) {
+    return this.quizService.getCourseCompletionByInstructor(instructorId);
   }
 
 

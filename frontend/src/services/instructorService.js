@@ -29,7 +29,6 @@ const instructorService = {
     createCourse: async (payload) => {
         try {
             const token = authService.getStoredToken();
-            console.log('kk', token)
             const response = await apiCourse.post(
                 '/courses',
                 payload,
@@ -198,132 +197,12 @@ const instructorService = {
     }
   },
   
-  generateAIQuiz: async (payload) => {
-    // 🔧 MOCK MODE - Uncomment để sử dụng mock data thay vì gọi API thực
-    const USE_MOCK = true; // Đổi thành false để gọi API thực
-    
-    if (USE_MOCK) {
-      console.log("🧪 Using MOCK data for AI quiz");
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      return {
-        status: "done",
-        quiz: [
-          {
-            question: "In an Event-Driven Architecture, what is the primary role of the Broker component?",
-            options: [
-              "To create Events that are redirected to Consumers",
-              "To react to Events and execute necessary actions",
-              "To redirect Events from Producers to the right Consumers"
-            ],
-            correct_index: 2
-          },
-          {
-            question: "What is the main benefit of using Event-Driven Architecture in terms of scalability?",
-            options: [
-              "It allows for faster communication between services",
-              "It allows for more control over the communication flow",
-              "It allows services to be decoupled and scaled independently"
-            ],
-            correct_index: 2
-          },
-          {
-            question: "What is the key difference between an Event and a Command in the context of Event-Driven Architecture?",
-            options: [
-              "An Event is a request, while a Command is a notification",
-              "An Event is something that happens, while a Command is a request for action",
-              "An Event is a notification, while a Command is something that happens"
-            ],
-            correct_index: 1
-          },
-          {
-            question: "In an Event-Driven Architecture, what is the primary advantage of using immutable Events?",
-            options: [
-              "They can be modified by Consumers",
-              "They can be processed in parallel by multiple services",
-              "They can be used to request a response from other services"
-            ],
-            correct_index: 1
-          },
-          {
-            question: "What is a potential drawback of using Event-Driven Architecture?",
-            options: [
-              "It can lead to tighter coupling between services",
-              "It can result in faster communication between services",
-              "It can introduce additional complexity and performance overhead"
-            ],
-            correct_index: 2
-          },
-          {
-            question: "When should you use Event-Driven Architecture for your solution?",
-            options: [
-              "When performance is more important than scalability",
-              "When you need to have direct dependencies between services",
-              "When scalability is more important than performance, and you need to decouple services"
-            ],
-            correct_index: 2
-          },
-          {
-            question: "What is the role of the Producer component in an Event-Driven Architecture?",
-            options: [
-              "To consume Events and execute necessary actions",
-              "To redirect Events from other services",
-              "To create Events that are redirected to Consumers"
-            ],
-            correct_index: 2
-          },
-          {
-            question: "How does Event-Driven Architecture handle failures compared to traditional request-response approaches?",
-            options: [
-              "It requires both services to be online and active to receive the request",
-              "It allows one of the services to be down, and the Event will be persisted by the Broker",
-              "It does not handle failures differently than traditional request-response approaches"
-            ],
-            correct_index: 1
-          },
-          {
-            question: "What is the main difference between the two examples of Event-Driven Architecture presented in the lesson?",
-            options: [
-              "One example uses a Broker, while the other does not",
-              "One example expects a response, while the other does not",
-              "One example uses a Producer, while the other uses a Consumer"
-            ],
-            correct_index: 1
-          },
-          {
-            question: "In the context of Event-Driven Architecture, what does the term 'eventual consistency' refer to?",
-            options: [
-              "The guarantee that all services will be in sync at all times",
-              "The possibility that services may be out of sync due to delays in processing Events",
-              "The requirement that all services must be online and active to receive Events"
-            ],
-            correct_index: 1
-          },
-          {
-            question: "What is the relationship between Event-Driven Architecture and Message-Driven Architecture?",
-            options: [
-              "Event-Driven Architecture is a subset of Message-Driven Architecture",
-              "Message-Driven Architecture is a subset of Event-Driven Architecture",
-              "Event-Driven Architecture and Message-Driven Architecture are interchangeable terms"
-            ],
-            correct_index: 0
-          }
-        ],
-        tag: [
-          'event driven architecture',
-          'microservices',
-          'broker pattern',
-          'scalability',
-          'distributed systems'
-        ]
-      };
-    }
-    
-    // Code gọi API thực
+ 
+    generateAIQuiz: async (payload) => {
     try {
       const token = authService.getStoredToken();
       console.log("Generating AI quiz with payload:", payload);
+      // Gọi endpoint AI quiz generate
       const response = await apiCourse.post(
         '/lessons/quiz-generate',
         payload,
@@ -377,6 +256,19 @@ const instructorService = {
     } catch (error) {
       console.error('Error updating quiz:', error);
       throw error;
+    }
+  },
+
+  getCourseCompletionStats: async (instructorId) => {
+    try {
+      const token = authService.getStoredToken();
+      const response = await apiCourse.get(`/quizzes/instructor/${instructorId}/completion`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching course completion stats:', error);
+      return [];
     }
   },
 }
