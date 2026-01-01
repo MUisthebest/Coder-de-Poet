@@ -20,9 +20,59 @@ function AdminCourses() {
   const [courseType, setCourseType] = useState(searchParams.get('type') || 'all');
   const [pendingOnly, setPendingOnly] = useState((searchParams.get('pendingOnly') || '0') === '1');
   const [includeDeleted, setIncludeDeleted] = useState((searchParams.get('includeDeleted') || '0') === '1');
+  
+  // Modal states
+  const [showModal, setShowModal] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    title: '',
+    message: '',
+    type: 'confirm', // 'confirm' or 'alert'
+    onConfirm: null,
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
+    variant: 'primary' // 'primary', 'danger', 'success'
+  });
 
   const instructorId = searchParams.get('instructorId') || '';
   const statusParam = (searchParams.get('status') || 'all').toLowerCase();
+
+  // Helper functions for modal
+  const showConfirmModal = (title, message, onConfirm, variant = 'primary') => {
+    setModalConfig({
+      title,
+      message,
+      type: 'confirm',
+      onConfirm,
+      confirmText: 'Confirm',
+      cancelText: 'Cancel',
+      variant
+    });
+    setShowModal(true);
+  };
+
+  const showAlertModal = (title, message, variant = 'primary') => {
+    setModalConfig({
+      title,
+      message,
+      type: 'alert',
+      onConfirm: null,
+      confirmText: 'OK',
+      cancelText: '',
+      variant
+    });
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+  };
+
+  const handleModalConfirm = () => {
+    if (modalConfig.onConfirm) {
+      modalConfig.onConfirm();
+    }
+    closeModal();
+  };
 
   useEffect(() => {
     if (!authLoading) {
@@ -204,30 +254,69 @@ function AdminCourses() {
   }, [courses]);
 
   const handleDelete = async (courseId) => {
-    const confirmed = window.confirm('Are you sure you want to delete this course? This action cannot be undone.');
-    if (!confirmed) return;
-    const res = await adminService.deleteCourse(courseId);
-    if (!res.success) {
-      alert(res.error || 'Failed to delete course');
-      return;
-    }
-    await loadCourses(instructorId);
+    showConfirmModal(
+      'Delete Course',
+      'Are you sure you want to delete this course? This action cannot be undone.',
+      async () => {
+        const res = await adminService.deleteCourse(courseId);
+        if (!res.success) {
+          showAlertModal('Error', res.error || 'Failed to delete course', 'danger');
+          return;
+        }
+        
+        // Reload based on current filter
+        if (instructorId && instructorId !== 'all') {
+          await loadCourses(instructorId);
+        } else {
+          await loadAllCourses();
+        }
+      },
+      'danger'
+    );
   };
 
   const handleApprove = async (courseId) => {
-    const confirmed = window.confirm('Approve this course?');
-    if (!confirmed) return;
-    const res = await adminService.approveCourse(courseId);
-    if (!res.success) return alert(res.error || 'Failed to approve');
-    await loadCourses(instructorId);
+    showConfirmModal(
+      'Approve Course',
+      'Are you sure you want to approve this course?',
+      async () => {
+        const res = await adminService.approveCourse(courseId);
+        if (!res.success) {
+          showAlertModal('Error', res.error || 'Failed to approve', 'danger');
+          return;
+        }
+        
+        // Reload based on current filter
+        if (instructorId && instructorId !== 'all') {
+          await loadCourses(instructorId);
+        } else {
+          await loadAllCourses();
+        }
+      },
+      'success'
+    );
   };
 
   const handleReject = async (courseId) => {
-    const reason = window.confirm('Reject this course?');
-    if (!reason) return;
-    const res = await adminService.rejectCourse(courseId);
-    if (!res.success) return alert(res.error || 'Failed to reject');
-    await loadCourses(instructorId);
+    showConfirmModal(
+      'Reject Course',
+      'Are you sure you want to reject this course?',
+      async () => {
+        const res = await adminService.rejectCourse(courseId);
+        if (!res.success) {
+          showAlertModal('Error', res.error || 'Failed to reject', 'danger');
+          return;
+        }
+        
+        // Reload based on current filter
+        if (instructorId && instructorId !== 'all') {
+          await loadCourses(instructorId);
+        } else {
+          await loadAllCourses();
+        }
+      },
+      'danger'
+    );
   };
 
   const toggleLessons = async (courseId) => {
@@ -246,12 +335,20 @@ function AdminCourses() {
   };
 
   const handleDeleteLesson = async (courseId, lessonId) => {
-    const ok = window.confirm('Delete this lesson? This cannot be undone.');
-    if (!ok) return;
-    const res = await adminService.deleteLesson(lessonId);
-    if (!res.success) return alert(res.error || 'Failed to delete lesson');
-    const refreshed = await adminService.listLessons(courseId);
-    if (refreshed.success) setLessonsByCourse((p) => ({ ...p, [courseId]: refreshed.data }));
+    showConfirmModal(
+      'Delete Lesson',
+      'Are you sure you want to delete this lesson? This action cannot be undone.',
+      async () => {
+        const res = await adminService.deleteLesson(lessonId);
+        if (!res.success) {
+          showAlertModal('Error', res.error || 'Failed to delete lesson', 'danger');
+          return;
+        }
+        const refreshed = await adminService.listLessons(courseId);
+        if (refreshed.success) setLessonsByCourse((p) => ({ ...p, [courseId]: refreshed.data }));
+      },
+      'danger'
+    );
   };
 
   if (authLoading || loading) {
@@ -518,6 +615,51 @@ function AdminCourses() {
           )}
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={closeModal}></div>
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+            <div className={`px-6 py-4 ${
+              modalConfig.variant === 'danger' ? 'bg-red-50 border-b border-red-100' :
+              modalConfig.variant === 'success' ? 'bg-green-50 border-b border-green-100' :
+              'bg-blue-50 border-b border-blue-100'
+            }`}>
+              <h3 className={`text-lg font-semibold ${
+                modalConfig.variant === 'danger' ? 'text-red-900' :
+                modalConfig.variant === 'success' ? 'text-green-900' :
+                'text-blue-900'
+              }`}>
+                {modalConfig.title}
+              </h3>
+            </div>
+            <div className="px-6 py-4">
+              <p className="text-gray-700 leading-relaxed">{modalConfig.message}</p>
+            </div>
+            <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3">
+              {modalConfig.type === 'confirm' && (
+                <button
+                  onClick={closeModal}
+                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                >
+                  {modalConfig.cancelText}
+                </button>
+              )}
+              <button
+                onClick={handleModalConfirm}
+                className={`px-4 py-2 text-white rounded-lg transition ${
+                  modalConfig.variant === 'danger' ? 'bg-red-600 hover:bg-red-700' :
+                  modalConfig.variant === 'success' ? 'bg-green-600 hover:bg-green-700' :
+                  'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                {modalConfig.confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
