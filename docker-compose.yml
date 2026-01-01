@@ -1,4 +1,5 @@
-# XÓA DÒNG NÀY: version: "3.9"
+
+name: learnix
 
 networks:
   learnix_net:
@@ -32,29 +33,28 @@ services:
     networks:
       - learnix_net
 
-  # .NET Auth
   auth_service:
     build:
       context: ./auth_service
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      - ASPNETCORE_URLS=http://0.0.0.0:8080
-      - ASPNETCORE_ENVIRONMENT=Production
-    env_file: 
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      ASPNETCORE_ENVIRONMENT: Production
+    env_file:
       - .env.prod
     expose:
       - "8080"
     networks:
       - learnix_net
 
-  # Kafka services - THÊM VÀO
+  # ===== Kafka infra (shared) =====
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     restart: unless-stopped
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_CLIENT_PORT: "2181"
+      ZOOKEEPER_TICK_TIME: "2000"
     networks:
       - learnix_net
 
@@ -64,67 +64,72 @@ services:
     depends_on:
       - zookeeper
     environment:
-      KAFKA_BROKER_ID: 1
+      KAFKA_BROKER_ID: "1"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      # Only internal docker network is needed for your microservices
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      # Cấu hình thêm cho production
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
     networks:
       - learnix_net
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
 
-  # NestJS Course service - ĐÃ SỬA
   course_service:
     build:
       context: ./course_service
       dockerfile: Dockerfile
     restart: unless-stopped
-    env_file:  # ĐÃ SỬA: đúng cú pháp list
+    env_file:
       - .env.prod
       - ./course_service/.env
-    depends_on:  # ĐÃ SỬA: đúng cú pháp
+    depends_on:
       kafka:
         condition: service_healthy
     expose:
       - "3001"
     environment:
-      - NODE_ENV=production
-      - KAFKA_BROKERS=kafka:9092
-      - KAFKA_HOST=kafka
-      - KAFKA_PORT=9092
+      NODE_ENV: production
+      PORT: "3001"
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_HOST: kafka
+      KAFKA_PORT: "9092"
     networks:
       - learnix_net
 
-  # Python AI
   ai_service:
     build:
       context: ./AI_service
       dockerfile: Dockerfile
     restart: unless-stopped
-    env_file: 
+    env_file:
       - .env.prod
     expose:
       - "8000"
     networks:
       - learnix_net
 
-  # Python Chat
   chat_service:
     build:
       context: ./chat_service
       dockerfile: Dockerfile
     restart: unless-stopped
-    env_file: 
+    env_file:
       - .env.prod
     expose:
       - "8001"
     networks:
       - learnix_net
 
-  # .NET IDE
   ide_service:
     build:
       context: ./ide_service
@@ -133,7 +138,7 @@ services:
     environment:
       ASPNETCORE_URLS: http://0.0.0.0:8081
       ASPNETCORE_ENVIRONMENT: Production
-    env_file: 
+    env_file:
       - .env.prod
     expose:
       - "8081"
