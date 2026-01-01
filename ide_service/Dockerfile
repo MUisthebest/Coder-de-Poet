@@ -8,6 +8,6 @@ RUN dotnet publish ./ide_service.csproj -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 COPY --from=build /app/publish .
-EXPOSE 8081
-ENV ASPNETCORE_URLS=http://0.0.0.0:8081
+EXPOSE 8082
+ENV ASPNETCORE_URLS=http://0.0.0.0:8082
 ENTRYPOINT ["dotnet", "ide_service.dll"]
