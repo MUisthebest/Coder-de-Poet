@@ -45,6 +45,7 @@ services:
     networks:
       - learnix_net
 
+      
   # NestJS Course service
   course_service:
     build:
