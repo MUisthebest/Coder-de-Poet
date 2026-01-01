@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session, text
+from sqlalchemy.orm import Session
 from typing import List, Optional
+from sqlalchemy import text  # Thêm import này
 
 from . import crud, schemas
 from .ai_service import ai_service
