@@ -3,7 +3,7 @@ import axios from 'axios';
 import { authService } from './authService';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_BACKEND_URL || 'http://localhost:5015',
+  baseURL: process.env.REACT_APP_BACKEND_URL || 'http://144.91.74.84',
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
