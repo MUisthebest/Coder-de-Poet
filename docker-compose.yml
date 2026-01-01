@@ -55,8 +55,18 @@ services:
     env_file: 
     - .env.prod
     - ./course_service/.env 
+    depends_on:
+      - zookeeper:
+        condition: service_healthy
+      - kafka:
+        condition: service_healthy
     expose:
       - "3001"
+    environment:
+      - NODE_ENV=production
+      - KAFKA_BROKERS=kafka:9092
+      - KAFKA_HOST=kafka
+      - KAFKA_PORT=9092
     networks:
       - learnix_net
 
