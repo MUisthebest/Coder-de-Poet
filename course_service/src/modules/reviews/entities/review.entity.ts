@@ -1,15 +1,15 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('reviews')
 export class Review {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column()
-  courseId: number;
+  @Column({ type: 'uuid' })
+  courseId: string;
 
-  @Column()
-  userId: number;
+  @Column({ type: 'uuid' })
+  userId: string;
 
   @Column({ type: 'int', default: 5 })
   rating: number;
