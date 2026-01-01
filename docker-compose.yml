@@ -41,8 +41,10 @@ services:
     environment:
       ASPNETCORE_URLS: http://0.0.0.0:8080
       ASPNETCORE_ENVIRONMENT: Production
+      PORT: "8080"
     env_file:
       - .env.prod
+      - ./auth_service/.env
     expose:
       - "8080"
     networks:
@@ -125,6 +127,7 @@ services:
     restart: unless-stopped
     env_file:
       - .env.prod
+      - ./chat_service/.env
     expose:
       - "8001"
     networks:
@@ -136,7 +139,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      ASPNETCORE_URLS: http://0.0.0.0:8081
+      ASPNETCORE_URLS: http://0.0.0.0:8082
       ASPNETCORE_ENVIRONMENT: Production
     env_file:
       - .env.prod
