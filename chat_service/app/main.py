@@ -1,7 +1,7 @@
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from . import crud, schemas
 from .ai_service import ai_service
@@ -11,26 +11,37 @@ from .models import ChatSession
 # Tạo tables
 Base.metadata.create_all(bind=engine)
 
-# Tạo router với prefix
-router = APIRouter(prefix="/api/chat")
+app = FastAPI(
+    title="Chatbot Message Service API",
+    description="API để lưu và lấy chat messages - User management từ external service",
+    version="1.0.0"
+)
 
-@router.get("/")
+# CORS configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Có thể restrict cụ thể frontend URLs
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/")
 async def root():
     return {
         "service": "Chatbot Message Service",
         "description": "API để lưu và lấy chat messages",
         "endpoints": {
-            "send_message": "POST /api/chat/send",
-            "get_messages": "POST /api/chat/messages",
-            "get_sessions": "POST /api/chat/sessions",
-            "get_history": "POST /api/chat/history",
-            "delete_session": "DELETE /api/chat/session/{session_id}",
-            "health": "GET /api/chat/health"
+            "send_message": "POST /chat/send",
+            "get_messages": "POST /chat/messages",
+            "get_sessions": "POST /chat/sessions",
+            "health": "GET /health"
         },
         "note": "User management được xử lý bởi external service"
     }
 
-@router.get("/health")
+@app.get("/health")
 async def health_check(db: Session = Depends(get_db)):
     """Health check endpoint"""
     try:
@@ -47,7 +58,7 @@ async def health_check(db: Session = Depends(get_db)):
             detail=f"Database connection failed: {str(e)}"
         )
 
-@router.post("/send", response_model=schemas.ChatResponse)
+@app.post("/chat/send", response_model=schemas.ChatResponse)
 async def send_message(
     request: schemas.ChatMessageCreate,
     db: Session = Depends(get_db)
@@ -63,7 +74,7 @@ async def send_message(
             db=db,
             user_id=request.user_id,
             session_id=request.session_id,
-            session_data=request.session_data
+            session_data=request.session_data  # ĐỔI TÊN
         )
         
         # 2. Lấy chat history gần đây để context
@@ -89,7 +100,7 @@ async def send_message(
             session_id=session.id,
             message_type="user",
             content=request.message,
-            message_data={"intent": "user_message"}
+            message_data={"intent": "user_message"}  # ĐỔI TÊN
         )
         
         # 4. Generate AI response
@@ -104,7 +115,7 @@ async def send_message(
             session_id=session.id,
             message_type="assistant",
             content=ai_response,
-            message_data={"model": "phi-2", "tokens": len(ai_response)}
+            message_data={"model": "phi-2", "tokens": len(ai_response)}  # ĐỔI TÊN
         )
         
         # 6. Cập nhật session updated_at
@@ -130,7 +141,7 @@ async def send_message(
             detail=f"Failed to process message: {str(e)}"
         )
 
-@router.post("/messages", response_model=List[schemas.MessageResponse])
+@app.post("/chat/messages", response_model=List[schemas.MessageResponse])
 async def get_messages(
     request: schemas.GetMessagesRequest,
     db: Session = Depends(get_db)
@@ -167,7 +178,7 @@ async def get_messages(
             detail=f"Failed to get messages: {str(e)}"
         )
 
-@router.post("/sessions", response_model=List[schemas.SessionResponse])
+@app.post("/chat/sessions", response_model=List[schemas.SessionResponse])
 async def get_sessions(
     request: schemas.GetSessionsRequest,
     db: Session = Depends(get_db)
@@ -195,7 +206,7 @@ async def get_sessions(
                     message_count=message_count,
                     created_at=session.created_at,
                     updated_at=session.updated_at,
-                    session_data=session.session_data
+                    session_data=session.session_data  # ĐỔI TÊN
                 )
             )
         
@@ -207,7 +218,7 @@ async def get_sessions(
             detail=f"Failed to get sessions: {str(e)}"
         )
 
-@router.post("/history", response_model=List[schemas.ChatHistoryResponse])
+@app.post("/chat/history", response_model=List[schemas.ChatHistoryResponse])
 async def get_chat_history(
     request: schemas.GetSessionsRequest,
     db: Session = Depends(get_db)
@@ -249,7 +260,7 @@ async def get_chat_history(
             detail=f"Failed to get chat history: {str(e)}"
         )
 
-@router.delete("/session/{session_id}")
+@app.delete("/chat/session/{session_id}")
 async def delete_session(
     session_id: int,
     user_id: str,
@@ -267,22 +278,3 @@ async def delete_session(
         )
     
     return {"message": "Session deleted successfully"}
-
-# Tạo app và include router
-app = FastAPI(
-    title="Chatbot Message Service API",
-    description="API để lưu và lấy chat messages - User management từ external service",
-    version="1.0.0"
-)
-
-# CORS configuration
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Include router
-app.include_router(router)
