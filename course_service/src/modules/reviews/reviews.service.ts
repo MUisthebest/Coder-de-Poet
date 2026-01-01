@@ -24,7 +24,7 @@ export class ReviewsService {
     }
   }
 
-  async findByCourse(courseId: number) {
+  async findByCourse(courseId: string) {
     try {
       return await this.repo.findByCourse(courseId);
     } catch (error) {
@@ -32,7 +32,7 @@ export class ReviewsService {
     }
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     try {
       const review = await this.repo.findById(id);
       
@@ -46,7 +46,7 @@ export class ReviewsService {
     }
   }
 
-  async update(id: number, updateReviewDto: UpdateReviewDto) {
+  async update(id: string, updateReviewDto: UpdateReviewDto) {
     try {
       await this.findOne(id); // Check if exists
       return await this.repo.update(id, updateReviewDto);
@@ -55,7 +55,7 @@ export class ReviewsService {
     }
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     try {
       await this.findOne(id); // Check if exists
       return await this.repo.delete(id);
@@ -64,7 +64,7 @@ export class ReviewsService {
     }
   }
 
-  async getAverageRating(courseId: number) {
+  async getAverageRating(courseId: string) {
     try {
       return await this.repo.getAverageRating(courseId);
     } catch (error) {

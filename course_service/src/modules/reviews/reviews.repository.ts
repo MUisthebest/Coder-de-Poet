@@ -44,7 +44,7 @@ export class ReviewsRepository {
 		return rows.map(r => this.mapRow(r));
 	}
 
-	async findByCourse(courseId: number) {
+	async findByCourse(courseId: string) {
 		const query = `
 			SELECT *
 			FROM reviews
@@ -56,7 +56,7 @@ export class ReviewsRepository {
 		return rows.map(r => this.mapRow(r));
 	}
 
-	async findById(id: number) {
+	async findById(id: string) {
 		const query = `
 			SELECT *
 			FROM reviews
@@ -68,7 +68,7 @@ export class ReviewsRepository {
 		return this.mapRow(rows[0]);
 	}
 
-	async update(id: number, dto: UpdateReviewDto) {
+	async update(id: string, dto: UpdateReviewDto) {
 		const fields: string[] = [];
 		const values: any[] = [];
 		let idx = 1;
@@ -100,7 +100,7 @@ export class ReviewsRepository {
 		return this.mapRow(rows[0]);
 	}
 
-	async delete(id: number) {
+	async delete(id: string) {
 		const query = `
 			DELETE FROM reviews
 			WHERE id = $1
@@ -111,7 +111,7 @@ export class ReviewsRepository {
 		return this.mapRow(rows[0]);
 	}
 
-	async getAverageRating(courseId: number) {
+	async getAverageRating(courseId: string) {
 		const query = `
 			SELECT AVG(rating)::float AS average, COUNT(*)::int AS total
 			FROM reviews
