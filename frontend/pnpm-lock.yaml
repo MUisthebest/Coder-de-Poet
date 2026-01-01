@@ -39,13 +39,8 @@ importers:
         specifier: ^5.5.0
         version: 5.5.0(react@19.2.3)
       react-markdown:
-<<<<<<< Updated upstream
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.2.7)(react@19.2.3)
-=======
-        specifier: ^9.0.1
-        version: 9.1.0(@types/react@19.2.7)(react@19.2.3)
->>>>>>> Stashed changes
       react-player:
         specifier: ^3.4.0
         version: 3.4.0(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -59,11 +54,7 @@ importers:
         specifier: 5.0.1
         version: 5.0.1(@babel/plugin-syntax-flow@7.27.1(@babel/core@7.28.5))(@babel/plugin-transform-react-jsx@7.27.1(@babel/core@7.28.5))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@19.2.3)(type-fest@0.21.3)(typescript@4.9.5)
       react-syntax-highlighter:
-<<<<<<< Updated upstream
         specifier: ^15.6.6
-=======
-        specifier: ^15.5.0
->>>>>>> Stashed changes
         version: 15.6.6(react@19.2.3)
       web-vitals:
         specifier: ^2.1.4
@@ -8819,7 +8810,7 @@ snapshots:
       import-fresh: 3.3.1
       parse-json: 5.2.0
       path-type: 4.0.0
-      yaml: 1.10.2
+      yaml: 2.8.2
 
   cross-spawn@7.0.6:
     dependencies:

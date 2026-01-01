@@ -1,33 +1,35 @@
-version: "3.8"
+zookeeper:
+  image: confluentinc/cp-zookeeper:7.5.0
+  environment:
+    ZOOKEEPER_CLIENT_PORT: 2181
+    ZOOKEEPER_TICK_TIME: 2000
+  networks:
+    - learnix_net
+  # Thêm restart policy
+  restart: unless-stopped
 
-services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.6.0
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-    healthcheck:
-      test: ["CMD", "bash", "-lc", "echo ruok | nc localhost 2181 | grep imok"]
-      interval: 10s
-      timeout: 3s
-      retries: 10
-
-  kafka:
-    image: confluentinc/cp-kafka:7.6.0
-    depends_on:
-      zookeeper:
-        condition: service_healthy
-    ports:
-      - "9093:9093"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    healthcheck:
-      test: ["CMD", "bash", "-lc", "kafka-broker-api-versions --bootstrap-server localhost:9092 >/dev/null"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+kafka:
+  image: confluentinc/cp-kafka:7.5.0
+  depends_on:
+    - zookeeper
+  environment:
+    KAFKA_BROKER_ID: 1
+    KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://144.91.74.84:9093
+    KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+    KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+    KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    # Cấu hình thêm cho production
+    KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+  ports:
+    - "9093:9093"
+  networks:
+    - learnix_net
+  restart: unless-stopped
+  # Thêm healthcheck
+  healthcheck:
+    test: ["CMD", "kafka-topics", "--list", "--bootstrap-server", "localhost:9092"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
