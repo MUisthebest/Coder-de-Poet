@@ -100,7 +100,6 @@ const SignIn = () => {
             navigate('/admin', { replace: true });
           }
           else if (result.role === "Instructor") {
-            console.log('kkk')
             navigate('/instructor/dashboard', {replace: true});
           }
           else {
