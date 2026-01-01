@@ -56,9 +56,9 @@ services:
     - .env.prod
     - ./course_service/.env 
     depends_on:
-      - zookeeper:
+      zookeeper:
         condition: service_healthy
-      - kafka:
+      kafka:
         condition: service_healthy
     expose:
       - "3001"
