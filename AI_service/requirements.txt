@@ -6,5 +6,6 @@ requests
 srt
 pydantic
 yt-dlp
+youtube-transcript-api
 
 
