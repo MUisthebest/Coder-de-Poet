@@ -6,7 +6,7 @@ class AuthService {
 
   async login(credentials) {
     try {
-      const response = await api.post('/api/auth/signin', credentials);
+      const response = await api.post('/signin', credentials);
       const { data } = response;
 
       console.log("✅ Login response data:", data);
@@ -27,7 +27,7 @@ class AuthService {
 }
 
   async signup(userData) {
-    const response = await api.post('/api/auth/signup', userData);
+    const response = await api.post('/signup', userData);
     const { accessToken } = response.data;
     this.setAccessToken(accessToken);
     return response.data;
@@ -43,7 +43,7 @@ async socialLogin(provider, accessToken) {
 
     console.log('📤 Sending to backend:', payload);
 
-    const response = await api.post('/api/auth/social-login', payload);
+    const response = await api.post('//social-login', payload);
     const { data } = response;
 
     console.log("✅ Social login response:", data);
@@ -75,7 +75,7 @@ async socialLogin(provider, accessToken) {
 }
 
   async getCurrentUser() {
-    const response = await api.get('/api/auth/me');
+    const response = await api.get('/me');
     return response.data; 
   }
 
@@ -104,7 +104,7 @@ async socialLogin(provider, accessToken) {
   // Refresh token: chỉ gọi API, backend tự đọc cookie
 async refreshToken() {
   try {
-    const response = await api.post('/api/auth/refresh-token', {});
+    const response = await api.post('/refresh-token', {});
     const { accessToken } = response.data;
     
     if (!accessToken) {
@@ -122,12 +122,12 @@ async refreshToken() {
 }
 
   async forgotPassword(email) {
-    const response = await api.post('/api/auth/forgot-password', { email });
+    const response = await api.post('/forgot-password', { email });
     return response.data;
   }
 
   async resetPassword(token, password) {
-    const response = await api.post('/api/auth/reset-password', {
+    const response = await api.post('/reset-password', {
       token,
       password
     });
@@ -136,7 +136,7 @@ async refreshToken() {
 
   async logout() {
     try {
-      await api.post('/api/auth/logout');
+      await api.post('/logout');
     } catch (err) {
       console.error('Logout failed:', err);
     } finally {
@@ -162,7 +162,7 @@ async refreshToken() {
 
   async getInstructorById(userId) {
       try {
-        const { data } = await api.get(`/api/auth/admin/instructors/${userId}`);
+        const { data } = await api.get(`/admin/instructors/${userId}`);
         return { success: true, data };
       } catch (error) {
         return {

@@ -36,7 +36,7 @@ apiCourse.interceptors.response.use(
     const originalRequest = error.config;
 
     // Chỉ xử lý 401 và chưa từng retry
-    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/api/auth/refresh-token')) {
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/refresh-token')) {
       
       if (isRefreshing) {
         // Đang refresh → chờ token mới
