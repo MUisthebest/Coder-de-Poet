@@ -307,18 +307,39 @@ const CourseDetail = () => {
   }
 
   return (
-    <div className="flex flex-col md:flex-row max-w-8xl mx-auto md:p-2 gap-1 min-h-screen overflow-y-auto md:overflow-hidden w-full">
+    <div className="flex flex-col md:flex-row max-w-8xl mx-auto md:p-4 gap-1 min-h-screen overflow-y-auto md:overflow-hidden w-full">
       <div className="flex w-full md:w-[66vw] flex-col gap-1 md:px-10">
         {courseData && (
           <>
             <div className="flex-grow sm:w-[60vw]">
-              <PlayVideo
-                currentLesson={currentLesson}
-                lessons={lessons}
-                courseId={courseData.id}
-                getEmbedUrl={getEmbedUrl}
-                isEnrolled={isEnrolled}
-              />
+              {isEnrolled || user?.role === "Instructor" ? (
+                <PlayVideo
+                  currentLesson={currentLesson}
+                  lessons={lessons}
+                  courseId={courseData.id}
+                  getEmbedUrl={getEmbedUrl}
+                  isEnrolled={isEnrolled}
+                />
+              ) : (
+                <div className="w-[100vw] md:h-[65vh] md:w-[60vw] aspect-video bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl overflow-hidden shadow-lg flex items-center justify-center">
+                  <div className="text-center px-6 py-12 space-y-6">
+                    <div className="text-6xl">📚</div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+                      Enroll to Start Learning
+                    </h2>
+                    <p className="text-gray-600 text-base md:text-lg max-w-sm mx-auto">
+                      Join this course to access all lessons, quizzes, and course materials.
+                    </p>
+                    <button
+                      onClick={handleEnroll}
+                      disabled={enrolling}
+                      className="px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:from-blue-700 hover:to-indigo-700 transition-all text-base md:text-lg disabled:opacity-50"
+                    >
+                      {enrolling ? 'Enrolling...' : (courseData?.access_type === 'premium' ? `💎 Enroll Premium - ${courseData.price || '$49.99'}` : '🎓 Enroll Free')}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mt-1">
@@ -331,36 +352,10 @@ const CourseDetail = () => {
                 enrolling={enrolling}
                 currentLesson={currentLesson}
                 onLessonAdded={fetchLessons}
+                averageRating={averageRating}
+                reviewCount={reviews.length}
+                onOpenReview={() => setShowReviewModal(true)}
               />
-            </div>
-
-            <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-2 flex flex-col gap-2">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Đánh giá khóa học</p>
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-3xl font-bold text-gray-900">{averageRating || 0}</span>
-                    <div className="flex items-center gap-1 text-yellow-500">
-                      {Array.from({ length: 5 }).map((_, idx) => (
-                        <Star key={idx} size={20} fill={idx < Math.round(averageRating) ? "currentColor" : "none"} />
-                      ))}
-                    </div>
-                    <span className="text-sm text-gray-500">({reviews.length} đánh giá)</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
-                    {isEnrolled ? "Đã đăng ký" : "Chưa đăng ký"}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowReviewModal(true)}
-                    className="px-4 py-2 rounded-xl bg-blue-600 text-white font-medium shadow hover:bg-blue-700 transition"
-                  >
-                    Đánh giá khóa học
-                  </button>
-                </div>
-              </div>
             </div>
 
             {showReviewModal && (

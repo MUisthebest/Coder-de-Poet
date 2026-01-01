@@ -79,11 +79,21 @@ const PopularCategories = ({ courses }) => {
               <span className="text-gray-600">Popular tags:</span>
               <span className="font-semibold text-gray-900 ml-1">
                 {(() => {
-                  const allTags = topCourses.flatMap(c => c.tags || []);
+                  // Xử lý tags có thể là object, array hoặc string
+                  const allTags = topCourses.flatMap(c => {
+                    if (!c.tags) return [];
+                    if (Array.isArray(c.tags)) return c.tags;
+                    if (typeof c.tags === 'string') return [c.tags];
+                    if (typeof c.tags === 'object') return Object.values(c.tags).filter(Boolean);
+                    return [];
+                  });
+                  
                   const tagCounts = {};
                   
                   allTags.forEach(tag => {
-                    tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                    if (tag) {
+                      tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                    }
                   });
                   
                   const popularTags = Object.entries(tagCounts)
