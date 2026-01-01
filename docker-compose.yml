@@ -96,10 +96,10 @@ services:
       kafka:
         condition: service_healthy
     expose:
-      - "3001"
+      - "3000"
     environment:
       NODE_ENV: production
-      PORT: "3001"
+      PORT: "3000"
       KAFKA_BROKERS: kafka:9092
       KAFKA_HOST: kafka
       KAFKA_PORT: "9092"

@@ -202,7 +202,8 @@ builder.Services.AddCors(options =>
                 "https://coder-de-poet-2.onrender.com",
                 "https://coder-de-poet-4.onrender.com",
                 "http://localhost:3001",
-                "http://localhost:3000"
+                "http://localhost:3000",
+                "http://144.91.74.84"
             };
         }
     }
