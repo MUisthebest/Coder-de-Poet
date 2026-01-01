@@ -1,0 +1,40 @@
+# OS / IDE
+**/.DS_Store
+**/Thumbs.db
+**/.vscode
+**/.idea
+
+# Git
+.git
+.gitignore
+
+# Node
+**/node_modules
+**/dist
+**/build
+**/.next
+**/.turbo
+**/.cache
+**/.parcel-cache
+**/coverage
+**/*.log
+
+# Python
+**/__pycache__
+**/*.pyc
+**/.venv
+**/venv
+
+# .NET
+**/bin
+**/obj
+
+# Large / misc
+**/*.mp4
+**/*.mov
+**/*.mkv
+**/*.zip
+**/*.7z
+**/*.tar
+**/*.tar.gz
+**/downloads

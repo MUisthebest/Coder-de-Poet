@@ -37,6 +37,28 @@ async function bootstrap() {
     maxAge: 86400, // 24 hours
   });
   
+  // Thêm global validation pipe
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    transform: true,
+    forbidNonWhitelisted: true,
+  }));
+
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.KAFKA,
+    options: {
+      client: {
+        clientId: 'course-service-consumer',
+        brokers
+      },
+      consumer: {
+        groupId: 'course_service_group-events', 
+      },
+    },
+  });
+
+  await app.startAllMicroservices();
+  
   const port = process.env.PORT ?? 3001;
   await app.listen(port);
   console.log(`Application is running on: http://localhost:${port}`);
