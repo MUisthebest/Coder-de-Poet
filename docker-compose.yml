@@ -45,7 +45,7 @@ services:
     networks:
       - learnix_net
 
-      
+
   # NestJS Course service
   course_service:
     build:
@@ -57,6 +57,7 @@ services:
       - "3000"
     networks:
       - learnix_net
+
 
   # Python AI
   ai_service:
