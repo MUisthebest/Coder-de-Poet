@@ -147,9 +147,9 @@ export default function ProblemList() {
                 </div>
 
                 {/* Card */}
-                <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg max-h-[85vh]">
+                <div className="overflow-hidden w-full rounded-2xl border border-gray-200 bg-white shadow-lg max-h-[85vh]">
                     {/* Card header */}
-                    <div className="flex flex-col gap-3 border-b border-gray-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col w-full gap-3 border-b border-gray-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="text-sm text-gray-600">
                             {loading ? "Loading..." : `${total} problems`}
                         </div>
@@ -208,7 +208,7 @@ export default function ProblemList() {
                             </div>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto w-full">
                             <table className="min-w-[900px] w-full">
                                 <thead className="sticky top-0 bg-gray-50">
                                     <tr className="border-b border-gray-200 text-left text-xs font-semibold tracking-wide text-gray-700">
