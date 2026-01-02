@@ -47,8 +47,8 @@ function SkeletonRow({ i }) {
 }
 
 function SortCaret({ active, dir }) {
-    if (!active) return <span className="ml-2 text-gray-400">^v</span>;
-    return <span className="ml-2 text-gray-800">{dir === "asc" ? "^" : "v"}</span>;
+    if (!active) return <span className="ml-2 text-gray-400">↕</span>;
+    return <span className="ml-2">{dir === "asc" ? "↑" : "↓"}</span>;
 }
 
 export default function ProblemList() {
@@ -122,22 +122,26 @@ export default function ProblemList() {
         <div className="min-h-screen bg-gray-50 text-gray-900">
             <div className="mx-auto max-w-6xl px-4 py-8">
                 {/* Header */}
-                <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3">
                         <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-400 font-extrabold text-white">
                             L
                         </div>
                         <div>
-                            <div className="text-lg font-bold text-gray-900">Problemset</div>
-                            <div className="text-sm text-gray-600">LeetCode-style list from your API</div>
+                            <h1 className="text-2xl font-bold text-gray-900">Problemset</h1>
+                            <p className="text-sm text-gray-600">LeetCode-style list from your API</p>
                         </div>
                     </div>
 
-                    <div className="w-full sm:w-[380px]">
-                        <div className="flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 shadow-sm focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200">
-                            <span className="text-gray-500">Search</span>
+                    <div className="w-full sm:w-96">
+                        <div className="relative">
+                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
                             <input
-                                className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
+                                className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                 placeholder="Search by title or slug..."
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
@@ -146,12 +150,12 @@ export default function ProblemList() {
                     </div>
                 </div>
 
-                {/* Card */}
-                <div className="overflow-hidden w-full rounded-2xl border border-gray-200 bg-white shadow-lg max-h-[85vh]">
-                    {/* Card header */}
-                    <div className="flex flex-col w-full gap-3 border-b border-gray-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                {/* Main Card */}
+                <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
+                    {/* Card header - Stats & Pagination */}
+                    <div className="flex flex-col gap-4 border-b border-gray-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="text-sm text-gray-600">
-                            {loading ? "Loading..." : `${total} problems`}
+                            {loading ? "Loading..." : `Showing ${pageItems.length} of ${total} problems`}
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -173,7 +177,7 @@ export default function ProblemList() {
                             </button>
 
                             <span className="text-sm text-gray-600">
-                                Page <b className="text-gray-900">{safePage}</b> / {totalPages}
+                                Page <span className="font-semibold text-gray-900">{safePage}</span> of {totalPages}
                             </span>
 
                             <button
@@ -195,89 +199,117 @@ export default function ProblemList() {
                         </div>
                     </div>
 
-                    {/* Error */}
+                    {/* Error State */}
                     {err ? (
-                        <div className="px-4 py-4">
-                            <div className="font-semibold text-red-600">Couldn't load problems</div>
-                            <div className="mt-1 text-sm text-red-500">
-                                {err}
-                                <div className="mt-2 text-gray-600">
-                                    If your backend is on a different port, make sure CORS allows{" "}
-                                    <code className="rounded bg-gray-100 px-1 py-0.5">http://localhost:3000</code>.
+                        <div className="px-6 py-8">
+                            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                                <div className="flex items-center">
+                                    <svg className="mr-3 h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                    </svg>
+                                    <h3 className="text-sm font-medium text-red-800">Failed to load problems</h3>
+                                </div>
+                                <div className="mt-2 text-sm text-red-700">
+                                    {err}
+                                    <div className="mt-2 text-red-600">
+                                        If your backend is on a different port, make sure CORS allows{" "}
+                                        <code className="rounded bg-red-100 px-1 py-0.5">http://localhost:3000</code>.
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto w-full">
-                            <table className="min-w-[900px] w-full">
-                                <thead className="sticky top-0 bg-gray-50">
-                                    <tr className="border-b border-gray-200 text-left text-xs font-semibold tracking-wide text-gray-700">
-                                        <th className="px-4 py-3 w-[90px]">Status</th>
-                                        <th className="px-4 py-3 w-[60px]">#</th>
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr className="text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
+                                        <th className="px-6 py-3 w-24">Status</th>
+                                        <th className="px-6 py-3 w-16">#</th>
 
                                         <th
-                                            className="px-4 py-3 cursor-pointer select-none hover:text-gray-900"
+                                            className="px-6 py-3 cursor-pointer select-none hover:bg-gray-100 hover:text-gray-900"
                                             onClick={() => toggleSort("title")}
                                         >
-                                            Title <SortCaret active={sortKey === "title"} dir={sortDir} />
+                                            <div className="flex items-center">
+                                                Title
+                                                <SortCaret active={sortKey === "title"} dir={sortDir} />
+                                            </div>
                                         </th>
 
                                         <th
-                                            className="px-4 py-3 w-[240px] cursor-pointer select-none hover:text-gray-900"
+                                            className="px-6 py-3 w-64 cursor-pointer select-none hover:bg-gray-100 hover:text-gray-900"
                                             onClick={() => toggleSort("slug")}
                                         >
-                                            Slug <SortCaret active={sortKey === "slug"} dir={sortDir} />
+                                            <div className="flex items-center">
+                                                Slug
+                                                <SortCaret active={sortKey === "slug"} dir={sortDir} />
+                                            </div>
                                         </th>
 
                                         <th
-                                            className="px-4 py-3 w-[420px] cursor-pointer select-none hover:text-gray-900"
+                                            className="px-6 py-3 w-80 cursor-pointer select-none hover:bg-gray-100 hover:text-gray-900"
                                             onClick={() => toggleSort("id")}
                                         >
-                                            ID <SortCaret active={sortKey === "id"} dir={sortDir} />
+                                            <div className="flex items-center">
+                                                ID
+                                                <SortCaret active={sortKey === "id"} dir={sortDir} />
+                                            </div>
                                         </th>
                                     </tr>
                                 </thead>
 
-                                <tbody className="flex flex-col max-h-[60vh] w-[100%] overflow-auto">
+                                <tbody className="divide-y divide-gray-200 bg-white">
                                     {loading
                                         ? Array.from({ length: PAGE_SIZE }, (_, i) => <SkeletonRow key={i} i={i} />)
                                         : pageItems.map((p, idx) => (
-                                            <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50 w-full">
-                                                <td className="px-4 py-3">
-                                                    <span className="inline-flex items-center justify-center rounded-full border border-gray-300 bg-gray-100 px-3 py-1 text-xs text-gray-600">
+                                            <tr key={p.id} className="hover:bg-gray-50 transition-colors duration-150">
+                                                <td className="whitespace-nowrap px-6 py-4">
+                                                    <span className="inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
                                                         -
                                                     </span>
                                                 </td>
 
-                                                <td className="px-4 py-3 text-gray-500">
+                                                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
                                                     {(safePage - 1) * PAGE_SIZE + idx + 1}
                                                 </td>
 
-                                                <td className="px-4 py-3">
+                                                <td className="px-6 py-4">
                                                     <Link
-                                                        className="font-medium text-gray-900 hover:text-blue-600 hover:underline underline-offset-4"
+                                                        className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
                                                         to={`/ide/problems/${p.id}`}
                                                     >
                                                         {p.title}
                                                     </Link>
                                                 </td>
 
-                                                <td className="px-4 py-3">
-                                                    <code className="rounded-full border border-gray-300 bg-gray-100 px-3 py-1 text-xs text-gray-800">
+                                                <td className="px-6 py-4">
+                                                    <code className="rounded-md bg-gray-100 px-2 py-1 text-xs font-mono text-gray-800">
                                                         {p.slug}
                                                     </code>
                                                 </td>
 
-                                                <td className="px-4 py-3 font-mono text-sm text-gray-700">
-                                                    {p.id}
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm font-mono text-gray-700 truncate max-w-xs">
+                                                        {p.id}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
 
                                     {!loading && pageItems.length === 0 && (
                                         <tr>
-                                            <td colSpan={5} className="px-4 py-10 text-center text-gray-500">
-                                                No problems match "{query}".
+                                            <td colSpan={5} className="px-6 py-12 text-center">
+                                                <div className="flex flex-col items-center justify-center">
+                                                    <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    <p className="mt-2 text-sm text-gray-500">
+                                                        No problems found matching "{query}"
+                                                    </p>
+                                                    <p className="text-xs text-gray-400 mt-1">
+                                                        Try adjusting your search terms
+                                                    </p>
+                                                </div>
                                             </td>
                                         </tr>
                                     )}
@@ -286,9 +318,16 @@ export default function ProblemList() {
                         </div>
                     )}
 
-                    <div className="border-t border-gray-200 px-4 py-3 text-sm text-gray-600">
-                        Tip: Click column headers to sort. Click a title to open{" "}
-                        <code className="rounded bg-gray-100 px-1 py-0.5">/problems/:id</code>.
+                    {/* Footer */}
+                    <div className="border-t border-gray-200 px-6 py-3">
+                        <div className="text-xs text-gray-500">
+                            <span className="inline-flex items-center gap-1">
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Click column headers to sort • Click problem title to open details
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
