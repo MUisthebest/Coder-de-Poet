@@ -3,6 +3,7 @@ import instructorService from "../../services/instructorService";
 import { FiUploadCloud, FiVideo, FiBook, FiFileText, FiX, FiImage } from "react-icons/fi";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
+import getThumbnailUrl from "../../utils/getThumbnailUrl";
 
 const quillModules = {
   toolbar: [
@@ -27,19 +28,8 @@ const getEmbedUrl = (url) => {
 
 // Lấy thumbnail từ youtube
 const getThumbnail = (url) => {
-  if (!url) return "";
-  if (url.includes("youtube.com/watch")) {
-    const id = url.split("v=")[1]?.split("&")[0];
-    return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : "";
-  }
-  // Nếu là Cloudinary video, có thể tạo thumbnail từ URL video
-  if (url.includes("cloudinary.com") && url.includes("/video/upload")) {
-    // Thay đổi từ video thành image và thêm thumbnail transformation
-    return url
-      .replace('/video/upload/', '/image/upload/so_0/')
-      .replace(/\.[^/.]+$/, '.jpg'); // Đổi extension thành .jpg
-  }
-  return "";
+  if (!url) return null;
+  return getThumbnailUrl(url);
 };
 
 // Tạo placeholder thumbnail nếu không có video
