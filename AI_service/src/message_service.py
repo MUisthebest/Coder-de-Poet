@@ -10,7 +10,7 @@ from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 
 from .models import GenerateLessonQuizCommand, LessonQuizGeneratedEvent
 
-KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092", "localhost:9093")
+KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
 AI_INPUT_TOPIC = os.getenv("AI_INPUT_TOPIC", "ai.generate_lesson_quiz")
 AI_OUTPUT_TOPIC = os.getenv("AI_OUTPUT_TOPIC", "ai.lesson_quiz_generated")
 AI_CONSUMER_GROUP = os.getenv("AI_CONSUMER_GROUP", "ai_lesson_quiz_service_group")
