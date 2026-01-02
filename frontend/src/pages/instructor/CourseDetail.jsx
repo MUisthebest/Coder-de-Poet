@@ -285,7 +285,7 @@ const CourseDetailRoute = () => {
       </div>
 
       {/* Right sticky profile sidebar */}
-      <div className="flex justify-center items-start sticky top-0">
+      <div className="flex justify-center items-center sticky top-0">
         <ProfileSidebar 
           weeklyActivities={weeklyActivities}
           myCourses={myCourses}

@@ -236,7 +236,7 @@ const MyCourses = ({ courses: coursesProp = [], user }) => {
 
   return (
     <div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">My Courses</h3>
+      <h3 className="text-[calc(1vw_+_12px)] font-semibold text-gray-900 mb-4">My Courses</h3>
 
       {loading && initialLoad ? (
         <div className="flex justify-center items-center py-8">
