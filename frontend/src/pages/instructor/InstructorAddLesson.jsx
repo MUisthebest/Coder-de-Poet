@@ -3,7 +3,7 @@ import instructorService from "../../services/instructorService";
 import { FiUploadCloud, FiVideo, FiBook, FiFileText, FiX, FiImage } from "react-icons/fi";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
-import getThumbnailUrl from "../../utils/getThumbnailUrl";
+import {getThumbnailUrl} from "../../utils/getThumbnailUrl";
 
 const quillModules = {
   toolbar: [
