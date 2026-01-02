@@ -219,8 +219,8 @@ export default function ProblemList() {
                             </div>
                         </div>
                     ) : (
-                        <div className="overflow-hidden">
-                            <div className="overflow-x-auto">
+                        <div className="overflow-hidden  h-[calc(80vh_-_250px)]">
+                            <div className="overflow-x-auto h-full">
                                 <table className="min-w-full">
                                     <thead className="bg-gray-50 sticky top-0 z-10">
                                         <tr className="text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
