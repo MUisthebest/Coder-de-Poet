@@ -224,61 +224,50 @@ export default function ProblemList() {
                                 <table className="min-w-full">
                                     <thead className="bg-gray-50 sticky top-0 z-10">
                                         <tr className="text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
-                                            <th className="px-6 py-3 w-24">Status</th>
-                                            <th className="px-6 py-3 w-16">#</th>
-
+                                            <th className="px-6 py-3 w-24 whitespace-nowrap">Status</th>
+                                            <th className="px-6 py-3 w-16 whitespace-nowrap">#</th>
                                             <th
                                                 className="px-6 py-3 cursor-pointer select-none hover:bg-gray-100 hover:text-gray-900"
                                                 onClick={() => toggleSort("title")}
                                             >
-                                                <div className="flex items-center">
+                                                <div className="flex items-center whitespace-nowrap">
                                                     Title
                                                     <SortCaret active={sortKey === "title"} dir={sortDir} />
                                                 </div>
                                             </th>
-
                                             <th
-                                                className="px-6 py-3 w-64 cursor-pointer select-none hover:bg-gray-100 hover:text-gray-900"
+                                                className="px-6 py-3 cursor-pointer select-none hover:bg-gray-100 hover:text-gray-900"
                                                 onClick={() => toggleSort("slug")}
                                             >
-                                                <div className="flex items-center">
+                                                <div className="flex items-center whitespace-nowrap">
                                                     Slug
                                                     <SortCaret active={sortKey === "slug"} dir={sortDir} />
                                                 </div>
                                             </th>
-
                                             <th
-                                                className="px-6 py-3 w-80 cursor-pointer select-none hover:bg-gray-100 hover:text-gray-900"
+                                                className="px-6 py-3 cursor-pointer select-none hover:bg-gray-100 hover:text-gray-900"
                                                 onClick={() => toggleSort("id")}
                                             >
-                                                <div className="flex items-center">
+                                                <div className="flex items-center whitespace-nowrap">
                                                     ID
                                                     <SortCaret active={sortKey === "id"} dir={sortDir} />
                                                 </div>
                                             </th>
                                         </tr>
                                     </thead>
-                                </table>
-                            </div>
-
-                            {/* Scrollable tbody */}
-                            <div className="overflow-y-auto max-h-[calc(80vh_-_250px)]">
-                                <table className="min-w-full">
                                     <tbody className="divide-y divide-gray-200 bg-white">
                                         {loading
                                             ? Array.from({ length: PAGE_SIZE }, (_, i) => <SkeletonRow key={i} i={i} />)
                                             : pageItems.map((p, idx) => (
                                                 <tr key={p.id} className="hover:bg-gray-50 transition-colors duration-150">
-                                                    <td className="whitespace-nowrap px-6 py-4">
+                                                    <td className="whitespace-nowrap px-6 py-4 w-24">
                                                         <span className="inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
                                                             -
                                                         </span>
                                                     </td>
-
-                                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 w-16">
                                                         {(safePage - 1) * PAGE_SIZE + idx + 1}
                                                     </td>
-
                                                     <td className="px-6 py-4">
                                                         <Link
                                                             className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
@@ -287,15 +276,13 @@ export default function ProblemList() {
                                                             {p.title}
                                                         </Link>
                                                     </td>
-
                                                     <td className="px-6 py-4">
                                                         <code className="rounded-md bg-gray-100 px-2 py-1 text-xs font-mono text-gray-800">
                                                             {p.slug}
                                                         </code>
                                                     </td>
-
                                                     <td className="px-6 py-4">
-                                                        <div className="text-sm font-mono text-gray-700 truncate max-w-xs">
+                                                        <div className="text-sm font-mono text-gray-700 truncate">
                                                             {p.id}
                                                         </div>
                                                     </td>
