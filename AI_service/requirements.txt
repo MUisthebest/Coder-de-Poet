@@ -9,4 +9,6 @@ yt-dlp
 youtube-transcript-api
 openai
 torch
+transformers==4.44.2
+sentencepiece
 
