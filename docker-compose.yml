@@ -144,6 +144,15 @@ services:
     environment:
       ASPNETCORE_URLS: http://0.0.0.0:8082
       ASPNETCORE_ENVIRONMENT: Production
+      RUNNER_IMAGE: learnix-sandbox-runner:latest
+      HOST_SANDBOX_DIR: /tmp
+      CONTAINER_SANDBOX_DIR: /tmp
+      SANDBOX_TIMEOUT_MS: "2500"
+      SANDBOX_CPU: "1.0"
+      SANDBOX_MEM: "256m"
+      SANDBOX_PIDS: "128"
+      MAX_OUTPUT_BYTES: "1048576"
+
     env_file:
       - .env.prod
     expose:
