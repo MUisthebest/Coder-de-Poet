@@ -21,7 +21,7 @@ public class RunController(IdeDbContext db, JudgeService judge) : ControllerBase
             return BadRequest(new { error = "unsupported language" });
 
         var p = await db.Problems
-            .AsSplitQuery() // giảm warning MultipleCollectionInclude + tránh query nặng
+            .AsSplitQuery() 
             .Include(x => x.Templates)
             .Include(x => x.Testcases)
             .FirstOrDefaultAsync(x => x.Id == req.ProblemId);
