@@ -68,8 +68,9 @@ const InstructorAddLesson = ({ onClose, onSuccess, MyCourse, preSelectedCourse }
   useEffect(() => {
     // Khi courseId thay đổi, tìm thông tin course
     if (courseId) {
-      const course = MyCourse.find(c => c.id === courseId);
-      setSelectedCourseData(course || null);
+      // vì MyCourse được truyền [course]
+      const course = MyCourse[0] !== null ? MyCourse[0] : null;
+      setSelectedCourseData(course);
     }
   }, [courseId, MyCourse]);
 
