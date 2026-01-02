@@ -147,7 +147,7 @@ export default function ProblemList() {
                 </div>
 
                 {/* Card */}
-                <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg max-h-[70vh]">
+                <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg max-h-[80vh]">
                     {/* Card header */}
                     <div className="flex flex-col gap-3 border-b border-gray-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="text-sm text-gray-600">
@@ -209,7 +209,7 @@ export default function ProblemList() {
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="min-w-[900px] w-full overflow-auto max-h-[40vh]">
+                            <table className="min-w-[900px] w-full">
                                 <thead className="sticky top-0 bg-gray-50">
                                     <tr className="border-b border-gray-200 text-left text-xs font-semibold tracking-wide text-gray-700">
                                         <th className="px-4 py-3 w-[90px]">Status</th>
@@ -238,7 +238,7 @@ export default function ProblemList() {
                                     </tr>
                                 </thead>
 
-                                <tbody>
+                                <tbody className="flex flex-col max-h-[60vh] overflow-auto">
                                     {loading
                                         ? Array.from({ length: PAGE_SIZE }, (_, i) => <SkeletonRow key={i} i={i} />)
                                         : pageItems.map((p, idx) => (
