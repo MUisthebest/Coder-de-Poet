@@ -195,6 +195,53 @@ const instructorService = {
             throw error;
         }   
     },
+
+    // Review services
+    getReviews: async () => {
+        try {
+            const token = authService.getStoredToken();
+            const response = await apiCourse.get('/reviews', 
+                token ? { headers: { Authorization: `Bearer ${token}` } } : undefined
+            );
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching reviews:', error);
+            throw error;
+        }
+    },
+
+    getReviewsByCourse: async (courseId) => {
+        try {
+            const token = authService.getStoredToken();
+            const response = await apiCourse.get('/reviews', 
+                token ? { headers: { Authorization: `Bearer ${token}` } } : undefined
+            );
+            const data = Array.isArray(response.data) ? response.data : response.data?.items || response.data?.reviews || [];
+            return data.filter((r) => String(r.courseId ?? r.course_id) === String(courseId));
+        } catch (error) {
+            console.error('Error fetching course reviews:', error);
+            throw error;
+        }
+    },
+
+    createReview: async (reviewData) => {
+        try {
+            const token = authService.getStoredToken();
+            const response = await apiCourse.post('/reviews', reviewData,
+                token ? { headers: { Authorization: `Bearer ${token}` } } : undefined
+            );
+            return response.data;
+        } catch (error) {
+            console.error('Error creating review:', error);
+            throw error;
+        }
+    },
+
+    calculateAverageRating: (reviews) => {
+        if (!reviews || reviews.length === 0) return 0;
+        const sum = reviews.reduce((acc, r) => acc + Number(r.rating || 0), 0);
+        return Number((sum / reviews.length).toFixed(1));
+    },
 }
 
 export default instructorService;

@@ -1,25 +1,27 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\auth_service.csproj": {}
+    "D:\\HCMUS\\1Web\\FinalProject\\Coder-de-Poet\\auth_service\\auth_service.csproj": {}
   },
   "projects": {
-    "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\auth_service.csproj": {
+    "D:\\HCMUS\\1Web\\FinalProject\\Coder-de-Poet\\auth_service\\auth_service.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\auth_service.csproj",
+        "projectUniqueName": "D:\\HCMUS\\1Web\\FinalProject\\Coder-de-Poet\\auth_service\\auth_service.csproj",
         "projectName": "auth_service",
-        "projectPath": "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\auth_service.csproj",
-        "packagesPath": "C:\\Users\\ASUS\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\obj\\",
+        "projectPath": "D:\\HCMUS\\1Web\\FinalProject\\Coder-de-Poet\\auth_service\\auth_service.csproj",
+        "packagesPath": "C:\\Users\\NamTran\\.nuget\\packages\\",
+        "outputPath": "D:\\HCMUS\\1Web\\FinalProject\\Coder-de-Poet\\auth_service\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\ASUS\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\NamTran\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
