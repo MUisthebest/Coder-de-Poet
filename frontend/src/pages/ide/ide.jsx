@@ -27,19 +27,19 @@ function compare(a, b, key, dir) {
 function SkeletonRow({ i }) {
     return (
         <tr key={i} className="border-b border-gray-200">
-            <td className="py-3 px-4">
+            <td className="py-3 px-6">
                 <div className="h-6 w-14 rounded-full bg-gray-200 animate-pulse" />
             </td>
-            <td className="py-3 px-4">
+            <td className="py-3 px-6">
                 <div className="h-4 w-10 rounded bg-gray-200 animate-pulse" />
             </td>
-            <td className="py-3 px-4">
+            <td className="py-3 px-6">
                 <div className="h-4 w-64 rounded bg-gray-200 animate-pulse" />
             </td>
-            <td className="py-3 px-4">
+            <td className="py-3 px-6">
                 <div className="h-4 w-40 rounded bg-gray-200 animate-pulse" />
             </td>
-            <td className="py-3 px-4">
+            <td className="py-3 px-6">
                 <div className="h-4 w-72 rounded bg-gray-200 animate-pulse" />
             </td>
         </tr>
@@ -219,102 +219,109 @@ export default function ProblemList() {
                             </div>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr className="text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
-                                        <th className="px-6 py-3 w-24">Status</th>
-                                        <th className="px-6 py-3 w-16">#</th>
+                        <div className="overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full">
+                                    <thead className="bg-gray-50 sticky top-0 z-10">
+                                        <tr className="text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
+                                            <th className="px-6 py-3 w-24">Status</th>
+                                            <th className="px-6 py-3 w-16">#</th>
 
-                                        <th
-                                            className="px-6 py-3 cursor-pointer select-none hover:bg-gray-100 hover:text-gray-900"
-                                            onClick={() => toggleSort("title")}
-                                        >
-                                            <div className="flex items-center">
-                                                Title
-                                                <SortCaret active={sortKey === "title"} dir={sortDir} />
-                                            </div>
-                                        </th>
+                                            <th
+                                                className="px-6 py-3 cursor-pointer select-none hover:bg-gray-100 hover:text-gray-900"
+                                                onClick={() => toggleSort("title")}
+                                            >
+                                                <div className="flex items-center">
+                                                    Title
+                                                    <SortCaret active={sortKey === "title"} dir={sortDir} />
+                                                </div>
+                                            </th>
 
-                                        <th
-                                            className="px-6 py-3 w-64 cursor-pointer select-none hover:bg-gray-100 hover:text-gray-900"
-                                            onClick={() => toggleSort("slug")}
-                                        >
-                                            <div className="flex items-center">
-                                                Slug
-                                                <SortCaret active={sortKey === "slug"} dir={sortDir} />
-                                            </div>
-                                        </th>
+                                            <th
+                                                className="px-6 py-3 w-64 cursor-pointer select-none hover:bg-gray-100 hover:text-gray-900"
+                                                onClick={() => toggleSort("slug")}
+                                            >
+                                                <div className="flex items-center">
+                                                    Slug
+                                                    <SortCaret active={sortKey === "slug"} dir={sortDir} />
+                                                </div>
+                                            </th>
 
-                                        <th
-                                            className="px-6 py-3 w-80 cursor-pointer select-none hover:bg-gray-100 hover:text-gray-900"
-                                            onClick={() => toggleSort("id")}
-                                        >
-                                            <div className="flex items-center">
-                                                ID
-                                                <SortCaret active={sortKey === "id"} dir={sortDir} />
-                                            </div>
-                                        </th>
-                                    </tr>
-                                </thead>
+                                            <th
+                                                className="px-6 py-3 w-80 cursor-pointer select-none hover:bg-gray-100 hover:text-gray-900"
+                                                onClick={() => toggleSort("id")}
+                                            >
+                                                <div className="flex items-center">
+                                                    ID
+                                                    <SortCaret active={sortKey === "id"} dir={sortDir} />
+                                                </div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
 
-                                <tbody className="divide-y divide-gray-200 bg-white">
-                                    {loading
-                                        ? Array.from({ length: PAGE_SIZE }, (_, i) => <SkeletonRow key={i} i={i} />)
-                                        : pageItems.map((p, idx) => (
-                                            <tr key={p.id} className="hover:bg-gray-50 transition-colors duration-150">
-                                                <td className="whitespace-nowrap px-6 py-4">
-                                                    <span className="inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-                                                        -
-                                                    </span>
-                                                </td>
+                            {/* Scrollable tbody */}
+                            <div className="overflow-y-auto max-h-[calc(70vh_-_250px)]">
+                                <table className="min-w-full">
+                                    <tbody className="divide-y divide-gray-200 bg-white">
+                                        {loading
+                                            ? Array.from({ length: PAGE_SIZE }, (_, i) => <SkeletonRow key={i} i={i} />)
+                                            : pageItems.map((p, idx) => (
+                                                <tr key={p.id} className="hover:bg-gray-50 transition-colors duration-150">
+                                                    <td className="whitespace-nowrap px-6 py-4">
+                                                        <span className="inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+                                                            -
+                                                        </span>
+                                                    </td>
 
-                                                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                                                    {(safePage - 1) * PAGE_SIZE + idx + 1}
-                                                </td>
+                                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                                                        {(safePage - 1) * PAGE_SIZE + idx + 1}
+                                                    </td>
 
-                                                <td className="px-6 py-4">
-                                                    <Link
-                                                        className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                                                        to={`/ide/problems/${p.id}`}
-                                                    >
-                                                        {p.title}
-                                                    </Link>
-                                                </td>
+                                                    <td className="px-6 py-4">
+                                                        <Link
+                                                            className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                                                            to={`/ide/problems/${p.id}`}
+                                                        >
+                                                            {p.title}
+                                                        </Link>
+                                                    </td>
 
-                                                <td className="px-6 py-4">
-                                                    <code className="rounded-md bg-gray-100 px-2 py-1 text-xs font-mono text-gray-800">
-                                                        {p.slug}
-                                                    </code>
-                                                </td>
+                                                    <td className="px-6 py-4">
+                                                        <code className="rounded-md bg-gray-100 px-2 py-1 text-xs font-mono text-gray-800">
+                                                            {p.slug}
+                                                        </code>
+                                                    </td>
 
-                                                <td className="px-6 py-4">
-                                                    <div className="text-sm font-mono text-gray-700 truncate max-w-xs">
-                                                        {p.id}
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-sm font-mono text-gray-700 truncate max-w-xs">
+                                                            {p.id}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+
+                                        {!loading && pageItems.length === 0 && (
+                                            <tr>
+                                                <td colSpan={5} className="px-6 py-12 text-center">
+                                                    <div className="flex flex-col items-center justify-center">
+                                                        <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        <p className="mt-2 text-sm text-gray-500">
+                                                            No problems found matching "{query}"
+                                                        </p>
+                                                        <p className="text-xs text-gray-400 mt-1">
+                                                            Try adjusting your search terms
+                                                        </p>
                                                     </div>
                                                 </td>
                                             </tr>
-                                        ))}
-
-                                    {!loading && pageItems.length === 0 && (
-                                        <tr>
-                                            <td colSpan={5} className="px-6 py-12 text-center">
-                                                <div className="flex flex-col items-center justify-center">
-                                                    <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                    <p className="mt-2 text-sm text-gray-500">
-                                                        No problems found matching "{query}"
-                                                    </p>
-                                                    <p className="text-xs text-gray-400 mt-1">
-                                                        Try adjusting your search terms
-                                                    </p>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
 
