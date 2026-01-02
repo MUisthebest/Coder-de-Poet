@@ -242,7 +242,7 @@ export default function ProblemList() {
                                     {loading
                                         ? Array.from({ length: PAGE_SIZE }, (_, i) => <SkeletonRow key={i} i={i} />)
                                         : pageItems.map((p, idx) => (
-                                            <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                            <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50 w-full">
                                                 <td className="px-4 py-3">
                                                     <span className="inline-flex items-center justify-center rounded-full border border-gray-300 bg-gray-100 px-3 py-1 text-xs text-gray-600">
                                                         -
