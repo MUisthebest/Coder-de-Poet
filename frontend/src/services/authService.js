@@ -43,7 +43,7 @@ async socialLogin(provider, accessToken) {
 
     console.log('📤 Sending to backend:', payload);
 
-    const response = await api.post('//social-login', payload);
+    const response = await api.post('/social-login', payload);
     const { data } = response;
 
     console.log("✅ Social login response:", data);
