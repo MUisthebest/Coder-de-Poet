@@ -238,7 +238,7 @@ export default function ProblemList() {
                                     </tr>
                                 </thead>
 
-                                <tbody className="flex flex-col max-h-[60vh] overflow-auto w-full">
+                                <tbody className="flex flex-col max-h-[60vh] w-[100%] overflow-auto">
                                     {loading
                                         ? Array.from({ length: PAGE_SIZE }, (_, i) => <SkeletonRow key={i} i={i} />)
                                         : pageItems.map((p, idx) => (
