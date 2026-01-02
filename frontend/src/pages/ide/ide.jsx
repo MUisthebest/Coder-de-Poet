@@ -262,7 +262,7 @@ export default function ProblemList() {
                             </div>
 
                             {/* Scrollable tbody */}
-                            <div className="overflow-y-auto max-h-[calc(70vh_-_250px)]">
+                            <div className="overflow-y-auto max-h-[calc(80vh_-_250px)]">
                                 <table className="min-w-full">
                                     <tbody className="divide-y divide-gray-200 bg-white">
                                         {loading
