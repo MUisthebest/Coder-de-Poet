@@ -3,7 +3,6 @@ import instructorService from "../../services/instructorService";
 import { FiUploadCloud, FiVideo, FiBook, FiFileText, FiX, FiImage } from "react-icons/fi";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
-import {getThumbnailUrl} from "../../utils/getThumbnailUrl";
 
 const quillModules = {
   toolbar: [
@@ -26,15 +25,112 @@ const getEmbedUrl = (url) => {
   return url;
 };
 
-// Lấy thumbnail từ youtube
+// Cải tiến hàm lấy thumbnail
 const getThumbnail = (url) => {
-  if (!url) return null;
-  return getThumbnailUrl(url);
+  if (!url) return "";
+  
+  // YouTube video
+  if (url.includes("youtube.com/watch") || url.includes("youtu.be/")) {
+    let videoId = "";
+    
+    // Xử lý nhiều định dạng YouTube URL
+    if (url.includes("youtube.com/watch")) {
+      videoId = url.split("v=")[1]?.split("&")[0];
+    } else if (url.includes("youtu.be/")) {
+      videoId = url.split("youtu.be/")[1]?.split("?")[0];
+    }
+    
+    if (videoId) {
+      // Các lựa chọn thumbnail chất lượng khác nhau
+      return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    }
+    return "";
+  }
+  
+  // Cloudinary video - Cải tiến để có nhiều tùy chọn
+  if (url.includes("cloudinary.com") && url.includes("/video/upload/")) {
+    // Tách URL để xử lý
+    const urlParts = url.split('/upload/');
+    if (urlParts.length < 2) return "";
+    
+    const transformation = urlParts[1];
+    
+    // Các tùy chọn thumbnail khác nhau từ Cloudinary:
+    // 1. Thumbnail từ frame đầu tiên (so_0)
+    // 2. Thumbnail từ frame giữa (so_50)
+    // 3. Thumbnail với chất lượng tốt
+    const baseUrl = `${urlParts[0]}/upload/`;
+    
+    // Tạo thumbnail với các transformation tốt hơn
+    const thumbnailOptions = [
+      `w_800,h_450,c_fill,so_0/${transformation.replace(/\.[^/.]+$/, '.jpg')}`, // Frame đầu
+      `w_800,h_450,c_fill,so_50/${transformation.replace(/\.[^/.]+$/, '.jpg')}`, // Frame giữa
+      `c_thumb,w_800,h_450,g_face/${transformation.replace(/\.[^/.]+$/, '.jpg')}`, // Face detection
+    ];
+    
+    // Thử lấy thumbnail từ frame đầu tiên
+    return `${baseUrl}${thumbnailOptions[0]}`;
+  }
+  
+  // Cloudinary image (đã là ảnh)
+  if (url.includes("cloudinary.com") && url.includes("/image/upload/")) {
+    // Optimize existing image for thumbnail
+    const urlParts = url.split('/upload/');
+    if (urlParts.length < 2) return url;
+    
+    const transformation = urlParts[1];
+    const baseUrl = `${urlParts[0]}/upload/`;
+    
+    // Thêm transformation để tối ưu cho thumbnail
+    return `${baseUrl}w_800,h_450,c_fill/${transformation}`;
+  }
+  
+  // Nếu là video từ nguồn khác, thử lấy poster/thumbnail
+  if (url.match(/\.(mp4|webm|ogg|mov|avi)$/i)) {
+    // Đối với video file trực tiếp, không thể lấy thumbnail trực tiếp
+    // Cần upload thumbnail riêng hoặc sử dụng placeholder
+    return "";
+  }
+  
+  return "";
 };
 
-// Tạo placeholder thumbnail nếu không có video
-const getPlaceholderThumbnail = () => {
-  return "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&h=450&fit=crop";
+// Tạo placeholder thumbnail chất lượng cao
+const getPlaceholderThumbnail = (type = "video") => {
+  const placeholders = {
+    video: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&h=450&fit=crop&auto=format",
+    course: "https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=800&h=450&fit=crop&auto=format",
+    lesson: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=450&fit=crop&auto=format"
+  };
+  
+  return placeholders[type] || placeholders.video;
+};
+
+// Hàm upload thumbnail riêng biệt lên Cloudinary
+const uploadThumbnailToCloudinary = async (file) => {
+  const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
+  
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", uploadPreset);
+  formData.append("folder", "course_thumbnails");
+  formData.append("transformation", "w_800,h_450,c_fill"); // Tối ưu cho thumbnail
+  
+  try {
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      { method: "POST", body: formData }
+    );
+    
+    if (!response.ok) throw new Error("Upload failed");
+    
+    const data = await response.json();
+    return data.secure_url;
+  } catch (error) {
+    console.error("Thumbnail upload error:", error);
+    throw error;
+  }
 };
 
 const InstructorAddLesson = ({ onClose, onSuccess, MyCourse, preSelectedCourse }) => {
@@ -49,6 +145,9 @@ const InstructorAddLesson = ({ onClose, onSuccess, MyCourse, preSelectedCourse }
   const [success, setSuccess] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [selectedCourseData, setSelectedCourseData] = useState(null);
+  const [thumbnailType, setThumbnailType] = useState("auto"); // "auto", "custom", "placeholder"
+  const [customThumbnailFile, setCustomThumbnailFile] = useState(null);
+  const [customThumbnailPreview, setCustomThumbnailPreview] = useState("");
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -59,36 +158,59 @@ const InstructorAddLesson = ({ onClose, onSuccess, MyCourse, preSelectedCourse }
   }, []);
 
   useEffect(() => {
-    if (preSelectedCourse?.id) {
-      setCourseId(preSelectedCourse.id);
-      setSelectedCourseData(preSelectedCourse);
-    }
-  }, [preSelectedCourse]);
-
-  useEffect(() => {
-    // Khi courseId thay đổi, tìm thông tin course
-    if (courseId) {
-      // vì MyCourse được truyền [course]
-      const course = MyCourse[0] !== null ? MyCourse[0] : null;
+    const course = MyCourse[0];
+    if (course) {
+      setCourseId(course.id);
       setSelectedCourseData(course);
     }
-  }, [courseId, MyCourse]);
+    else {
+      setCourseId("");
+      setSelectedCourseData(null);
+    }
+  }, [MyCourse]);
 
   useEffect(() => {
-    // Khi videoUrl thay đổi, tự động tạo thumbnail
-    if (videoUrl) {
+    // Khi videoUrl thay đổi, tự động tạo thumbnail nếu đang ở chế độ auto
+    if (thumbnailType === "auto" && videoUrl) {
       const thumbnail = getThumbnail(videoUrl);
       if (thumbnail) {
         setThumbnailUrl(thumbnail);
         console.log("Auto-generated thumbnail:", thumbnail);
       } else {
         // Nếu không thể tạo thumbnail từ video, sử dụng placeholder
-        setThumbnailUrl(getPlaceholderThumbnail());
+        setThumbnailUrl(getPlaceholderThumbnail("video"));
       }
-    } else {
-      setThumbnailUrl("");
+    } else if (thumbnailType === "placeholder") {
+      setThumbnailUrl(getPlaceholderThumbnail("course"));
     }
-  }, [videoUrl]);
+    // custom thumbnail được xử lý riêng
+  }, [videoUrl, thumbnailType]);
+
+  // Xử lý upload custom thumbnail
+  const handleCustomThumbnailUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Kiểm tra file type
+    if (!file.type.startsWith('image/')) {
+      setError("Please select an image file for thumbnail");
+      return;
+    }
+
+    // Giới hạn kích thước file (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Thumbnail size should be less than 5MB");
+      return;
+    }
+
+    setCustomThumbnailFile(file);
+    
+    // Tạo preview
+    const previewUrl = URL.createObjectURL(file);
+    setCustomThumbnailPreview(previewUrl);
+    setThumbnailUrl(previewUrl); // Set preview tạm thời
+    setThumbnailType("custom");
+  };
 
   const handleVideoUpload = async (e) => {
     const file = e.target.files[0];
@@ -100,6 +222,8 @@ const InstructorAddLesson = ({ onClose, onSuccess, MyCourse, preSelectedCourse }
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", uploadPreset);
+    formData.append("folder", "course_videos");
+    formData.append("resource_type", "video");
 
     try {
       setUploading(true);
@@ -118,6 +242,9 @@ const InstructorAddLesson = ({ onClose, onSuccess, MyCourse, preSelectedCourse }
       if (data.secure_url) {
         setVideoUrl(data.secure_url);
         console.log("Video uploaded successfully:", data.secure_url);
+        
+        // Tự động chuyển sang chế độ auto thumbnail
+        setThumbnailType("auto");
       } else {
         throw new Error("Upload failed - no secure_url returned");
       }
@@ -152,6 +279,25 @@ const InstructorAddLesson = ({ onClose, onSuccess, MyCourse, preSelectedCourse }
       return;
     }
 
+    let finalThumbnailUrl = thumbnailUrl;
+
+    // Nếu có custom thumbnail file, upload lên Cloudinary trước
+    if (thumbnailType === "custom" && customThumbnailFile) {
+      try {
+        setSaving(true);
+        setError(null);
+        
+        const uploadedUrl = await uploadThumbnailToCloudinary(customThumbnailFile);
+        finalThumbnailUrl = uploadedUrl;
+        console.log("Custom thumbnail uploaded:", uploadedUrl);
+      } catch (err) {
+        console.error("Custom thumbnail upload failed:", err);
+        setError("Failed to upload custom thumbnail. Please try again.");
+        setSaving(false);
+        return;
+      }
+    }
+
     // Tạo payload cho lesson
     const payload = {
       courseId,
@@ -160,12 +306,10 @@ const InstructorAddLesson = ({ onClose, onSuccess, MyCourse, preSelectedCourse }
       position: 1,
     };
 
-    // Only add contentUrl if it's a valid URL
     if (videoUrl && videoUrl.trim()) {
       payload.contentUrl = videoUrl;
     }
 
-    // Only add contentBody if it exists and has content
     if (contentBody && contentBody.trim()) {
       payload.contentBody = contentBody;
     }
@@ -178,33 +322,29 @@ const InstructorAddLesson = ({ onClose, onSuccess, MyCourse, preSelectedCourse }
       const lessonResponse = await instructorService.createLesson(payload);
       console.log("Lesson created:", lessonResponse);
       
-      // Step 2: Nếu có video và có thể tạo thumbnail, cập nhật thumbnail cho course
-      if (videoUrl && thumbnailUrl) {
+      // Step 2: Cập nhật thumbnail cho course nếu có
+      if (finalThumbnailUrl) {
         try {
-          // Kiểm tra xem course đã có thumbnail chưa
-          const currentCourse = selectedCourseData;
-          
-          // Chỉ cập nhật thumbnail nếu course chưa có thumbnail
-          // hoặc nếu muốn luôn cập nhật khi có lesson video mới
-          if (!currentCourse?.thumbnailUrl || true) { // true = luôn cập nhật
-            await updateCourseThumbnail(courseId, thumbnailUrl);
-            console.log("Course thumbnail auto-updated from lesson video");
-          } else {
-            console.log("Course already has thumbnail, skipping auto-update");
-          }
+          await updateCourseThumbnail(courseId, finalThumbnailUrl);
+          console.log("Course thumbnail updated from lesson:", finalThumbnailUrl);
         } catch (thumbnailError) {
           console.warn("Failed to auto-update course thumbnail, but lesson was created:", thumbnailError);
-          // Không throw error ở đây vì lesson đã tạo thành công
         }
       }
       
-      setSuccess("Lesson created successfully! Course thumbnail has been auto-updated.");
+      setSuccess("Lesson created successfully! Course thumbnail has been updated.");
+      
+      // Cleanup preview URL
+      if (customThumbnailPreview) {
+        URL.revokeObjectURL(customThumbnailPreview);
+      }
       
       setTimeout(() => {
         if (onSuccess) {
           onSuccess({
             lesson: lessonResponse,
-            thumbnailUpdated: !!thumbnailUrl
+            thumbnailUpdated: !!finalThumbnailUrl,
+            thumbnailUrl: finalThumbnailUrl
           });
         } else {
           onClose();
@@ -218,20 +358,25 @@ const InstructorAddLesson = ({ onClose, onSuccess, MyCourse, preSelectedCourse }
     }
   };
 
-  const handleManualThumbnailUpdate = async () => {
-    if (!courseId || !thumbnailUrl) {
-      setError("No course selected or thumbnail available");
-      return;
-    }
-
-    try {
-      setSaving(true);
-      await updateCourseThumbnail(courseId, thumbnailUrl);
-      setSuccess("Course thumbnail updated manually!");
-    } catch (err) {
-      setError("Failed to update thumbnail: " + (err.message || "Unknown error"));
-    } finally {
-      setSaving(false);
+  const handleThumbnailTypeChange = (type) => {
+    setThumbnailType(type);
+    
+    switch(type) {
+      case "auto":
+        if (videoUrl) {
+          const autoThumbnail = getThumbnail(videoUrl);
+          setThumbnailUrl(autoThumbnail || getPlaceholderThumbnail("video"));
+        }
+        break;
+      case "placeholder":
+        setThumbnailUrl(getPlaceholderThumbnail("course"));
+        break;
+      case "custom":
+        // Giữ nguyên custom thumbnail preview nếu có
+        if (customThumbnailPreview) {
+          setThumbnailUrl(customThumbnailPreview);
+        }
+        break;
     }
   };
 
@@ -322,111 +467,170 @@ const InstructorAddLesson = ({ onClose, onSuccess, MyCourse, preSelectedCourse }
             />
           </div>
 
-          {/* Upload Video & Thumbnail Preview */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Video Upload */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <FiVideo /> Lesson Video (optional)
-              </label>
-              {videoUrl ? (
-                <div className="space-y-3">
-                  <video
-                    src={videoUrl}
-                    controls
-                    className="rounded-lg w-full max-h-64 object-cover"
-                  />
-                  <p className="text-xs text-green-600">
-                    ✅ Video uploaded successfully. Thumbnail will be auto-generated.
-                  </p>
-                </div>
-              ) : (
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition">
-                  <input
-                    type="file"
-                    accept="video/*"
-                    onChange={handleVideoUpload}
-                    className="hidden"
-                    id="videoUpload"
-                  />
-                  <label
-                    htmlFor="videoUpload"
-                    className="cursor-pointer flex flex-col items-center text-gray-500"
-                  >
-                    {uploading ? (
-                      <>
-                        <svg
-                          className="animate-spin h-6 w-6 text-blue-500 mb-2"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8v8H4z"
-                          ></path>
-                        </svg>
-                        <span>Uploading...</span>
-                      </>
-                    ) : (
-                      <>
-                        <FiUploadCloud className="text-blue-400 text-3xl mb-2" />
-                        <span className="text-sm">Click to upload video</span>
-                        <span className="text-xs mt-1">(Will auto-generate course thumbnail)</span>
-                      </>
-                    )}
-                  </label>
-                </div>
-              )}
-            </div>
+          {/* Upload Video */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <FiVideo /> Lesson Video (optional)
+            </label>
+            {videoUrl ? (
+              <div className="space-y-3">
+                <video
+                  src={videoUrl}
+                  controls
+                  className="rounded-lg w-full max-h-64 object-cover"
+                />
+                <p className="text-xs text-green-600">
+                  ✅ Video uploaded successfully.
+                </p>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition">
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={handleVideoUpload}
+                  className="hidden"
+                  id="videoUpload"
+                />
+                <label
+                  htmlFor="videoUpload"
+                  className="cursor-pointer flex flex-col items-center text-gray-500"
+                >
+                  {uploading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-6 w-6 text-blue-500 mb-2"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        ></path>
+                      </svg>
+                      <span>Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FiUploadCloud className="text-blue-400 text-3xl mb-2" />
+                      <span className="text-sm">Click to upload video</span>
+                      <span className="text-xs mt-1">Supports: MP4, WebM, MOV, AVI (max 500MB)</span>
+                    </>
+                  )}
+                </label>
+              </div>
+            )}
+          </div>
 
-            {/* Thumbnail Preview */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <FiImage /> Auto-generated Thumbnail Preview
-              </label>
-              <div className="border border-gray-200 rounded-lg p-4 h-full flex flex-col">
-                {thumbnailUrl ? (
-                  <>
-                    <div className="flex-1 mb-3">
+          {/* Thumbnail Selection Section */}
+          <div className="border border-gray-200 rounded-lg p-4">
+            <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+              <FiImage /> Course Thumbnail Selection
+            </label>
+            
+            {/* Thumbnail Type Selector */}
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => handleThumbnailTypeChange("auto")}
+                className={`px-3 py-2 text-sm rounded-md border ${
+                  thumbnailType === "auto" 
+                    ? "bg-blue-50 border-blue-500 text-blue-700" 
+                    : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                Auto from Video
+              </button>
+              <button
+                type="button"
+                onClick={() => handleThumbnailTypeChange("custom")}
+                className={`px-3 py-2 text-sm rounded-md border ${
+                  thumbnailType === "custom" 
+                    ? "bg-blue-50 border-blue-500 text-blue-700" 
+                    : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                Custom Upload
+              </button>
+              <button
+                type="button"
+                onClick={() => handleThumbnailTypeChange("placeholder")}
+                className={`px-3 py-2 text-sm rounded-md border ${
+                  thumbnailType === "placeholder" 
+                    ? "bg-blue-50 border-blue-500 text-blue-700" 
+                    : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                Use Placeholder
+              </button>
+            </div>
+            
+            {/* Thumbnail Preview Area */}
+            <div className="mt-4">
+              {thumbnailType === "custom" ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Upload Custom Thumbnail
+                  </label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCustomThumbnailUpload}
+                      className="hidden"
+                      id="thumbnailUpload"
+                    />
+                    <label
+                      htmlFor="thumbnailUpload"
+                      className="cursor-pointer flex flex-col items-center text-gray-500"
+                    >
+                      <FiUploadCloud className="text-blue-400 text-2xl mb-2" />
+                      <span className="text-sm">Click to upload custom thumbnail</span>
+                      <span className="text-xs mt-1">Recommended: 800x450px, JPG/PNG (max 5MB)</span>
+                    </label>
+                  </div>
+                  
+                  {customThumbnailPreview && (
+                    <div className="mt-4">
+                      <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
                       <img
-                        src={thumbnailUrl}
-                        alt="Thumbnail preview"
-                        className="w-full h-48 object-cover rounded-lg"
+                        src={customThumbnailPreview}
+                        alt="Custom thumbnail preview"
+                        className="w-full h-48 object-cover rounded-lg border border-gray-200"
                       />
                     </div>
-                    <div className="text-xs text-gray-600 space-y-1">
-                      <p>📌 This thumbnail will be auto-updated to the course</p>
-                      <p>🔗 Source: {videoUrl.includes('youtube') ? 'YouTube' : 'Cloudinary'}</p>
-                      {courseId && (
-                        <button
-                          type="button"
-                          onClick={handleManualThumbnailUpdate}
-                          className="mt-2 text-xs px-3 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded"
-                          disabled={saving}
-                        >
-                          Update thumbnail now
-                        </button>
-                      )}
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
+                  <div className="relative">
+                    <img
+                      src={thumbnailUrl || getPlaceholderThumbnail("course")}
+                      alt="Thumbnail preview"
+                      className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                    />
+                    <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                      {thumbnailType === "auto" ? "Auto-generated" : "Placeholder"}
                     </div>
-                  </>
-                ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
-                    <FiImage className="text-4xl mb-2" />
-                    <p className="text-sm">Upload a video to generate thumbnail</p>
-                    <p className="text-xs mt-1">(YouTube or Cloudinary videos only)</p>
                   </div>
-                )}
-              </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {thumbnailType === "auto" 
+                      ? "Thumbnail will be automatically generated from the video" 
+                      : "Using high-quality placeholder image"}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -445,14 +649,14 @@ const InstructorAddLesson = ({ onClose, onSuccess, MyCourse, preSelectedCourse }
             />
           </div>
 
-          {/* Course Thumbnail Auto-Update Notice */}
-          {videoUrl && thumbnailUrl && courseId && (
+          {/* Thumbnail Auto-Update Notice */}
+          {thumbnailUrl && courseId && (
             <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
               <div className="flex items-start gap-2">
                 <span className="text-yellow-600 text-lg">ℹ️</span>
                 <div className="text-sm text-yellow-800">
-                  <p className="font-medium">Course Thumbnail Auto-Update</p>
-                  <p>When you save this lesson, the course thumbnail will be automatically updated using the first frame of this video.</p>
+                  <p className="font-medium">Course Thumbnail Update</p>
+                  <p>When you save this lesson, the course thumbnail will be updated using the selected thumbnail above.</p>
                   {selectedCourseData?.thumbnailUrl && (
                     <p className="mt-1 text-xs">Note: This will replace the existing thumbnail.</p>
                   )}
