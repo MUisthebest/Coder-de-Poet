@@ -3,7 +3,7 @@
 */
 
 const API_CONFIG = {
-  BASE_URL: process.env.IDE_SERVICE_URL || "http://localhost:5247",
+  BASE_URL: process.env.REACT_APP_IDE_SERVICE_URL || "http://localhost:5247",
   ENDPOINTS: {
     PROBLEMS: "/api/problems",
     RUN: "/api/run"
