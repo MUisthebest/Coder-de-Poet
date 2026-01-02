@@ -219,7 +219,7 @@ export default function ProblemList() {
                             </div>
                         </div>
                     ) : (
-                        <div className="overflow-hidden  h-[calc(90vh_-_100px)]">
+                        <div className="overflow-hidden  h-[calc(80vh_-_100px)]">
                             <div className="overflow-x-auto h-full">
                                 <table className="min-w-full">
                                     <thead className="bg-gray-50 sticky top-0 z-10">
