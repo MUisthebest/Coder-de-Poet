@@ -14,7 +14,7 @@ services:
 
       ConnectionStrings__Default: "Host=aws-1-ap-southeast-2.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.erpstsihpmfvagprbgnz;Password=Nguyenphucan@123;Ssl Mode=Require;Trust Server Certificate=true; Pooling=false"
 
-      RUNNER_IMAGE: "learnix-runner:latest"
+      RUNNER_IMAGE: "learnix-sandbox-runner:latest"
       SANDBOX_TIMEOUT_MS: "2500"
       SANDBOX_CPU: "1.0"
       SANDBOX_MEM: "256m"
