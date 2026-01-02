@@ -20,19 +20,19 @@ const PlayVideo = ({ currentLesson, lessons = [], courseId, getEmbedUrl, isEnrol
             {isEnrolled || canManageCourse ? (
               <>
                 {/* HEADER */}
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between mb-2 gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
                     {currentLesson.position && (
-                      <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                      <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium flex-shrink-0">
                         Bài {currentLesson.position}
                       </span>
                     )}
-                    <h2 className="text-[calc(1vw_+_12px)] font-bold text-gray-800">
+                    <h2 className="text-[calc(1vw_+_12px)] font-bold text-gray-800 break-words line-clamp-2 overflow-hidden">
                       {currentLesson.title}
                     </h2>
                   </div>
 
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500 flex-shrink-0">
                     Bài {lessons.findIndex((l) => l.id === currentLesson.id) + 1} /{" "}
                     {lessons.length}
                   </div>

@@ -12,6 +12,7 @@ import {
 } from "react-icons/fi";
 import instructorService from "../../services/instructorService";
 import CreateQuizPage from "./CreateQuizPage";
+import ReviewPage from "./ReviewPage";
 import { useAuth } from "../../contexts/AuthContext";
 import ProfileSidebar from '../../components/home/ProfileSideBar';
 import InstructorAddLesson from "./InstructorAddLesson";
@@ -26,6 +27,7 @@ const CourseDetailRoute = () => {
   const [courseLoading, setCourseLoading] = useState(true);
   const [myCourses, setMyCourses] = useState([]);
   const [showAddLesson, setShowAddLesson] = useState(false);
+  const [showReviewPage, setShowReviewPage] = useState(false);
 
   const weeklyActivities = [
     { day: 'Mon', hours: 2.5, type: 'learning' },
@@ -269,6 +271,13 @@ const CourseDetailRoute = () => {
                   MyCourse={[course]}
                 />
               )}
+
+              {/* Reviews Section */}
+              <div className="mt-12 pt-8 border-t border-gray-100">
+                <ReviewPage
+                  courseId={courseId || course?.id}
+                />
+              </div>
 
               {/* Footer */}
           <div className="flex justify-end gap-3 pt-8 border-t border-gray-100 mt-8">
