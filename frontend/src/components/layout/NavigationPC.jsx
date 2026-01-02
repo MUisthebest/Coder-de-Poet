@@ -1,10 +1,23 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useSidebar } from "../../contexts/SidebarContext";
 import { useAuth } from "../../contexts/AuthContext";
 
 export default function Navigation_PC() {
   const { isOpen, setIsOpen } = useSidebar();
-  const { user, isAuthenticated, loading , logout, isAdmin} = useAuth();
+  const { user, isAuthenticated, loading, logout, isAdmin } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Navigate to login page after successful logout
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Still navigate to login page even if logout has error
+      navigate('/login');
+    }
+  };
 
   return (
     <nav
@@ -83,8 +96,8 @@ export default function Navigation_PC() {
                   {user.email}
                 </p>
                 <button
-                  onClick={logout}
-                  className="mt-2 px-4 py-2 border-1 bg-white rounded-2xl text-red-700 text-xs   hover:text-white hover:bg-red-600 font-medium transition all duration-200"
+                  onClick={handleLogout}
+                  className="mt-2 px-4 py-2 border-1 bg-white rounded-2xl text-red-700 text-xs hover:text-white hover:bg-red-600 font-medium transition-all duration-200"
                 >
                   Logout
                 </button>

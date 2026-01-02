@@ -20,6 +20,18 @@ const ProfileSidebar = ({
     { id: 'courses', label: 'My Courses' }
   ];
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Navigate to login page after successful logout
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Still navigate to login page even if logout has error
+      navigate('/login');
+    }
+  };
+
   // Hiển thị loading state
   if (loading) {
     return (
@@ -97,7 +109,7 @@ const ProfileSidebar = ({
         
       {/* Button Logout */}
         <button
-          onClick={logout}
+          onClick={handleLogout}
           className="mt-2 px-4 mb-4 py-2 border-1 bg-white rounded-2xl text-red-700 text-xs   hover:text-white hover:bg-red-600 font-medium transition all duration-200"
         >
           Logout
@@ -111,6 +123,5 @@ const ProfileSidebar = ({
     </div>
   );
 };
-
 
 export default ProfileSidebar;
