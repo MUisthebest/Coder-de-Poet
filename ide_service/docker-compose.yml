@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     image: ide_service-ide_api
     environment:
-      ASPNETCORE_URLS: "http://0.0.0.0:8089"
+      ASPNETCORE_URLS: "http://0.0.0.0:8082"
 
       HOST_SANDBOX_DIR: "/sandbox_host"
       CONTAINER_SANDBOX_DIR: "/sandbox_host"
@@ -21,7 +21,7 @@ services:
       WORKER_INTERVAL_MS: "1000"
 
     ports:
-      - "8089:8089"
+      - "8082:8082"
 
     volumes:
       - ./sandbox_host:/sandbox_host
