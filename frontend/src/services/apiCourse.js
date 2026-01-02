@@ -2,7 +2,7 @@ import axios from "axios";
 import { authService } from "./authService";
 
 const apiCourse = axios.create({
-  baseURL: process.env.REACT_APP_COURSE_SERVICE_URL || 'http://localhost:3001',
+  baseURL: process.env.REACT_APP_COURSE_SERVICE_URL || 'https://learnixhcmus.duckdns.org/api/course',
   withCredentials: true,
 });
 
