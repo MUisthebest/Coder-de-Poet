@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import CourseCard from '../../components/home/CourseCard';
 import ProfileSidebar from '../../components/home/ProfileSideBar';
 import PopularCategories from '../../components/home/PopularCategories';
 import CategorySlider from '../../components/home/CategorySlider';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSidebar } from "../../contexts/SidebarContext";
+import { authService } from '../../services/authService';
 import axios from 'axios';
 
 const Home = () => {
@@ -72,7 +73,6 @@ const Home = () => {
       return;
     }
 
-    setMyCoursesLoading(true);
     try {
       const token = authService.getStoredToken();
       let data = null;
@@ -118,7 +118,6 @@ const Home = () => {
       console.error('Failed to fetch my courses:', err);
       setMyCourses([]);
     } finally {
-      setMyCoursesLoading(false);
     }
   }, [API_URL, user]);
 
