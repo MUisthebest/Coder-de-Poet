@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -12,9 +13,12 @@ from .models import ChatSession
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Chatbot Message Service API",
-    description="API để lưu và lấy chat messages - User management từ external service",
-    version="1.0.0"
+    title="Chat Service API",
+    description="Real-time chat API with AI response integration and message persistence",
+    version="1.0.0",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json"
 )
 
 # CORS configuration
@@ -26,23 +30,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="Chat Service API",
+        version="1.0.0",
+        description="Chat service with AI responses and message persistence",
+        routes=app.routes,
+    )
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
+
+@app.get("/", tags=["Root"])
 async def root():
+    """Service information endpoint"""
     return {
-        "service": "Chatbot Message Service",
-        "description": "API để lưu và lấy chat messages",
+        "service": "Chat Service API",
+        "description": "API for chat messages with AI response",
+        "version": "1.0.0",
         "endpoints": {
             "send_message": "POST /chat/send",
-            "get_messages": "POST /chat/messages",
-            "get_sessions": "POST /chat/sessions",
-            "health": "GET /health"
+            "get_messages": "GET /chat/messages",
+            "get_sessions": "GET /chat/sessions",
+            "health": "GET /health",
+            "docs": "/api/docs"
         },
-        "note": "User management được xử lý bởi external service"
+        "documentation": "See /api/docs for full API documentation"
     }
 
-@app.get("/health")
+@app.get("/health", tags=["Health"])
 async def health_check(db: Session = Depends(get_db)):
-    """Health check endpoint"""
+    """Health check endpoint - verifies database connectivity"""
     try:
         # Kiểm tra database connection
         db.execute("SELECT 1")
@@ -57,15 +78,24 @@ async def health_check(db: Session = Depends(get_db)):
             detail=f"Database connection failed: {str(e)}"
         )
 
-@app.post("/chat/send", response_model=schemas.ChatResponse)
+@app.post("/chat/send", response_model=schemas.ChatResponse, tags=["Chat"])
 async def send_message(
     request: schemas.ChatMessageCreate,
     db: Session = Depends(get_db)
 ):
     """
-    Gửi tin nhắn từ user và nhận response từ AI
-    - Lưu cả user message và AI response
-    - Tự động tạo session nếu chưa có
+    Send a message and receive AI response
+    
+    - Saves user message and AI response
+    - Automatically creates session if not exists
+    - Uses message history for context
+    
+    Args:
+        request: Chat message request with user_id and content
+        db: Database session
+        
+    Returns:
+        ChatResponse: User message, AI response, and session info
     """
     try:
         # 1. Lấy hoặc tạo session
@@ -140,15 +170,22 @@ async def send_message(
             detail=f"Failed to process message: {str(e)}"
         )
 
-@app.post("/chat/messages", response_model=List[schemas.MessageResponse])
+@app.post("/chat/messages", response_model=List[schemas.MessageResponse], tags=["Chat"])
 async def get_messages(
     request: schemas.GetMessagesRequest,
     db: Session = Depends(get_db)
 ):
     """
-    Lấy tin nhắn của user
-    - Nếu có session_id: lấy tin nhắn trong session đó
-    - Nếu không có session_id: lấy tất cả tin nhắn của user
+    Get user messages
+    
+    Retrieve messages from a specific session or all messages for a user
+    
+    Args:
+        request: GetMessagesRequest with user_id and optional session_id
+        db: Database session
+        
+    Returns:
+        List[MessageResponse]: List of chat messages with metadata
     """
     try:
         if request.session_id:
@@ -177,13 +214,22 @@ async def get_messages(
             detail=f"Failed to get messages: {str(e)}"
         )
 
-@app.post("/chat/sessions", response_model=List[schemas.SessionResponse])
+@app.post("/chat/sessions", response_model=List[schemas.SessionResponse], tags=["Chat"])
 async def get_sessions(
     request: schemas.GetSessionsRequest,
     db: Session = Depends(get_db)
 ):
     """
-    Lấy danh sách sessions của user
+    Get user chat sessions
+    
+    Retrieve all chat sessions for a user with metadata
+    
+    Args:
+        request: GetSessionsRequest with user_id and pagination params
+        db: Database session
+        
+    Returns:
+        List[SessionResponse]: List of chat sessions with message counts
     """
     try:
         sessions = crud.chat_crud.get_user_sessions(
