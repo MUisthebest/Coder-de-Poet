@@ -122,7 +122,9 @@ services:
       - "8000"
     networks:
       - learnix_net
-
+    volumes:
+      - ./secrets/youtube_cookies.txt:/run/secrets/youtube_cookies.txt:ro
+      
   chat_service:
     build:
       context: ./chat_service

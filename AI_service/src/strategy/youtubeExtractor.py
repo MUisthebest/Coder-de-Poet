@@ -20,6 +20,8 @@ class YoutubeExtractor (IQuizExtractor):
         ydl_opts = {
             "quiet": True,
             "skip_download": True,
+            "noplaylist": True,
+            "cookies": "/run/secrets/youtube_cookies.txt"
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
