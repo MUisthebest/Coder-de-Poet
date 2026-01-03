@@ -1,278 +1,583 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import axios from 'axios';
-import { NavLink } from 'react-router-dom';
 import { authService } from '../../services/authService';
 import { getThumbnailUrl } from '../../utils/thumbnailHelper';
+import { NavLink } from 'react-router-dom';
 
 const MyCourses = ({ courses: coursesProp = [], user }) => {
-  const [courses, setCourses] = useState([]);
+  const [courses, setCourses] = useState(coursesProp || []);
+  const [loading, setLoading] = useState(true);
   const [unenrollingCourseId, setUnenrollingCourseId] = useState(null);
-  const [courseThumbnails, setCourseThumbnails] = useState({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [startIndex, setStartIndex] = useState(0);
-
+  const [initialLoad, setInitialLoad] = useState(true);
+  
+  // Thêm state để lưu thumbnails riêng
+  const [courseThumbnails, setCourseThumbnails] = useState({});
+  
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
-
+  
+  const lastFetchRef = useRef({
+    userId: null,
+    timestamp: 0
+  });
+  
+  const isFetchingRef = useRef(false);
   const carouselRef = useRef(null);
-  const thumbnailCacheRef = useRef({});
+  const thumbnailCacheRef = useRef({}); // Cache cho thumbnails
 
-  /* =======================
-      Helpers
-  ======================= */
-
-  const getPopularTags = (tags, limit = 2) => {
-    if (!Array.isArray(tags)) return [];
-    return [...new Set(tags)].slice(0, limit);
+  const getPopularTags = (courseTags, limit = 3) => {
+    if (!courseTags || !Array.isArray(courseTags)) return [];
+    const uniqueTags = [...new Set(courseTags)];
+    return uniqueTags.slice(0, limit);
   };
 
-  const formatTag = (tag) =>
-    tag
-      ?.replace(/-/g, ' ')
+  const formatTag = (tag) => {
+    if (!tag) return '';
+    const formatted = tag.replace(/-/g, ' ');
+    return formatted
       .split(' ')
-      .map(w => w[0].toUpperCase() + w.slice(1))
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
+  };
 
-  /* =======================
-      Sync props → state
-  ======================= */
+  // Hàm fetch thumbnails riêng biệt
+  const fetchCourseThumbnails = async (courseList) => {
+    const thumbnailPromises = courseList.map(async (course) => {
+      const courseId = course.id;
+      
+      // Kiểm tra cache trước
+      if (thumbnailCacheRef.current[courseId] && 
+          Date.now() - thumbnailCacheRef.current[courseId].timestamp < 30000) { // Cache 30 giây
+        return { courseId, thumbnail: thumbnailCacheRef.current[courseId].url };
+      }
+      
+      try {
+        const token = authService.getStoredToken();
+        const response = await axios.get(`${API_URL}/courses/${courseId}/thumbnail`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        
+        const thumbnailUrl = response.data.thumbnail_url || course.thumbnail;
+        
+        // Lưu vào cache
+        thumbnailCacheRef.current[courseId] = {
+          url: thumbnailUrl,
+          timestamp: Date.now()
+        };
+        
+        return { courseId, thumbnail: thumbnailUrl };
+      } catch (error) {
+        console.error(`Failed to fetch thumbnail for course ${courseId}:`, error);
+        return { courseId, thumbnail: course.thumbnail || '' };
+      }
+    });
 
+    try {
+      const results = await Promise.allSettled(thumbnailPromises);
+      const newThumbnails = {};
+      
+      results.forEach(result => {
+        if (result.status === 'fulfilled' && result.value) {
+          newThumbnails[result.value.courseId] = result.value.thumbnail;
+        }
+      });
+      
+      setCourseThumbnails(prev => ({ ...prev, ...newThumbnails }));
+    } catch (error) {
+      console.error('Error fetching thumbnails:', error);
+    }
+  };
+
+  // Effect chính để fetch courses
   useEffect(() => {
-    if (!coursesProp || coursesProp.length === 0) {
-      setCourses([]);
+    console.log("MyCourses useEffect - coursesProp:", coursesProp?.length, "user:", user?.id);
+    
+    if (coursesProp && coursesProp.length > 0) {
+      console.log("Using courses from props, skipping API fetch");
+      setCourses(coursesProp);
+      fetchCourseThumbnails(coursesProp); // Fetch thumbnails cho courses từ props
+      setLoading(false);
+      setInitialLoad(false);
       return;
     }
 
-    setCourses(coursesProp);
-    fetchCourseThumbnails(coursesProp);
-  }, [coursesProp]);
+    if (!user || !user.id) {
+      console.log("No user, clearing courses");
+      setCourses([]);
+      setLoading(false);
+      setInitialLoad(false);
+      return;
+    }
 
-  /* =======================
-      Thumbnail handling
-  ======================= */
+    const shouldFetch = 
+      !isFetchingRef.current && 
+      (lastFetchRef.current.userId !== user.id || 
+       Date.now() - lastFetchRef.current.timestamp > 60000);
 
-  const fetchCourseThumbnails = async (courseList) => {
-    const token = authService.getStoredToken();
-
-    const tasks = courseList.map(async (course) => {
-      const id = course.id;
-
-      const cached = thumbnailCacheRef.current[id];
-      if (cached && Date.now() - cached.timestamp < 30000) {
-        return { id, url: cached.url };
+    if (!shouldFetch) {
+      console.log("Skipping fetch - already fetching or recent fetch");
+      if (courses.length > 0) {
+        setLoading(false);
       }
+      setInitialLoad(false);
+      return;
+    }
 
+    const fetchMyCourses = async () => {
+      console.log("Starting fetchMyCourses for user:", user.id);
+      
+      isFetchingRef.current = true;
+      lastFetchRef.current = {
+        userId: user.id,
+        timestamp: Date.now()
+      };
+      
+      setLoading(true);
       try {
-        const res = await axios.get(
-          `${API_URL}/courses/${id}/thumbnail`,
-          { headers: token ? { Authorization: `Bearer ${token}` } : undefined }
-        );
+        let data = null;
+        const token = authService.getStoredToken();
+        if (user && user.role === "Instructor") {
+          const res = await axios.get(`${API_URL}/courses/instructor/${user.id}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          });
+          data = res.data;
+          console.log("API response:", data);
+        }
+        else {
+          const res = await axios.get(`${API_URL}/enrollments/user/${user.id}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          });
+          data = res.data;
+          console.log("API response:", data);
+        }
 
-        const url = res.data?.thumbnail_url || course.thumbnail || '';
+        if (data?.items) data = data.items;
+        if (!Array.isArray(data)) {
+          if (data?.courses) data = data.courses;
+          else if (data?.data) data = data.data;
+          else data = [];
+        }
 
-        thumbnailCacheRef.current[id] = {
-          url,
-          timestamp: Date.now(),
-        };
+        const mapped = data.map(c => ({
+          id: c.id || c.course_id,
+          title: c.title || c.name || c.course_title || 'Untitled',
+          category: c.category?.name || c.category_name || c.category || 'Uncategorized',
+          students: c.student_count || c.students || 0,
+          progress: c.completion_percentage || c.progress || 0,
+          timeLeft: c.time_left || '',
+          nextLesson: c.nextLesson || null,
+          thumbnail: c.thumbnail_url || c.thumbnail || '',
+          rating: c.rating || 4.5,
+          tags: c.tag
+        }));
 
-        return { id, url };
-      } catch {
-        return { id, url: course.thumbnail || '' };
+        console.log("Mapped courses:", mapped.length);
+        setCourses(mapped);
+        
+        // Fetch thumbnails riêng cho danh sách courses mới
+        fetchCourseThumbnails(mapped);
+      } catch (err) {
+        console.error('Failed to fetch my courses', err);
+        setCourses([]);
+      } finally {
+        setLoading(false);
+        setInitialLoad(false);
+        isFetchingRef.current = false;
       }
-    });
+    };
 
-    const results = await Promise.allSettled(tasks);
-    const next = {};
+    fetchMyCourses();
+    
+    return () => {
+      console.log("MyCourses cleanup");
+    };
+  }, [coursesProp, user]);
 
-    results.forEach(r => {
-      if (r.status === 'fulfilled') {
-        next[r.value.id] = r.value.url;
+  // Effect để theo dõi sự thay đổi của thumbnails (real-time updates)
+  useEffect(() => {
+    if (courses.length === 0) return;
+
+    // Hàm kiểm tra và cập nhật thumbnails
+    const checkThumbnailUpdates = async () => {
+      console.log("Checking for thumbnail updates...");
+      
+      const coursesNeedingUpdate = courses.filter(course => {
+        const courseId = course.id;
+        const cacheEntry = thumbnailCacheRef.current[courseId];
+        
+        // Nếu không có cache hoặc cache đã cũ (> 10 giây)
+        return !cacheEntry || (Date.now() - cacheEntry.timestamp > 10000);
+      });
+
+      if (coursesNeedingUpdate.length > 0) {
+        console.log(`Found ${coursesNeedingUpdate.length} courses needing thumbnail update`);
+        await fetchCourseThumbnails(coursesNeedingUpdate);
       }
-    });
+    };
 
-    setCourseThumbnails(prev => ({ ...prev, ...next }));
-  };
+    // Kiểm tra mỗi 5 giây
+    const interval = setInterval(checkThumbnailUpdates, 5000);
 
+    // Cũng lắng nghe storage events nếu có
+    const handleStorageChange = (e) => {
+      if (e.key?.includes('thumbnail') || e.key?.includes('course')) {
+        // Clear cache để fetch lại
+        thumbnailCacheRef.current = {};
+        checkThumbnailUpdates();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [courses]);
+
+  // Hàm để refresh thumbnail của một course cụ thể
   const refreshCourseThumbnail = async (courseId) => {
     try {
       const token = authService.getStoredToken();
-      const res = await axios.get(
-        `${API_URL}/courses/${courseId}/thumbnail`,
-        {
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-          params: { t: Date.now() },
-        }
-      );
-
-      const url = res.data.thumbnail_url;
-
+      const response = await axios.get(`${API_URL}/courses/${courseId}/thumbnail`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        params: { t: Date.now() } // Thêm timestamp để tránh cache
+      });
+      
+      const newThumbnail = response.data.thumbnail_url;
+      
+      // Cập nhật cache
       thumbnailCacheRef.current[courseId] = {
-        url,
-        timestamp: Date.now(),
+        url: newThumbnail,
+        timestamp: Date.now()
       };
-
-      setCourseThumbnails(prev => ({ ...prev, [courseId]: url }));
-      return url;
-    } catch {
+      
+      // Cập nhật state
+      setCourseThumbnails(prev => ({
+        ...prev,
+        [courseId]: newThumbnail
+      }));
+      
+      // Cũng cập nhật trong courses array nếu cần
+      setCourses(prev => prev.map(course => 
+        course.id === courseId 
+          ? { ...course, thumbnail: newThumbnail }
+          : course
+      ));
+      
+      return newThumbnail;
+    } catch (error) {
+      console.error(`Failed to refresh thumbnail for course ${courseId}:`, error);
       return null;
     }
   };
 
-  const getCourseThumbnail = (course) => {
-    return getThumbnailUrl(
-      courseThumbnails[course.id] || course.thumbnail
-    );
-  };
-
-  /* =======================
-      Unenroll
-  ======================= */
-
+  // Hàm hủy đăng ký khóa học
   const handleUnenroll = async (courseId) => {
-    if (!user || user.role !== 'Student') return;
-    if (!window.confirm('Bạn có chắc muốn hủy đăng ký khóa học này?')) return;
+    if (!user || !user.id) return;
+    
+    if (!window.confirm('Bạn có chắc chắn muốn hủy đăng ký khóa học này?')) {
+      return;
+    }
 
+    if(user.role === "Instructor" || user.role === "Admin") return;
+    
     setUnenrollingCourseId(courseId);
-
     try {
       const token = authService.getStoredToken();
       await axios.delete(`${API_URL}/enrollments/unenroll`, {
-        data: { userId: user.id, courseId },
+        data: {
+          userId: user.id,
+          courseId: courseId,
+        },
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setCourses(prev => prev.filter(c => c.id !== courseId));
-      alert('Hủy đăng ký thành công');
-    } catch {
-      alert('Hủy đăng ký thất bại');
+      // Xóa thumbnail khỏi cache và state
+      delete thumbnailCacheRef.current[courseId];
+      setCourseThumbnails(prev => {
+        const newThumbnails = { ...prev };
+        delete newThumbnails[courseId];
+        return newThumbnails;
+      });
+      
+      // Cập nhật danh sách courses
+      setCourses(prevCourses => prevCourses.filter(course => course.id !== courseId));
+      
+      alert('Hủy đăng ký khóa học thành công!');
+    } catch (err) {
+      console.error('Unenroll failed', err);
+      if (err.response?.status === 404) {
+        alert('Bạn chưa đăng ký khóa học này');
+      } else {
+        alert('Hủy đăng ký khóa học thất bại. Vui lòng thử lại.');
+      }
     } finally {
       setUnenrollingCourseId(null);
     }
   };
 
-  /* =======================
-      Carousel
-  ======================= */
+  // Hàm xử lý chuyển đến khóa học tiếp theo
+  const goToSlide = (index) => {
+    setCurrentIndex(index);
+    
+    if (index === 3 && startIndex + 4 < courses.length) {
+      setStartIndex(startIndex + 4);
+      setCurrentIndex(0);
+    } else if (index === 3 && startIndex + 4 >= courses.length) {
+      setStartIndex(0);
+      setCurrentIndex(0);
+    }
+    
+    if (carouselRef.current) {
+      const scrollAmount = index * carouselRef.current.offsetWidth;
+      carouselRef.current.scrollTo({
+        left: scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Lấy thumbnail cho một course
+  const getCourseThumbnail = (course) => {
+    const courseId = course.id;
+    
+    // Ưu tiên sử dụng thumbnail từ courseThumbnails state
+    if (courseThumbnails[courseId]) {
+      return getThumbnailUrl(courseThumbnails[courseId]);
+    }
+    
+    // Nếu không có, sử dụng thumbnail từ course object
+    if (course.thumbnail) {
+      return getThumbnailUrl(course.thumbnail);
+    }
+    
+    return null;
+  };
+
+  // Hàm xử lý lỗi ảnh
+  const handleImageError = async (e, courseId) => {
+    console.log(`Image error for course ${courseId}, attempting to refresh...`);
+    
+    // Thử refresh thumbnail
+    const newThumbnail = await refreshCourseThumbnail(courseId);
+    
+    if (newThumbnail) {
+      // Nếu refresh thành công, cập nhật src
+      e.target.src = getThumbnailUrl(newThumbnail);
+    } else {
+      // Nếu không, sử dụng fallback
+      e.target.src = "https://via.placeholder.com/300x160?text=No+Image";
+    }
+  };
 
   const displayedCourses = courses.slice(startIndex, startIndex + 4);
 
-  const goToSlide = (index) => {
-    setCurrentIndex(index);
-
-    if (index === 3) {
-      setStartIndex(
-        startIndex + 4 < courses.length ? startIndex + 4 : 0
-      );
-      setCurrentIndex(0);
-    }
-
-    carouselRef.current?.scrollTo({
-      left: index * carouselRef.current.offsetWidth,
-      behavior: 'smooth',
-    });
-  };
-
-  /* =======================
-      Render
-  ======================= */
-
-  if (!coursesProp) {
-    return (
-      <div className="flex justify-center py-8">
-        <div className="animate-spin h-8 w-8 border-b-2 border-blue-600 rounded-full" />
-      </div>
-    );
-  }
-
-  if (courses.length === 0) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        <p>Bạn chưa đăng ký khóa học nào</p>
-        <button
-          onClick={() => (window.location.href = '/courses')}
-          className="mt-3 px-4 py-2 bg-blue-600 text-white rounded"
-        >
-          Khám phá khóa học
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-4">My Courses</h3>
+      <h3 className="text-[calc(2vh_+_6px)] font-semibold text-gray-900 mb-4">My Courses</h3>
 
-      <div
-        ref={carouselRef}
-        className="flex gap-6 overflow-x-auto pb-4 snap-x"
-      >
-        {displayedCourses.map(course => (
-          <NavLink
-            to={`/courses/${course.id}`}
-            key={course.id}
-            className="w-full bg-white rounded-lg border hover:shadow-lg snap-center"
+      {loading && initialLoad ? (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-2 text-gray-600">Loading Course...</span>
+        </div>
+      ) : !loading && courses.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          <p>Bạn chưa đăng ký khóa học nào.</p>
+          <button 
+            onClick={() => window.location.href = '/courses'}
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
           >
-            <div className="h-40 bg-gray-200 relative">
-              <img
-                src={getCourseThumbnail(course)}
-                alt={course.title}
-                className="w-full h-full object-cover"
-                onError={async (e) => {
-                  const url = await refreshCourseThumbnail(course.id);
-                  e.target.src =
-                    url
-                      ? getThumbnailUrl(url)
-                      : 'https://via.placeholder.com/300x160';
-                }}
-              />
-
-              {course.progress > 0 && (
-                <span className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                  {course.progress}%
-                </span>
-              )}
-            </div>
-
-            <div className="p-4">
-              <div className="flex justify-between">
-                <h4 className="font-semibold text-sm line-clamp-2">
-                  {course.title}
-                </h4>
-
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleUnenroll(course.id);
-                  }}
-                  disabled={unenrollingCourseId === course.id}
-                  className="text-red-500"
+            Khám phá khóa học
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Carousel Container */}
+          <div 
+            ref={carouselRef}
+            className="flex overflow-x-auto scroll-smooth gap-6 pb-4 snap-x snap-mandatory"
+            style={{ 
+              scrollBehavior: 'smooth',
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#d1d5db #f3f4f6'
+            }}
+          >
+            <style>{`
+              [data-carousel]::-webkit-scrollbar {
+                height: 6px;
+              }
+              [data-carousel]::-webkit-scrollbar-track {
+                background: #f3f4f6;
+                border-radius: 10px;
+              }
+              [data-carousel]::-webkit-scrollbar-thumb {
+                background: #d1d5db;
+                border-radius: 10px;
+              }
+              [data-carousel]::-webkit-scrollbar-thumb:hover {
+                background: #9ca3af;
+              }
+              [data-carousel]::-webkit-scrollbar-button {
+                display: none;
+              }
+            `}</style>
+            {displayedCourses.map((course) => {
+              const thumbnailUrl = getCourseThumbnail(course);
+              
+              return (
+                <NavLink 
+                  to={`/courses/${course.id}`}
+                  key={course.id} 
+                  className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all duration-300 flex-shrink-0 w-full snap-center relative"
                 >
-                  ✕
-                </button>
-              </div>
+                  {/* Course Thumbnail */}
+                  <div className="relative h-40 bg-gradient-to-r from-blue-400 to-blue-600 overflow-hidden">
+                    {thumbnailUrl ? (
+                      <img 
+                        src={thumbnailUrl} 
+                        alt={course.title}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        onError={(e) => handleImageError(e, course.id)}
+                        onLoad={() => {
+                          // Mark this thumbnail as successfully loaded
+                          thumbnailCacheRef.current[course.id] = {
+                            url: course.thumbnail || thumbnailUrl,
+                            timestamp: Date.now()
+                          };
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-blue-400 to-blue-600">
+                        <svg className="w-12 h-12 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17s4.5 10.747 10 10.747m0-13c5.5 0 10 4.745 10 10.747" />
+                        </svg>
+                      </div>
+                    )}
+                    
+                    {/* Progress Badge */}
+                    {course.progress > 0 && (
+                      <div className="absolute top-2 right-2 bg-black/60 text-white text-xs font-bold px-2 py-1 rounded-full">
+                        {course.progress}%
+                      </div>
+                    )}
+                    
+                    {/* Refresh thumbnail button (optional, for debugging) */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        refreshCourseThumbnail(course.id);
+                      }}
+                      className="absolute bottom-2 right-2 p-1 bg-white/80 hover:bg-white rounded-full shadow-sm"
+                      title="Refresh thumbnail"
+                    >
+                      <svg className="w-3 h-3 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+                  </div>
 
-              <div className="mt-2 flex gap-1 flex-wrap">
-                {getPopularTags(course.tags).map((t, i) => (
-                  <span key={i} className="text-xs bg-gray-100 px-2 py-0.5 rounded">
-                    #{formatTag(t)}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </NavLink>
-        ))}
-      </div>
+                  {/* Rest of the content remains the same */}
+                  <div className="p-4">
+                    {/* Header with title and unenroll button */}
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-semibold text-gray-900 text-sm leading-tight flex-1 line-clamp-2">
+                        {course.title}
+                      </h4>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleUnenroll(course.id);
+                        }}
+                        disabled={unenrollingCourseId === course.id}
+                        className="ml-2 p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50 flex-shrink-0"
+                        title="Hủy đăng ký"
+                      >
+                        {unenrollingCourseId === course.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                    
+                    {/* Category and Students */}
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+                        {course.category}
+                      </span>
+                      <span className="text-gray-500 text-xs flex items-center">
+                        <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM9 12a6 6 0 11-12 0 6 6 0 0112 0z" />
+                        </svg>
+                        {course.students.toLocaleString()}
+                      </span>
+                    </div>
 
-      <div className="flex justify-center gap-2 mt-4">
-        {displayedCourses.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => goToSlide(i)}
-            className={`h-2 rounded-full transition-all ${
-              i === currentIndex ? 'bg-black w-6' : 'bg-gray-300 w-2'
-            }`}
-          />
-        ))}
-      </div>
+                    {/* Tags */}
+                    <div className="mb-3">
+                      <div className="flex flex-wrap gap-1.5">
+                        {getPopularTags(course.tags, 2).map((tag, tagIndex) => (
+                          <span 
+                            key={tagIndex} 
+                            className="px-2 py-0.5 bg-gray-100 hover:bg-gray-200 rounded-md text-xs text-gray-700 font-medium border border-gray-300 transition-colors"
+                          >
+                            #{formatTag(tag)}
+                          </span>
+                        ))}
+                        
+                        {course.tags && course.tags.length > 2 && (
+                          <span className="px-2 py-0.5 bg-gray-200 rounded-md text-xs text-gray-600 font-medium">
+                            +{course.tags.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Progress bar */}
+                    {course.progress > 0 && (
+                      <div className="mt-3">
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span className="font-medium">Progress</span>
+                          <span className="font-bold text-blue-600">{course.progress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500" 
+                            style={{ width: `${course.progress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </NavLink>
+              );
+            })}
+          </div>
+
+          {/* Carousel Indicators */}
+          <div className="flex justify-center gap-2 mt-4 w-full">
+            {displayedCourses.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`h-2 w-[calc(20%)] rounded-full transition-all duration-300 ${
+                  index === currentIndex 
+                    ? 'bg-black w-6' 
+                    : 'bg-gray-300 w-2 hover:bg-gray-400'
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
