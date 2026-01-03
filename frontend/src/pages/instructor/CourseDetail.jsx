@@ -49,7 +49,10 @@ const CourseDetailRoute = () => {
   // State cho modal Add Quiz
   const [showQuizModal, setShowQuizModal] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
+  const [currentThumbnail, setCurrentThumbnail] = useState("");
 
+  // Ref để lưu thumbnail trước đó
+  const previousThumbnailRef = useRef("");
   // Fetch course từ sessionStorage hoặc từ API
   useEffect(() => {
     const storedCourse = sessionStorage.getItem("currentCourse");
@@ -57,6 +60,8 @@ const CourseDetailRoute = () => {
       try {
         const parsedCourse = JSON.parse(storedCourse);
         setCourse(parsedCourse);
+        setCurrentThumbnail(parsedCourse.thumbnail_url || "");
+        previousThumbnailRef.current = parsedCourse.thumbnail_url || "";
         setCourseLoading(false);
       } catch (err) {
         console.error("Error parsing stored course:", err);
