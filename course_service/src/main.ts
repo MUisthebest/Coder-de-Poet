@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 
 const brokers = process.env.KAFKA_BOOTSTRAP_SERVERS?.split(',') ?? ['localhost:9093'];
@@ -11,6 +12,30 @@ const brokers = process.env.KAFKA_BOOTSTRAP_SERVERS?.split(',') ?? ['localhost:9
 async function bootstrap() {
   console.log(process.env.DATABASE_URL);
   const app = await NestFactory.create(AppModule);
+  
+  // Setup Swagger/OpenAPI documentation
+  const config = new DocumentBuilder()
+    .setTitle('Course Service API')
+    .setDescription('API for managing courses, lessons, quizzes, enrollments and more')
+    .setVersion('1.0.0')
+    .addTag('Courses', 'Course management endpoints')
+    .addTag('Categories', 'Category management endpoints')
+    .addTag('Lessons', 'Lesson management endpoints')
+    .addTag('Quizzes', 'Quiz management endpoints')
+    .addTag('Enrollments', 'User enrollment endpoints')
+    .addTag('Reviews', 'Course review endpoints')
+    .addTag('Admin', 'Admin management endpoints')
+    .addTag('Search', 'Search endpoints')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document, {
+    //swaggerUrl: '/api/docs/swagger-json',
+    swaggerOptions: {
+      persistAuthorization: true,
+      displayOperationId: true,
+    },
+  });
   
   // Cấu hình CORS
   app.enableCors({
