@@ -69,6 +69,35 @@ const CourseDetailRoute = () => {
     }
   }, [courseId]);
 
+  useEffect(() => {
+    // Hàm kiểm tra sự thay đổi
+    const checkForThumbnailUpdate = () => {
+      const storedCourse = sessionStorage.getItem("currentCourse");
+      if (storedCourse) {
+        try {
+          const parsedCourse = JSON.parse(storedCourse);
+          const newThumbnail = parsedCourse.thumbnail_url || "";
+          
+          // Nếu thumbnail thay đổi
+          if (newThumbnail !== previousThumbnailRef.current) {
+            setCurrentThumbnail(newThumbnail);
+            previousThumbnailRef.current = newThumbnail;
+            console.log("Thumbnail đã được cập nhật!");
+          }
+        } catch (err) {
+          console.error("Error checking thumbnail update:", err);
+        }
+      }
+    };
+
+    // Kiểm tra mỗi 2 giây (có thể điều chỉnh)
+    const interval = setInterval(checkForThumbnailUpdate, 2000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
   // Fetch lessons
   const fetchLessons = async () => {
     if (!course?.id && !courseId) return;
