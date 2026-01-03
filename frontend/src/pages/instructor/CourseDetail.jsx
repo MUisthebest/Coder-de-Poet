@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   FiX,
@@ -156,6 +156,10 @@ const CourseDetailRoute = () => {
     // Navigate đến trang chi tiết với courseId và lessonId
     navigate(`/instructor/courses/${courseId}/lesson/${lesson.id}`);
   };
+
+  const currentThumbnailCourse = useMemo(() => {
+    return currentThumbnail || course?.thumbnail_url || "https://via.placeholder.com/100";
+  }, [currentThumbnail, course]);
 
   if (courseLoading) {
     return (
