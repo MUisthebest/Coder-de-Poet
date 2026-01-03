@@ -308,7 +308,7 @@ const InstructorDashboard = () => {
         <div className="md:flex hidden h-screen justify-center items-center sticky top-0">
           <ProfileSidebar 
             weeklyActivities={weeklyActivities}
-            myCourses={courses}
+            myCourses={filteredCourses}
             friends={friends}
             user={user}
             isAuthenticated={isAuthenticated}
