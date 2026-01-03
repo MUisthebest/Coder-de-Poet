@@ -16,6 +16,8 @@ const Home = () => {
   const [popularCourses, setPopularCourses] = useState([]);
   const [courses, setCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(false);
+  const [myCourses, setMyCourses] = useState([]); // Thêm state cho courses của user
+
   const [popularLoading, setPopularLoading] = useState(false);
   const { user, isAuthenticated, getUserRole } = useAuth();
 
@@ -63,6 +65,66 @@ const Home = () => {
 
     return [];
   };
+
+    const fetchMyCourses = useCallback(async () => {
+    if (!user || !user.id) {
+      setMyCourses([]);
+      return;
+    }
+
+    setMyCoursesLoading(true);
+    try {
+      const token = authService.getStoredToken();
+      let data = null;
+
+      if (user.role === "Instructor") {
+        // Instructor: fetch courses của họ tạo
+        const res = await axios.get(`${API_URL}/courses/instructor/${user.id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        data = res.data;
+      } else {
+        // Student: fetch courses mà họ đã enroll
+        const res = await axios.get(`${API_URL}/enrollments/user/${user.id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        data = res.data;
+      }
+
+      // Xử lý data trả về
+      if (data?.items) data = data.items;
+      if (!Array.isArray(data)) {
+        if (data?.courses) data = data.courses;
+        else if (data?.data) data = data.data;
+        else data = [];
+      }
+
+      // Map data
+      const mapped = data.map(c => ({
+        id: c.id || c.course_id,
+        title: c.title || c.name || c.course_title || 'Untitled',
+        category: c.category?.name || c.category_name || c.category || 'Uncategorized',
+        students: c.student_count || c.students || 0,
+        progress: c.completion_percentage || c.progress || 0,
+        timeLeft: c.time_left || '',
+        nextLesson: c.nextLesson || null,
+        thumbnail: c.thumbnail_url || c.thumbnail || '',
+        rating: c.rating || 4.5,
+        tags: c.tag || []
+      }));
+
+      setMyCourses(mapped);
+    } catch (err) {
+      console.error('Failed to fetch my courses:', err);
+      setMyCourses([]);
+    } finally {
+      setMyCoursesLoading(false);
+    }
+  }, [API_URL, user]);
+
+  useEffect(() => {
+    fetchMyCourses();
+  }, [fetchMyCourses]);
 
 
   // Chỉ chặn scroll trên mobile khi sidebar mở
@@ -389,6 +451,7 @@ useEffect(() => {
         <div className="flex h-screen justify-center items-center sticky top-0">
           <ProfileSidebar 
             user={user}
+            courses={myCourses}
             isAuthenticated={isAuthenticated}
           />
         </div>
