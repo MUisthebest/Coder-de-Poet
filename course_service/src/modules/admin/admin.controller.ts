@@ -61,4 +61,16 @@ export class AdminController {
   stats() {
     return this.adminService.systemStats();
   }
+
+  @ApiOperation({ summary: 'Get charts data for statistics', description: 'Get chart data for users, courses (Admin only)' })
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Chart data retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
+  @UseGuards(AuthGuard, RoleGuard)
+  @Roles('Admin')
+  @Get('charts/statistics')
+  chartsStatistics() {
+    return this.adminService.getChartsStatistics();
+  }
 }

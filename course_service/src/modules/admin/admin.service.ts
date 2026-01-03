@@ -24,4 +24,8 @@ export class AdminService {
   systemStats() {
     return this.repo.systemStats();
   }
+
+  async getChartsStatistics() {
+    return this.repo.getChartsStatistics();
+  }
 }

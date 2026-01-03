@@ -138,4 +138,87 @@ export class AdminRepository {
     const total_users = instructors_count + students_count;
     return { total_courses, total_enrollments, instructors_count, students_count, total_users };
   }
+
+  async getChartsStatistics() {
+    try {
+      // Summary stats (distinct users from enrollments)
+      const statsQuery = `
+        SELECT 
+          COUNT(DISTINCT student_id)::int AS users,
+          (SELECT COUNT(*)::int FROM courses) AS courses,
+          COUNT(*)::int AS enrollments
+        FROM enrollments;
+      `;
+
+      // Courses by category
+      const coursesCategoryQuery = `
+        SELECT 
+          COALESCE(cat.name, 'Uncategorized') AS category,
+          COUNT(*)::int AS count
+        FROM courses c
+        LEFT JOIN categories cat ON c.category_id = cat.id
+        GROUP BY cat.name
+        ORDER BY count DESC;
+      `;
+
+      // Users by role
+      const usersByRoleQuery = `
+        SELECT 
+          'Student' AS role,
+          COUNT(DISTINCT student_id)::int AS count
+        FROM enrollments
+        UNION ALL
+        SELECT 
+          'Instructor' AS role,
+          COUNT(DISTINCT instructor_id)::int AS count
+        FROM courses;
+      `;
+
+      // Top courses by enrollments
+      const topCoursesQuery = `
+        SELECT 
+          c.id,
+          c.title,
+          COUNT(e.id)::int AS enrollments,
+          COALESCE(ROUND((COUNT(CASE WHEN e.completion_percentage >= 100 THEN 1 END)::float /
+                 NULLIF(COUNT(e.id), 0) * 100)::numeric, 2)::float, 0) AS "completionRate"
+        FROM courses c
+        LEFT JOIN enrollments e ON c.id = e.course_id
+        GROUP BY c.id, c.title
+        ORDER BY enrollments DESC
+        LIMIT 10;
+      `;
+
+      const [statsRes, categoryRes, roleRes, topCoursesRes] = await Promise.all([
+        this.pool.query(statsQuery),
+        this.pool.query(coursesCategoryQuery),
+        this.pool.query(usersByRoleQuery),
+        this.pool.query(topCoursesQuery),
+      ]);
+
+      const summary = statsRes.rows[0] || { users: 0, courses: 0, enrollments: 0 };
+      const coursesByCategory = categoryRes.rows || [];
+      const usersByRole = roleRes.rows || [];
+      const topCourses = topCoursesRes.rows || [];
+
+      return {
+        summary,
+        charts: {
+          coursesByCategory,
+          usersByRole,
+          topCourses,
+        },
+      };
+    } catch (error) {
+      console.error('Error fetching charts statistics:', error);
+      return {
+        summary: { users: 0, courses: 0, enrollments: 0 },
+        charts: {
+          coursesByCategory: [],
+          usersByRole: [],
+          topCourses: [],
+        },
+      };
+    }
+  }
 }

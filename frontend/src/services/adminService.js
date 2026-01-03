@@ -180,6 +180,25 @@ class AdminService {
       };
     }
   }
+
+  async getChartsStatistics() {
+    try {
+      const token = authService.getStoredToken();
+      const { data } = await apiCourse.get('/admin/charts/statistics', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      return { success: true, data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message,
+        status: error.response?.status,
+      };
+    }
+  }
 }
 
 export const adminService = new AdminService();
