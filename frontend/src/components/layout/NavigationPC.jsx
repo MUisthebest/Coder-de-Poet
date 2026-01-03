@@ -1,10 +1,23 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useSidebar } from "../../contexts/SidebarContext";
 import { useAuth } from "../../contexts/AuthContext";
 
 export default function Navigation_PC() {
   const { isOpen, setIsOpen } = useSidebar();
-  const { user, isAuthenticated, loading , logout, isAdmin} = useAuth();
+  const { user, isAuthenticated, loading, logout, isAdmin } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Navigate to login page after successful logout
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Still navigate to login page even if logout has error
+      navigate('/login');
+    }
+  };
 
   return (
     <nav
@@ -38,20 +51,10 @@ export default function Navigation_PC() {
 
         {/* MENU ITEMS */} 
         <ul className="flex flex-col space-y-1 text-gray-700 font-medium flex-1 gap-[calc(1vh_+_5px)]">
-          {isAdmin ? (
-            <>
-              <NavItem to="/admin" label="Dashboard" icon="home-alt-2" isOpen={isOpen} />
-              <NavItem to="/admin/users" label="Manage Users" icon="user" isOpen={isOpen} />
-              <NavItem to="/admin/courses" label="Manage Courses" icon="book" isOpen={isOpen} />
-            </>
-          ) : (
-            <>
-              <NavItem to={`${user === null ? '/' : user.role === "Instructor" ? '/instructor/dashboard' : '/'}`} label="Dashboard" icon="home-alt-2" isOpen={isOpen} />
-              <NavItem to="/courses" label="Courses" icon="book" isOpen={isOpen} />
-              <NavItem to="/ide" label="Library" icon="book-open" isOpen={isOpen} />
-              <NavItem to={`${user === null ? '/chat' : user.role === "Instructor" ? '/instructor/member' : '/chat'}`} label="chat" icon="message-bubble-notification" isOpen={isOpen} />
-            </>
-          )}
+          <NavItem to={`${user === null ? '/' : user.role === "Admin" ? '/admin': user.role === "Instructor" ? '/instructor/dashboard':'/'}`} label={`${isAdmin ? 'Total': 'Dashboard'}`} icon="home-alt-2" isOpen={isOpen} />
+          <NavItem to={`${isAdmin ? '/admin/courses': '/courses'}`} label={`${isAdmin ? 'Manage Courses': 'Courses'}`} icon="book" isOpen={isOpen} />
+          <NavItem to="/ide" label={`${isAdmin ? 'Manage Library': 'Library'}`} icon="book-open" isOpen={isOpen} />
+          <NavItem to="/chat" label="chat" icon="message-bubble-notification" isOpen={isOpen} />
         </ul>
       </div>
 
@@ -93,8 +96,8 @@ export default function Navigation_PC() {
                   {user.email}
                 </p>
                 <button
-                  onClick={logout}
-                  className="mt-2 px-4 py-2 border-1 bg-white rounded-2xl text-red-700 text-xs   hover:text-white hover:bg-red-600 font-medium transition all duration-200"
+                  onClick={handleLogout}
+                  className="mt-2 px-4 py-2 border-1 bg-white rounded-2xl text-red-700 text-xs hover:text-white hover:bg-red-600 font-medium transition-all duration-200"
                 >
                   Logout
                 </button>
