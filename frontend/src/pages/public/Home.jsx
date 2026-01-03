@@ -450,7 +450,7 @@ useEffect(() => {
         <div className="flex h-screen justify-center items-center sticky top-0">
           <ProfileSidebar 
             user={user}
-            courses={myCourses}
+            myCourses={myCourses}
             isAuthenticated={isAuthenticated}
           />
         </div>
