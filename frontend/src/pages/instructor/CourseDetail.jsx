@@ -204,7 +204,7 @@ const CourseDetailRoute = () => {
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-start gap-4">
                   <img
-                    src={course.thumbnail_url || "https://via.placeholder.com/100"}
+                    src={currentThumbnailCourse}
                     alt="Course"
                     className="w-28 h-20 rounded-lg object-cover"
                   />
@@ -334,11 +334,8 @@ const CourseDetailRoute = () => {
       {/* Right sticky profile sidebar */}
       <div className="flex justify-center items-center sticky top-0">
         <ProfileSidebar 
-          weeklyActivities={weeklyActivities}
-          myCourses={myCourses}
-          friends={friends}
+          courses={myCourses}
           user={user}
-          isAuthenticated={isAuthenticated}
         />
       </div>
     </div>
