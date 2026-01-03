@@ -47,7 +47,6 @@ services:
       PORT: "8080"
     env_file:
       - .env.prod
-      - ./auth_service/.env
     expose:
       - "8080"
     networks:
@@ -124,6 +123,7 @@ services:
       - ./secrets/youtube_cookies.txt:/run/secrets/youtube_cookies.txt:ro
     networks:
       - learnix_net
+
 
   chat_service:
     build:
