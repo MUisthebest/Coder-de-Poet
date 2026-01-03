@@ -67,7 +67,7 @@ const SignUp = () => {
 
   return (
     <div className="h-screen flex items-center justify-center via-white to-amber-100 px-5">
-      <div className="w-full max-w-6xl md:h-[96vh] h-[80vh] bg-[#EFE9E3] backdrop-blur-2xl shadow-2xl rounded-3xl grid md:grid-cols-2 overflow-hidden border-1 border-[#57595B]">
+      <div className="w-full max-w-7xl md:h-[96vh] h-[80vh] bg-[#EFE9E3] backdrop-blur-2xl shadow-2xl rounded-3xl grid md:grid-cols-2 overflow-hidden border-1 border-[#57595B]">
         
         {/* Left: GIF - Ẩn trên mobile */}
         <div className="hidden md:block h-full">

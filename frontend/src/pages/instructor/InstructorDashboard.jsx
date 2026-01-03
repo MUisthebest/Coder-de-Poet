@@ -40,39 +40,40 @@ const InstructorDashboard = () => {
     console.log("Fetching courses for instructor:", instructorId.id);
     if (!instructorId.id) return;
     
-    const fetchCourses = async () => {
-      try {
-        setLoading(true);
-        const data = await instructorService.getCoursesByInstructor(instructorId.id);
-        console.log("Fetched courses:", data);
-        const courseList = data?.courses?.items || []; 
-        
-        // Fetch completion stats
-        const completionData = await instructorService.getCourseCompletionStats(instructorId.id);
-        console.log("Fetched completion stats:", completionData);
-        setCompletionStats(completionData);
-        
-        // Merge completion stats with courses
-        const coursesWithStats = courseList.map(course => {
-          const stat = completionData.find(s => s.course_id === course.id);
-          return {
-            ...course,
-            avgCompletionPercent: Number(stat?.avg_completion_percent) || 0,
-            totalStudents: Number(stat?.total_students) || 0,
-            activeStudents: Number(stat?.active_students) || 0
-          };
-        });
-        
-        setCourses(coursesWithStats);
-      } catch (err) {
-        console.error(err);
-        setError("Unable to fetch courses. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchCourses();
   }, [instructorId.id]);
+
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      const data = await instructorService.getCoursesByInstructor(instructorId.id);
+      console.log("Fetched courses:", data);
+      const courseList = data?.courses?.items || []; 
+      
+      // Fetch completion stats
+      const completionData = await instructorService.getCourseCompletionStats(instructorId.id);
+      console.log("Fetched completion stats:", completionData);
+      setCompletionStats(completionData);
+      
+      // Merge completion stats with courses
+      const coursesWithStats = courseList.map(course => {
+        const stat = completionData.find(s => s.course_id === course.id);
+        return {
+          ...course,
+          avgCompletionPercent: Number(stat?.avg_completion_percent) || 0,
+          totalStudents: Number(stat?.total_students) || 0,
+          activeStudents: Number(stat?.active_students) || 0
+        };
+      });
+      
+      setCourses(coursesWithStats);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to fetch courses. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   const handleViewCourse = (course) => {
@@ -235,7 +236,12 @@ const InstructorDashboard = () => {
 
           {showAddCourse && (
             <InstructorAddCourse
-              onClose={() => setShowAddCourse(false)} categories={categories}
+              onClose={() => setShowAddCourse(false)}
+              onSuccess={() => {
+                setShowAddCourse(false);
+                fetchCourses();
+              }}
+              categories={categories}
             />
           )}
           {/* STATS */}
@@ -302,7 +308,7 @@ const InstructorDashboard = () => {
         <div className="md:flex hidden h-screen justify-center items-center sticky top-0">
           <ProfileSidebar 
             weeklyActivities={weeklyActivities}
-            myCourses={courses}
+            myCourses={filteredCourses}
             friends={friends}
             user={user}
             isAuthenticated={isAuthenticated}

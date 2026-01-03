@@ -5,6 +5,7 @@ import PopularCategories from '../../components/home/PopularCategories';
 import CategorySlider from '../../components/home/CategorySlider';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSidebar } from "../../contexts/SidebarContext";
+import { authService } from '../../services/authService';
 import axios from 'axios';
 
 const Home = () => {
@@ -16,6 +17,7 @@ const Home = () => {
   const [popularCourses, setPopularCourses] = useState([]);
   const [courses, setCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(false);
+
   const [popularLoading, setPopularLoading] = useState(false);
   const { user, isAuthenticated, getUserRole } = useAuth();
 

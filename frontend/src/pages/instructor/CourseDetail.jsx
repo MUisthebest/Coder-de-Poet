@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   FiX,
@@ -12,6 +12,7 @@ import {
 } from "react-icons/fi";
 import instructorService from "../../services/instructorService";
 import CreateQuizPage from "./CreateQuizPage";
+import ReviewPage from "./ReviewPage";
 import { useAuth } from "../../contexts/AuthContext";
 import ProfileSidebar from '../../components/home/ProfileSideBar';
 import InstructorAddLesson from "./InstructorAddLesson";
@@ -26,6 +27,7 @@ const CourseDetailRoute = () => {
   const [courseLoading, setCourseLoading] = useState(true);
   const [myCourses, setMyCourses] = useState([]);
   const [showAddLesson, setShowAddLesson] = useState(false);
+  const [showReviewPage, setShowReviewPage] = useState(false);
 
   const weeklyActivities = [
     { day: 'Mon', hours: 2.5, type: 'learning' },
@@ -47,7 +49,10 @@ const CourseDetailRoute = () => {
   // State cho modal Add Quiz
   const [showQuizModal, setShowQuizModal] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
+  const [currentThumbnail, setCurrentThumbnail] = useState("");
 
+  // Ref để lưu thumbnail trước đó
+  const previousThumbnailRef = useRef("");
   // Fetch course từ sessionStorage hoặc từ API
   useEffect(() => {
     const storedCourse = sessionStorage.getItem("currentCourse");
@@ -55,6 +60,8 @@ const CourseDetailRoute = () => {
       try {
         const parsedCourse = JSON.parse(storedCourse);
         setCourse(parsedCourse);
+        setCurrentThumbnail(parsedCourse.thumbnail_url || "");
+        previousThumbnailRef.current = parsedCourse.thumbnail_url || "";
         setCourseLoading(false);
       } catch (err) {
         console.error("Error parsing stored course:", err);
@@ -66,6 +73,35 @@ const CourseDetailRoute = () => {
       setCourseLoading(false);
     }
   }, [courseId]);
+
+  useEffect(() => {
+    // Hàm kiểm tra sự thay đổi
+    const checkForThumbnailUpdate = () => {
+      const storedCourse = sessionStorage.getItem("currentCourse");
+      if (storedCourse) {
+        try {
+          const parsedCourse = JSON.parse(storedCourse);
+          const newThumbnail = parsedCourse.thumbnail_url || "";
+          
+          // Nếu thumbnail thay đổi
+          if (newThumbnail !== previousThumbnailRef.current) {
+            setCurrentThumbnail(newThumbnail);
+            previousThumbnailRef.current = newThumbnail;
+            console.log("Thumbnail đã được cập nhật!");
+          }
+        } catch (err) {
+          console.error("Error checking thumbnail update:", err);
+        }
+      }
+    };
+
+    // Kiểm tra mỗi 2 giây (có thể điều chỉnh)
+    const interval = setInterval(checkForThumbnailUpdate, 2000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
 
   // Fetch lessons
   const fetchLessons = async () => {
@@ -121,6 +157,10 @@ const CourseDetailRoute = () => {
     navigate(`/instructor/courses/${courseId}/lesson/${lesson.id}`);
   };
 
+  const currentThumbnailCourse = useMemo(() => {
+    return currentThumbnail || course?.thumbnail_url || "https://via.placeholder.com/100";
+  }, [currentThumbnail, course]);
+
   if (courseLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -164,7 +204,7 @@ const CourseDetailRoute = () => {
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-start gap-4">
                   <img
-                    src={course.thumbnail_url || "https://via.placeholder.com/100"}
+                    src={currentThumbnailCourse}
                     alt="Course"
                     className="w-28 h-20 rounded-lg object-cover"
                   />
@@ -270,6 +310,13 @@ const CourseDetailRoute = () => {
                 />
               )}
 
+              {/* Reviews Section */}
+              <div className="mt-12 pt-8 border-t border-gray-100">
+                <ReviewPage
+                  courseId={courseId || course?.id}
+                />
+              </div>
+
               {/* Footer */}
           <div className="flex justify-end gap-3 pt-8 border-t border-gray-100 mt-8">
             <button
@@ -285,13 +332,10 @@ const CourseDetailRoute = () => {
       </div>
 
       {/* Right sticky profile sidebar */}
-      <div className="flex justify-center items-start sticky top-0">
+      <div className="flex justify-center items-center sticky top-0">
         <ProfileSidebar 
-          weeklyActivities={weeklyActivities}
-          myCourses={myCourses}
-          friends={friends}
+          courses={myCourses}
           user={user}
-          isAuthenticated={isAuthenticated}
         />
       </div>
     </div>

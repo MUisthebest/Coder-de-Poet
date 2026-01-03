@@ -10,6 +10,8 @@ import { EnrollmentsModule } from './modules/enrollments/enrollments.module';
 import { SearchModule } from './modules/search/search.module';
 import { QuizModule } from './modules/quizz/quiz.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
+
 
 @Module({
   imports: [
@@ -32,6 +34,7 @@ import { AdminModule } from './modules/admin/admin.module';
     EnrollmentsModule,
     SearchModule,
     AdminModule,
+    ReviewsModule,
   ],
 })
 export class AppModule {}

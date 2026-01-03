@@ -46,19 +46,31 @@ const instructorService = {
     },
 
 
-    updateCourse: async (courseId, payload) => {
-        try {
-            const token = authService.getStoredToken();
-            const response = await apiCourse.patch(`/courses/${courseId}`, payload, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+  updateCourse: async (courseId, payload) => {
+      try {
+          const token = authService.getStoredToken();
+          const user = authService.getCurrentUser();
 
-            return response.data;
-        } catch (error) {
-            console.error('Error updating course:', error);
-            throw error;
-        }
-    },
+          const response = await apiCourse.patch(
+              `/courses/${courseId}`,
+              {
+                  ...payload,
+                  userId: user.id   // 👈 thêm user.id vào body
+              },
+              {
+                  headers: {
+                      Authorization: `Bearer ${token}`
+                  }
+              }
+          );
+
+          return response.data;
+      } catch (error) {
+          console.error('Error updating course:', error);
+          throw error;
+      }
+  },
+
 
     deleteCourse: async (courseId) => {
         try {

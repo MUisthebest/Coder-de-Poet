@@ -35,15 +35,49 @@ export class AdminRepository {
   async adminDeleteCourse(courseId: string) {
     const client = await this.pool.connect();
     try {
-      await client.query('BEGIN');
-      await client.query('DELETE FROM enrollments WHERE course_id = $1', [courseId]);
-      await client.query('DELETE FROM lessons WHERE course_id = $1', [courseId]);
-      await client.query('DELETE FROM quizzes WHERE course_id = $1', [courseId]);
+      // Get all lessons for this course
+      const { rows: lessons } = await client.query(
+        'SELECT id FROM lessons WHERE course_id = $1',
+        [courseId]
+      );
+      
+      // Delete quiz-related data for each lesson
+      for (const lesson of lessons) {
+        try {
+          // Delete questions for this lesson
+          await client.query('DELETE FROM questions WHERE lesson_id = $1', [lesson.id]);
+        } catch (err) {
+          console.warn('Could not delete questions for lesson:', lesson.id, err.message);
+        }
+        
+        try {
+          // Delete quizzes for this lesson (quizzes are linked to lessons, not courses directly)
+          await client.query('DELETE FROM quizzes WHERE lesson_id = $1', [lesson.id]);
+        } catch (err) {
+          console.warn('Could not delete quizzes for lesson:', lesson.id, err.message);
+        }
+      }
+      
+      // Delete lessons
+      try {
+        await client.query('DELETE FROM lessons WHERE course_id = $1', [courseId]);
+      } catch (err) {
+        console.warn('Could not delete lessons:', err.message);
+      }
+      
+      // Delete enrollments
+      try {
+        await client.query('DELETE FROM enrollments WHERE course_id = $1', [courseId]);
+      } catch (err) {
+        console.warn('Could not delete enrollments:', err.message);
+      }
+      
+      // Delete course - this is the critical operation
       const { rows } = await client.query('DELETE FROM courses WHERE id = $1 RETURNING *', [courseId]);
-      await client.query('COMMIT');
+      
       return rows[0] ?? null;
     } catch (e) {
-      await client.query('ROLLBACK');
+      console.error('Error deleting course:', e);
       throw e;
     } finally {
       client.release();
