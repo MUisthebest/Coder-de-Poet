@@ -120,6 +120,8 @@ services:
       - .env.prod
     expose:
       - "8000"
+    volumes:
+      - ./secrets/youtube_cookies.txt:/run/secrets/youtube_cookies.txt:ro
     networks:
       - learnix_net
 
