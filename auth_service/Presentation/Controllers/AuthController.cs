@@ -16,13 +16,13 @@ namespace auth_service.Presentation.Controllers
     /// Authentication and User Management Controller
     /// </summary>
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("/")]
     [Tags("Authentication")]
     public class authController : ControllerBase
     {
         private readonly IUserUseCase _userUseCase;
 
-        public AuthController(IUserUseCase userUseCase)
+        public authController(IUserUseCase userUseCase)
         {
             _userUseCase = userUseCase;
         }
