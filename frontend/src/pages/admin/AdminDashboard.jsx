@@ -3,6 +3,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
 import { useAuth } from '../../contexts/AuthContext';
+import {
+  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+} from 'recharts';
+
+const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -10,6 +16,7 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [stats, setStats] = useState(null);
+  const [chartData, setChartData] = useState(null);
   const [popularCourses, setPopularCourses] = useState([]);
 
   useEffect(() => {
@@ -27,12 +34,18 @@ function AdminDashboard() {
 
     try {
       setLoading(true);
-      const [statsRes, coursesRes] = await Promise.all([
+      const [statsRes, coursesRes, chartsRes] = await Promise.all([
         adminService.getStats(),
         adminService.getAllCourses(),
+        adminService.getChartsStatistics(),
       ]);
       
       setStats(statsRes.data);
+
+      if (chartsRes.success) {
+        setChartData(chartsRes.data);
+      }
+      
 
       console.log('Fetched courses data:', coursesRes);
       
@@ -88,8 +101,8 @@ function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
-      <div className="min-h-screen mx-auto bg-gray-50 py-10 px-5 sm:px-10 max-w-8xl md:flex flex-col w-full">
+    <div className="w-full overflow-y-auto">
+      <div className="mx-auto bg-gray-50 py-10 px-5 sm:px-10 max-w-8xl md:flex flex-col w-full min-h-screen">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
@@ -129,7 +142,48 @@ function AdminDashboard() {
           </div>
         )}
 
-        {/* Popular Courses Table */}
+        {/* Charts Section */}
+        {chartData && (
+          <div className="mt-10">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">System Statistics Charts</h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Courses by Category Chart */}
+              {chartData.charts?.coursesByCategory && chartData.charts.coursesByCategory.length > 0 && (
+                <div className="bg-white rounded-lg shadow-lg p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">📊 Courses by Category</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={chartData.charts.coursesByCategory} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="category" tick={{ fontSize: 12 }} stroke="#9CA3AF" />
+                      <YAxis tick={{ fontSize: 12 }} stroke="#9CA3AF" />
+                      <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
+                      <Legend />
+                      <Bar dataKey="count" fill="#10B981" name="Number of Courses" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* Users by Role Chart */}
+              {chartData.charts?.usersByRole && chartData.charts.usersByRole.length > 0 && (
+                <div className="bg-white rounded-lg shadow-lg p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">👥 Users by Role</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie data={chartData.charts.usersByRole} cx="50%" cy="50%" labelLine={false} label={({ role, count }) => `${role}: ${count}`} outerRadius={100} fill="#8884d8" dataKey="count">
+                        {chartData.charts.usersByRole.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+
+            {/* Popular Courses Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-bold text-gray-900">Popular Courses</h2>
@@ -168,7 +222,7 @@ function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button
-                          onClick={() => navigate(`/admin/courses`)}
+                          onClick={() => navigate(`/instructor/courses/${course.id}`)}
                           className="text-blue-600 hover:text-blue-700 font-medium text-sm"
                         >
                           View Details
@@ -187,6 +241,8 @@ function AdminDashboard() {
             </table>
           </div>
         </div>
+          </div>
+        )}
       </div>
     </div>
   );

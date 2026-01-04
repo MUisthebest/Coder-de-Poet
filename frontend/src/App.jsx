@@ -75,7 +75,7 @@ function Layout() {
         </>
       )}
 
-      <main className="flex-1 md:w-full h-[100vh] md:px-0  z-10">
+      <main className="flex-1 md:w-full h-[100vh] md:px-0 z-10 overflow-y-auto">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<SignIn />} />
