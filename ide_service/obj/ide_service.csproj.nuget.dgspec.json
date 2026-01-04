@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\ide_service\\ide_service.csproj": {}
+    "C:\\Users\\ASUS\\Documents\\GitHub\\Coder-de-Poet\\ide_service\\ide_service.csproj": {}
   },
   "projects": {
-    "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\ide_service\\ide_service.csproj": {
+    "C:\\Users\\ASUS\\Documents\\GitHub\\Coder-de-Poet\\ide_service\\ide_service.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\ide_service\\ide_service.csproj",
+        "projectUniqueName": "C:\\Users\\ASUS\\Documents\\GitHub\\Coder-de-Poet\\ide_service\\ide_service.csproj",
         "projectName": "ide_service",
-        "projectPath": "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\ide_service\\ide_service.csproj",
+        "projectPath": "C:\\Users\\ASUS\\Documents\\GitHub\\Coder-de-Poet\\ide_service\\ide_service.csproj",
         "packagesPath": "C:\\Users\\ASUS\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\ide_service\\obj\\",
+        "outputPath": "C:\\Users\\ASUS\\Documents\\GitHub\\Coder-de-Poet\\ide_service\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\ASUS\\AppData\\Roaming\\NuGet\\NuGet.Config"

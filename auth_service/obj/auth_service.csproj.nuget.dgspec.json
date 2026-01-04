@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\auth_service.csproj": {}
+    "C:\\Users\\ASUS\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\auth_service.csproj": {}
   },
   "projects": {
-    "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\auth_service.csproj": {
+    "C:\\Users\\ASUS\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\auth_service.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\auth_service.csproj",
+        "projectUniqueName": "C:\\Users\\ASUS\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\auth_service.csproj",
         "projectName": "auth_service",
-        "projectPath": "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\auth_service.csproj",
+        "projectPath": "C:\\Users\\ASUS\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\auth_service.csproj",
         "packagesPath": "C:\\Users\\ASUS\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\ASUS\\OneDrive\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\obj\\",
+        "outputPath": "C:\\Users\\ASUS\\Documents\\GitHub\\Coder-de-Poet\\auth_service\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\ASUS\\AppData\\Roaming\\NuGet\\NuGet.Config"

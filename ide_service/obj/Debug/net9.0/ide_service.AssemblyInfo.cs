@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ide_service")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3223bc589d0f39821109cd63e76e37be828e3251")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ecfd369a7d55e34abfed7a76184aaaeefe050e98")]
 [assembly: System.Reflection.AssemblyProductAttribute("ide_service")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ide_service")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
