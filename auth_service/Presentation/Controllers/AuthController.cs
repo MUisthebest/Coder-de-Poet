@@ -22,7 +22,7 @@ namespace auth_service.Presentation.Controllers
     {
         private readonly IUserUseCase _userUseCase;
 
-        public authController(IUserUseCase userUseCase)
+        public AuthController(IUserUseCase userUseCase)
         {
             _userUseCase = userUseCase;
         }

@@ -20,6 +20,18 @@ const ProfileSidebar = ({
     { id: 'courses', label: 'My Courses' }
   ];
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Navigate to login page after successful logout
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Still navigate to login page even if logout has error
+      navigate('/login');
+    }
+  };
+
   // Hiển thị loading state
   if (loading) {
     return (
@@ -66,10 +78,6 @@ const ProfileSidebar = ({
   // Nếu đã đăng nhập, hiển thị profile bình thường
   return (
     <div className={`rounded-2xl border-[1px] border-[#aaa] bg-[#E3E3E3] border-[1px] border-[#ccc] overflow-hidden h-[96vh] shadow-lg transition-all duration-300 ${isOpen ? 'w-[8vw]' : 'w-[20vw]'}`}>
-      <div className={`px-[1vw]  mt-5 w-full transition-all duration-300  ${isOpen ? ' flex flex-col mb-10 w-full items-center gap-3' : 'absolute  flex flex-row items-self-start  gap-[14vw]'}`}>
-        <i className='bxr  bx-bell text-[2vw]'></i>
-        <i className='bxr  bx-cog text-[2vw]'></i>  
-      </div>
       {/* Profile Header */}
       <div className="bg-[#E3E3E3] h-[27vh] p-6 text-center">
         <div className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden">
@@ -97,7 +105,7 @@ const ProfileSidebar = ({
         
       {/* Button Logout */}
         <button
-          onClick={logout}
+          onClick={handleLogout}
           className="mt-2 px-4 mb-4 py-2 border-1 bg-white rounded-2xl text-red-700 text-xs   hover:text-white hover:bg-red-600 font-medium transition all duration-200"
         >
           Logout
@@ -111,6 +119,5 @@ const ProfileSidebar = ({
     </div>
   );
 };
-
 
 export default ProfileSidebar;

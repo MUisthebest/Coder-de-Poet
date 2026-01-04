@@ -62,8 +62,7 @@ const ChatbotPage = () => {
   const [sessionLoading, setSessionLoading] = useState(true); 
   const messagesEndRef = useRef(null); 
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001'; 
-  const CHAT_API = 'http://localhost:8001'; // Chat service URL 
+  const CHAT_API = process.env.REACT_APP_CHAT_API || 'http://localhost:8001'; // Chat service URL 
 
   // Scroll to bottom khi có message mới 
   const scrollToBottom = () => { 

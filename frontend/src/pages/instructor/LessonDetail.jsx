@@ -499,7 +499,7 @@ const LessonDetailPage = () => {
       </div>
 
       {/* ProfileSidebar */}
-      <div className="sticky top-0 h-screen">
+      <div className="md:flex hidden h-screen justify-center items-center sticky top-0 ">
         <ProfileSidebar 
           weeklyActivities={weeklyActivities}
           myCourses={myCourses}

@@ -5,7 +5,7 @@ import api from './api';
 class AdminUserService {
   async listUsers() {
     try {
-      const { data } = await api.get('/api/auth/admin/users');
+      const { data } = await api.get('/admin/users');
       return { success: true, data };
     } catch (error) {
       return {
@@ -18,7 +18,7 @@ class AdminUserService {
 
   async deleteUser(userId) {
     try {
-      const { data } = await api.delete(`/api/auth/admin/users/${userId}`);
+      const { data } = await api.delete(`/admin/users/${userId}`);
       return { success: true, data };
     } catch (error) {
       return {
@@ -31,7 +31,7 @@ class AdminUserService {
 
   async updateRole(userId, role) {
     try {
-      const { data } = await api.patch(`/api/auth/admin/users/${userId}/role`, { role });
+      const { data } = await api.patch(`/admin/users/${userId}/role`, { role });
       return { success: true, data };
     } catch (error) {
       return {
@@ -44,7 +44,7 @@ class AdminUserService {
 
   async disableAccount(userId) {
     try {
-      const { data } = await api.patch(`/api/auth/admin/users/${userId}/disable`);
+      const { data } = await api.patch(`/admin/users/${userId}/disable`);
       return { success: true, data };
     } catch (error) {
       return {
@@ -57,7 +57,7 @@ class AdminUserService {
 
   async enableAccount(userId) {
     try {
-      const { data } = await api.patch(`/api/auth/admin/users/${userId}/enable`);
+      const { data } = await api.patch(`/admin/users/${userId}/enable`);
       return { success: true, data };
     } catch (error) {
       return {

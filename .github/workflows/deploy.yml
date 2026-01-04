@@ -1,0 +1,27 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ "ide-service_temp" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+            cd /opt/learnix
+            git fetch origin ide-service_temp
+            git reset --hard origin/ide-service_temp
+
+            docker compose config
+            docker compose up -d --build
+
+            docker compose ps

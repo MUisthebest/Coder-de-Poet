@@ -54,7 +54,7 @@ importers:
         specifier: 5.0.1
         version: 5.0.1(@babel/plugin-syntax-flow@7.27.1(@babel/core@7.28.5))(@babel/plugin-transform-react-jsx@7.27.1(@babel/core@7.28.5))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@19.2.3)(type-fest@0.21.3)(typescript@4.9.5)
       react-syntax-highlighter:
-        specifier: ^15.5.0
+        specifier: ^15.6.6
         version: 15.6.6(react@19.2.3)
       recharts:
         specifier: ^2.10.3
@@ -3028,6 +3028,9 @@ packages:
   fault@1.0.4:
     resolution: {integrity: sha512-CJ0HCB5tL5fYTEA7ToAq5+kTwd++Borf1/bifxd9iT70QcXr4MRrO3Llf8Ifs70q+SJcGHFtnIE/Nw6giCtECA==}
 
+  fault@1.0.4:
+    resolution: {integrity: sha512-CJ0HCB5tL5fYTEA7ToAq5+kTwd++Borf1/bifxd9iT70QcXr4MRrO3Llf8Ifs70q+SJcGHFtnIE/Nw6giCtECA==}
+
   faye-websocket@0.11.4:
     resolution: {integrity: sha512-CzbClwlXAuiRQAlUyfqPgvPoNKTckTPGfwZV4ZdAhVcP2lh9KUxJg2b5GkE7XbjKQ3YJnQ9z6D9ntLAlB+tP8g==}
     engines: {node: '>=0.8.0'}
@@ -5200,8 +5203,8 @@ packages:
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
 
-  react-markdown@10.1.0:
-    resolution: {integrity: sha512-qKxVopLT/TyA6BX3Ue5NwabOsAzm0Q7kAPwq6L+wWDwisYs7R8vZ0nRXqq6rkueboxpkjvLGU9fWifiX/ZZFxQ==}
+  react-markdown@9.1.0:
+    resolution: {integrity: sha512-xaijuJB0kzGiUdG7nc2MOMDUDBWPyGAjZtUrow9XxUeua8IqeP+VlIfAZ3bphpcLTnSZXz6z9jcVC/TCwbfgdw==}
     peerDependencies:
       '@types/react': '>=18'
       react: '>=18'
@@ -9053,7 +9056,7 @@ snapshots:
       import-fresh: 3.3.1
       parse-json: 5.2.0
       path-type: 4.0.0
-      yaml: 1.10.2
+      yaml: 2.8.2
 
   cross-spawn@7.0.6:
     dependencies:
@@ -12526,7 +12529,7 @@ snapshots:
 
   react-is@18.3.1: {}
 
-  react-markdown@10.1.0(@types/react@19.2.7)(react@19.2.3):
+  react-markdown@9.1.0(@types/react@19.2.7)(react@19.2.3):
     dependencies:
       '@types/hast': 3.0.4
       '@types/mdast': 4.0.4

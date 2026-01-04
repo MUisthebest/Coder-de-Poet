@@ -50,7 +50,7 @@ export class CoursesService {
         const course = await this.repo.findById(id);
         if (!course) throw new NotFoundException('Course not found');
 
-        if (course.instructorId !== userId) {
+        if (course.instructor_id !== userId) {
             throw new BadRequestException('You are not the instructor of this course');
         }
 

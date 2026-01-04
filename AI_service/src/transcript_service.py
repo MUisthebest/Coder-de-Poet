@@ -13,7 +13,7 @@ DOWNLOAD_PATH = "downloads"
 os.makedirs(DOWNLOAD_PATH, exist_ok=True)
 
 #Load model once at startup
-model = WhisperModel("base", device="cpu", compute_type="int8")
+model = WhisperModel("tiny", device="cpu", compute_type="int8")
 
 def download_video(video_url: str, filename_hint: str | None = None) -> str:
     if filename_hint:
@@ -42,6 +42,6 @@ def delete_video(file_path: str) -> None:
 
 
 def transcribe_video(video_path: str, language: str = "en") -> str:
-    segments, info = model.transcribe(video_path, language=language)
+    segments, info = model.transcribe(video_path, language=language, beam_size=1, task='transcribe', vad_filter=True)
     full_text = " ".join(seg.text for seg in segments)
     return full_text

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from sqlalchemy import text  # Thêm import này
 
 from . import crud, schemas
 from .ai_service import ai_service
@@ -65,8 +66,8 @@ async def root():
 async def health_check(db: Session = Depends(get_db)):
     """Health check endpoint - verifies database connectivity"""
     try:
-        # Kiểm tra database connection
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
+        db.commit()  # Đảm bảo commit để kiểm tra connection
         return {
             "status": "healthy",
             "database": "connected",

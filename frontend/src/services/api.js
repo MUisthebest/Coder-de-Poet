@@ -3,7 +3,7 @@ import axios from 'axios';
 import { authService } from './authService';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_BACKEND_URL || 'http://localhost:5015',
+  baseURL: process.env.REACT_APP_BACKEND_URL || 'https://learnixhcmus.duckdns.org',
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
@@ -36,7 +36,7 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Chỉ xử lý 401 và chưa từng retry
-    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/api/auth/refresh-token')) {
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/refresh-token')) {
       
       if (isRefreshing) {
         // Đang refresh → chờ token mới

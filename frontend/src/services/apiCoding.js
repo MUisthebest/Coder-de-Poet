@@ -2,12 +2,19 @@
     This file will be fetched the API ide services written in C#
 */
 
-const API_URL = "http://localhost:5247/api/problems";
+const API_CONFIG = {
+  BASE_URL: process.env.REACT_APP_IDE_SERVICE_URL || "http://localhost:5247",
+  ENDPOINTS: {
+    PROBLEMS: "/api/problems",
+    RUN: "/api/run"
+  }
+};
 
-const API_SUBMIT_URL = "http://localhost:5247/api/run";
+const buildUrl = (endpoint) => `${API_CONFIG.BASE_URL}${endpoint}`;
 
 export async function fetchProblems() {
-    const response = await fetch(API_URL, { method: 'GET' });
+    const url = buildUrl(API_CONFIG.ENDPOINTS.PROBLEMS);
+    const response = await fetch(url, { method: 'GET' });
 
     if (!response.ok) throw new Error('Failed to fetch problems');
     const data = await response.json();
@@ -16,13 +23,15 @@ export async function fetchProblems() {
 }
 
 export async function fetchProblemDetail(problemId) {
-  const res = await fetch(`${API_URL}/${problemId}`, { method: "GET" });
+  const url = `${buildUrl(API_CONFIG.ENDPOINTS.PROBLEMS)}/${problemId}`;
+  const res = await fetch(url, { method: "GET" });
   if (!res.ok) throw new Error("Failed to fetch problem detail");
   return res.json();
 }
   
 export async function submitSolution(problemId, sourceCode, language, input) {
-    const response = await fetch(`${API_SUBMIT_URL}`, {
+    const url = buildUrl(API_CONFIG.ENDPOINTS.RUN);
+    const response = await fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
